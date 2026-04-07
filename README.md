@@ -11,6 +11,13 @@
 **Estándares de desarrollo como paquetes npm instalables.** Un solo comando para configurar TDD, linting, formateo, commits convencionales y reglas de agentes de IA en cualquier proyecto.
 
 ```bash
+# Instalacion rapida — todo en dos comandos
+pnpm add -D @devground/devground eslint prettier typescript husky lint-staged @commitlint/cli
+npx devground-setup
+```
+
+```bash
+# O con el CLI interactivo
 npx devground-init
 ```
 
@@ -26,7 +33,18 @@ Cada nuevo proyecto empieza con la misma fricción: configurar ESLint, Prettier,
 
 ## Inicio rapido
 
-### Opcion 1: CLI interactivo (recomendado)
+### Opcion 1: Instalacion rapida (recomendado)
+
+Un solo paquete que trae todo. Dos comandos y listo.
+
+```bash
+pnpm add -D @devground/devground eslint prettier typescript husky lint-staged @commitlint/cli
+npx devground-setup
+```
+
+El setup detecta tu stack, escribe las configs, configura git hooks y genera AGENTS.md con symlinks. **No sobreescribe archivos existentes.**
+
+### Opcion 2: CLI interactivo
 
 ```bash
 npx devground-init
@@ -61,13 +79,13 @@ El CLI detecta tu stack automaticamente (Next.js, React, Node.js), tu gestor de 
   ✓ Listo. 7 estandares de desarrollo activos.
 ```
 
-### Opcion 2: Todo sin preguntas
+### Opcion 3: Todo sin preguntas
 
 ```bash
 npx devground-init --yes
 ```
 
-### Opcion 3: Solo reglas para agentes de IA
+### Opcion 4: Solo reglas para agentes de IA
 
 ```bash
 npx devground-init --preset agents-only
@@ -81,6 +99,7 @@ El monorepo contiene **8 paquetes** independientes. Cada uno se puede instalar p
 
 | Paquete | Version | Descripcion |
 |---------|---------|-------------|
+| [`@devground/devground`](#devgrounddevground) | `1.0.0` | **Todo en uno** — instala y configura todos los paquetes |
 | [`@devground/prettier-config`](#devgroundprettier-config) | `1.0.0` | Configuracion compartida de Prettier |
 | [`@devground/eslint-config`](#devgroundeslint-config) | `1.0.0` | ESLint Flat Config v9 (base + Next.js) |
 | [`@devground/tsconfig`](#devgroundtsconfig) | `1.0.0` | Presets de TypeScript (base, next, CI, node) |
@@ -92,7 +111,32 @@ El monorepo contiene **8 paquetes** independientes. Cada uno se puede instalar p
 
 ---
 
-## Uso individual de cada paquete
+## Uso de cada paquete
+
+### `@devground/devground`
+
+El meta-paquete que trae todo. Ideal para proyectos nuevos o cuando quieres adoptar todos los estandares de una vez.
+
+```bash
+pnpm add -D @devground/devground eslint prettier typescript husky lint-staged @commitlint/cli
+npx devground-setup
+```
+
+**Que configura automaticamente:**
+
+| Herramienta | Accion |
+|-------------|--------|
+| Prettier | Activa `@devground/prettier-config` en package.json |
+| ESLint | Escribe `eslint.config.mjs` (detecta Next.js) |
+| TypeScript | Escribe `tsconfig.json` + `tsconfig.typecheck.json` (Next.js) |
+| Commitlint | Escribe `commitlint.config.js` |
+| Lint-staged | Activa `@devground/lint-staged-config` en package.json |
+| Husky | Inicializa + escribe `.husky/pre-commit` |
+| AGENTS.md | Copia template + symlinks a CLAUDE.md, .cursorrules, copilot, gemini |
+
+**No sobreescribe archivos existentes.** Si ya tienes un `tsconfig.json` o `eslint.config.mjs`, los respeta.
+
+---
 
 ### `@devground/prettier-config`
 
