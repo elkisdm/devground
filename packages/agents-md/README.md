@@ -37,6 +37,19 @@ npx devground-agents
 9. **Semantic Tokens** — No hardcoded colors in UI components
 10. **`cn()` Helper** — Mandatory for CSS class merging
 
+## Prompt universal para cualquier agente
+
+El paquete incluye `PROMPT.md` — un prompt listo para copiar y pegar como **system prompt** o **custom instructions** en cualquier agente de IA (ChatGPT, Claude, Gemini, etc.).
+
+```bash
+# Ver el prompt
+cat node_modules/@devground/agents-md/PROMPT.md
+```
+
+Util cuando trabajas con agentes que no leen archivos del proyecto (como ChatGPT en la web).
+
+---
+
 ## Customization
 
 After running the setup, edit `AGENTS.md` directly. The symlinks ensure all agents pick up your changes automatically.

@@ -5,7 +5,7 @@
   "bin": {
     "devground-agents": "./setup.js"
   },
-  "files": ["setup.js", "AGENTS.md"],
+  "files": ["setup.js", "AGENTS.md", "PROMPT.md"],
   "keywords": ["agents-md", "claude", "cursor", "copilot", "gemini", "ai", "coding-standards", "devground"],
   "license": "MIT",
   "repository": {

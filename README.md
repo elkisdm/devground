@@ -345,6 +345,12 @@ proyecto/
 
 **Un archivo, todos los agentes.** Cuando editas `AGENTS.md`, Claude, Cursor, Copilot y Gemini ven los cambios automaticamente via symlinks.
 
+**Prompt universal:** El paquete tambien incluye `PROMPT.md` — un prompt optimizado para copiar y pegar como **system prompt** o **custom instructions** en cualquier agente de IA (ChatGPT, Claude web, Gemini, etc.). Util cuando trabajas con agentes que no leen archivos del proyecto.
+
+```bash
+cat node_modules/@devground/agents-md/PROMPT.md
+```
+
 **Compatibilidad Windows:** En sistemas sin soporte de symlinks, el setup copia el archivo en lugar de linkear.
 
 ---
