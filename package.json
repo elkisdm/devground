@@ -1,0 +1,14 @@
+{
+  "name": "devground",
+  "private": true,
+  "packageManager": "pnpm@10.15.1",
+  "scripts": {
+    "build": "pnpm --filter devground-init build",
+    "test": "pnpm --filter devground-init test",
+    "changeset": "changeset",
+    "publish-packages": "changeset publish"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.27.0"
+  }
+}

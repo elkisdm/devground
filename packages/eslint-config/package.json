@@ -1,0 +1,26 @@
+{
+  "name": "@devground/eslint-config",
+  "version": "1.0.0",
+  "description": "Shared ESLint flat config presets",
+  "type": "module",
+  "exports": {
+    ".": "./index.mjs",
+    "./next": "./next.mjs"
+  },
+  "files": ["*.mjs"],
+  "keywords": ["eslint", "config", "flat-config", "shared", "devground"],
+  "license": "MIT",
+  "peerDependencies": {
+    "eslint": ">=9.0.0"
+  },
+  "peerDependenciesMeta": {
+    "eslint-config-next": {
+      "optional": true
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/devground/devground.git",
+    "directory": "packages/eslint-config"
+  }
+}

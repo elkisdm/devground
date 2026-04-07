@@ -1,0 +1,16 @@
+{
+  "name": "@devground/agents-md",
+  "version": "1.0.0",
+  "description": "AI agent development rules — AGENTS.md + symlinks for Claude, Cursor, Copilot, Gemini",
+  "bin": {
+    "devground-agents": "./setup.js"
+  },
+  "files": ["setup.js", "AGENTS.md"],
+  "keywords": ["agents-md", "claude", "cursor", "copilot", "gemini", "ai", "coding-standards", "devground"],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/devground/devground.git",
+    "directory": "packages/agents-md"
+  }
+}

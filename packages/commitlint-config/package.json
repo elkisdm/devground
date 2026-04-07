@@ -1,0 +1,17 @@
+{
+  "name": "@devground/commitlint-config",
+  "version": "1.0.0",
+  "description": "Conventional commits configuration for commitlint",
+  "main": "index.js",
+  "files": ["index.js"],
+  "keywords": ["commitlint", "config", "conventional-commits", "shared", "devground"],
+  "license": "MIT",
+  "peerDependencies": {
+    "@commitlint/cli": ">=19.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/devground/devground.git",
+    "directory": "packages/commitlint-config"
+  }
+}

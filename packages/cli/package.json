@@ -1,0 +1,25 @@
+{
+  "name": "devground-init",
+  "version": "1.0.0",
+  "description": "CLI to scaffold devground development standards in any project",
+  "bin": {
+    "devground-init": "./dist/index.js"
+  },
+  "files": [
+    "dist/"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "commander": "^13.0.0",
+    "prompts": "^2.4.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/prompts": "^2.4.9",
+    "typescript": "^5.0.0"
+  },
+  "license": "MIT"
+}

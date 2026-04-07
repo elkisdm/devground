@@ -1,0 +1,14 @@
+{
+  "name": "@devground/prettier-config",
+  "version": "1.0.0",
+  "description": "Shared Prettier configuration",
+  "main": "index.json",
+  "files": ["index.json"],
+  "keywords": ["prettier", "config", "shared", "devground"],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/devground/devground.git",
+    "directory": "packages/prettier-config"
+  }
+}

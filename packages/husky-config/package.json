@@ -1,0 +1,19 @@
+{
+  "name": "@devground/husky-config",
+  "version": "1.0.0",
+  "description": "Git hooks setup with Husky",
+  "bin": {
+    "devground-husky": "./setup.js"
+  },
+  "files": ["setup.js", "hooks/"],
+  "keywords": ["husky", "git-hooks", "pre-commit", "config", "devground"],
+  "license": "MIT",
+  "peerDependencies": {
+    "husky": ">=9.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/devground/devground.git",
+    "directory": "packages/husky-config"
+  }
+}
