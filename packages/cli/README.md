@@ -37,7 +37,7 @@ npx devground-init
 ## Development
 
 ```bash
-npm install
-npm run build   # compile TypeScript
-npm run dev     # watch mode
+pnpm install
+pnpm build   # compile TypeScript
+pnpm dev     # watch mode
 ```
