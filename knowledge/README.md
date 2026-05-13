@@ -21,6 +21,7 @@ Las fuentes primarias están en la raíz del repo:
 | ¿Cómo escalo lecturas/escrituras? ¿Cuándo uso caché, queues, circuit breakers? | [03-systems-design.md](03-systems-design.md) |
 | Empiezo un proyecto desde cero, ¿qué hago primero? | [BEST-PRACTICES.md](BEST-PRACTICES.md) |
 | Necesito justificar una decisión técnica concreta | [adr/](adr/) |
+| ¿Esta guía realmente sirve? Caso real aplicado | [CASE-STUDY-devground.md](CASE-STUDY-devground.md) |
 
 ## Cómo usar esta base
 
