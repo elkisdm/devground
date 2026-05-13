@@ -1,0 +1,33 @@
+{
+  "name": "@devground/architecture-guide",
+  "version": "1.0.0",
+  "description": "Architecture knowledge base + ADR templates (databases, patterns, systems) installable into any project",
+  "bin": {
+    "devground-architecture": "./setup.js",
+    "devground-adr": "./adr-new.js"
+  },
+  "files": [
+    "setup.js",
+    "adr-new.js",
+    "knowledge/",
+    "templates/"
+  ],
+  "scripts": {
+    "prepublishOnly": "node ./scripts/sync-knowledge.js"
+  },
+  "keywords": [
+    "architecture",
+    "adr",
+    "knowledge-base",
+    "database",
+    "system-design",
+    "coding-standards",
+    "devground"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/devground/devground.git",
+    "directory": "packages/architecture-guide"
+  }
+}
