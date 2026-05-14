@@ -1,10 +1,19 @@
 {
   "name": "@devground/lint-staged-config",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Shared lint-staged configuration (eslint + prettier on staged files)",
   "main": "index.js",
-  "files": ["index.js"],
-  "keywords": ["lint-staged", "config", "shared", "eslint", "prettier", "devground"],
+  "files": [
+    "index.js"
+  ],
+  "keywords": [
+    "lint-staged",
+    "config",
+    "shared",
+    "eslint",
+    "prettier",
+    "devground"
+  ],
   "license": "MIT",
   "engines": {
     "node": ">=20"

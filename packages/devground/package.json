@@ -1,8 +1,17 @@
 {
   "name": "@devground/devground",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "All devground standards in one package. Install once, get everything.",
-  "keywords": ["devground", "standards", "eslint", "prettier", "tsconfig", "commitlint", "husky", "agents-md"],
+  "keywords": [
+    "devground",
+    "standards",
+    "eslint",
+    "prettier",
+    "tsconfig",
+    "commitlint",
+    "husky",
+    "agents-md"
+  ],
   "license": "MIT",
   "engines": {
     "node": ">=20"
@@ -28,13 +37,19 @@
     "@commitlint/cli": ">=19.0.0"
   },
   "peerDependenciesMeta": {
-    "eslint-config-next": { "optional": true },
-    "@commitlint/cli": { "optional": true }
+    "eslint-config-next": {
+      "optional": true
+    },
+    "@commitlint/cli": {
+      "optional": true
+    }
   },
   "bin": {
     "devground-setup": "./setup.js"
   },
-  "files": ["setup.js"],
+  "files": [
+    "setup.js"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/elkisdm/devground.git",
