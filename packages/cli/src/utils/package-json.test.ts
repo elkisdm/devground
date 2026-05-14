@@ -1,0 +1,78 @@
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { mkdtempSync, rmSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { readPackageJson, writePackageJson } from './package-json.js';
+
+let tmpDir: string;
+
+beforeEach(() => {
+  tmpDir = mkdtempSync(join(tmpdir(), 'devground-pkgjson-'));
+});
+
+afterEach(() => {
+  rmSync(tmpDir, { recursive: true, force: true });
+});
+
+describe('readPackageJson', () => {
+  it('parses a valid package.json', () => {
+    const content = { name: 'my-pkg', version: '1.0.0' };
+    writeFileSync(join(tmpDir, 'package.json'), JSON.stringify(content));
+
+    expect(readPackageJson(tmpDir)).toEqual(content);
+  });
+
+  it('preserves nested objects (dependencies, scripts)', () => {
+    const content = {
+      name: 'app',
+      dependencies: { react: '^19.0.0' },
+      scripts: { dev: 'next dev' },
+    };
+    writeFileSync(join(tmpDir, 'package.json'), JSON.stringify(content));
+
+    const result = readPackageJson(tmpDir);
+
+    expect(result.dependencies).toEqual({ react: '^19.0.0' });
+    expect(result.scripts).toEqual({ dev: 'next dev' });
+  });
+
+  it('throws when package.json does not exist', () => {
+    expect(() => readPackageJson(tmpDir)).toThrow();
+  });
+
+  it('throws when package.json is malformed JSON', () => {
+    writeFileSync(join(tmpDir, 'package.json'), '{ not valid json');
+
+    expect(() => readPackageJson(tmpDir)).toThrow();
+  });
+});
+
+describe('writePackageJson', () => {
+  it('writes a JSON object with 2-space indentation', () => {
+    const data = { name: 'pkg', version: '1.0.0' };
+    writePackageJson(tmpDir, data);
+
+    const raw = readFileSync(join(tmpDir, 'package.json'), 'utf-8');
+
+    expect(raw).toBe('{\n  "name": "pkg",\n  "version": "1.0.0"\n}\n');
+  });
+
+  it('terminates the file with a trailing newline', () => {
+    writePackageJson(tmpDir, { name: 'pkg' });
+
+    const raw = readFileSync(join(tmpDir, 'package.json'), 'utf-8');
+
+    expect(raw.endsWith('\n')).toBe(true);
+  });
+
+  it('round-trips: write then read returns the same object', () => {
+    const data = {
+      name: 'app',
+      scripts: { build: 'tsc' },
+      dependencies: { react: '^19.0.0' },
+    };
+    writePackageJson(tmpDir, data);
+
+    expect(readPackageJson(tmpDir)).toEqual(data);
+  });
+});
