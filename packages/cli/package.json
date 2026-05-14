@@ -48,7 +48,7 @@
     "prompts": "^2.4.2"
   },
   "devDependencies": {
-    "@types/node": "^20",
+    "@types/node": "^25",
     "@types/prompts": "^2.4.9",
     "typescript": "^5.0.0",
     "vitest": "^2.1.0"
