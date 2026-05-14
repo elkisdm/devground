@@ -1,9 +1,22 @@
 {
   "name": "@devground/tsconfig",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Shared TypeScript configuration presets (base, next, next-typecheck, node)",
-  "files": ["base.json", "next.json", "next-typecheck.json", "node.json"],
-  "keywords": ["typescript", "tsconfig", "config", "shared", "nextjs", "node", "devground"],
+  "files": [
+    "base.json",
+    "next.json",
+    "next-typecheck.json",
+    "node.json"
+  ],
+  "keywords": [
+    "typescript",
+    "tsconfig",
+    "config",
+    "shared",
+    "nextjs",
+    "node",
+    "devground"
+  ],
   "license": "MIT",
   "engines": {
     "node": ">=20"

@@ -1,12 +1,21 @@
 {
   "name": "@devground/husky-config",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Git hooks setup with Husky (pre-commit runs lint-staged)",
   "bin": {
     "devground-husky": "./setup.js"
   },
-  "files": ["setup.js", "hooks/"],
-  "keywords": ["husky", "git-hooks", "pre-commit", "config", "devground"],
+  "files": [
+    "setup.js",
+    "hooks/"
+  ],
+  "keywords": [
+    "husky",
+    "git-hooks",
+    "pre-commit",
+    "config",
+    "devground"
+  ],
   "license": "MIT",
   "engines": {
     "node": ">=20"
