@@ -2,9 +2,13 @@
   "name": "devground",
   "private": true,
   "packageManager": "pnpm@10.15.1",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "build": "pnpm --filter devground-init build",
     "test": "pnpm --filter devground-init test",
+    "typecheck": "pnpm --filter devground-init typecheck",
     "changeset": "changeset",
     "publish-packages": "changeset publish"
   },
