@@ -1,14 +1,94 @@
-<p align="center">
+<div align="center">
+
+```
+        ╔═══════════════════════════════════════════════╗
+        ║                                               ║
+        ║    ░█▀▄░█▀▀░█░█░█▀▀░█▀▄░█▀█░█░█░█▀█░█▀▄      ║
+        ║    ░█░█░█▀▀░▀▄▀░█░█░█▀▄░█░█░█░█░█░█░█░█      ║
+        ║    ░▀▀░░▀▀▀░░▀░░▀▀▀░▀░▀░▀▀▀░▀▀▀░▀░▀░▀▀░      ║
+        ║                                               ║
+        ║   estandares de desarrollo como paquetes npm  ║
+        ║                                               ║
+        ╚═══════════════════════════════════════════════╝
+```
+
+<p>
+  <a href="https://www.npmjs.com/package/@devground/devground"><img src="https://img.shields.io/npm/v/@devground/devground?style=for-the-badge&logo=npm&color=CB3837&label=npm" alt="npm version" /></a>
+  <a href="https://github.com/elkisdm/devground"><img src="https://img.shields.io/github/stars/elkisdm/devground?style=for-the-badge&logo=github&color=181717&label=stars" alt="GitHub stars" /></a>
+  <img src="https://img.shields.io/badge/license-MIT-44CC11?style=for-the-badge" alt="MIT License" />
+  <img src="https://img.shields.io/badge/PRs-welcome-FF69B4?style=for-the-badge" alt="PRs welcome" />
+</p>
+
+<p>
   <img src="https://img.shields.io/badge/pnpm-workspace-F69220?logo=pnpm&logoColor=white" alt="pnpm workspace" />
   <img src="https://img.shields.io/badge/ESLint-v9%20Flat%20Config-4B32C3?logo=eslint&logoColor=white" alt="ESLint v9" />
   <img src="https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white" alt="TypeScript strict" />
   <img src="https://img.shields.io/badge/Changesets-versioning-26A69A" alt="Changesets" />
-  <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License" />
+  <img src="https://img.shields.io/badge/Node-%E2%89%A520-339933?logo=node.js&logoColor=white" alt="Node 20+" />
 </p>
+
+<h3>
+  <a href="#-inicio-rapido">Inicio rapido</a>
+  <span>&nbsp;·&nbsp;</span>
+  <a href="#-paquetes">Paquetes</a>
+  <span>&nbsp;·&nbsp;</span>
+  <a href="#-uso-de-cada-paquete">Documentacion</a>
+  <span>&nbsp;·&nbsp;</span>
+  <a href="#-faq">FAQ</a>
+  <span>&nbsp;·&nbsp;</span>
+  <a href="#-roadmap">Roadmap</a>
+</h3>
+
+</div>
+
+---
+
+<table align="center">
+<tr>
+<td align="center">
+
+**TDD**
+
+ciclo Red → Green → Refactor
+
+</td>
+<td align="center">
+
+**Lint + Format**
+
+ESLint 9 + Prettier
+
+</td>
+<td align="center">
+
+**Commits**
+
+conventional + hooks
+
+</td>
+<td align="center">
+
+**AI Ready**
+
+AGENTS.md multi-agente
+
+</td>
+<td align="center">
+
+**Arquitectura**
+
+11 ADRs + knowledge base
+
+</td>
+</tr>
+</table>
+
+---
 
 # devground
 
-**Estándares de desarrollo como paquetes npm instalables.** Un solo comando para configurar TDD, linting, formateo, commits convencionales y reglas de agentes de IA en cualquier proyecto.
+> **9 paquetes npm. Un solo comando.**
+> Configura TDD, linting, formateo, commits convencionales, git hooks, reglas para agentes de IA y una knowledge base de arquitectura — en cualquier proyecto Node/TypeScript/Next.js.
 
 ```bash
 # Instalacion rapida — todo en dos comandos
@@ -17,44 +97,78 @@ npx devground-setup
 ```
 
 ```bash
-# O con el CLI interactivo
+# O con el CLI interactivo (detecta tu stack)
 npx devground-init
 ```
+
+<details>
+<summary><b>Ver lo que pasa en 30 segundos</b></summary>
+
+```diff
++ eslint.config.mjs              ← ESLint 9 flat config (detecta Next.js)
++ tsconfig.json                  ← preset strict para tu stack
++ tsconfig.typecheck.json        ← preset CI
++ commitlint.config.js           ← conventional commits
++ .husky/pre-commit              ← lint-staged en cada commit
++ AGENTS.md                      ← reglas para IA (source of truth)
++ CLAUDE.md → AGENTS.md          ← symlink (Claude Code)
++ .cursorrules → AGENTS.md       ← symlink (Cursor)
++ .github/copilot-instructions.md → AGENTS.md
++ .gemini/styleguide.md → AGENTS.md
++ knowledge/                     ← guias + 11 ADRs de arquitectura
+~ package.json                   ← prettier, lint-staged, prepare script
+```
+
+**No sobreescribe nada existente.** Si ya tienes `tsconfig.json`, lo respeta.
+
+</details>
 
 ---
 
 ## Tabla de contenidos
 
-- [El problema](#el-problema)
-- [Glosario express (para todo el equipo)](#glosario-express-para-todo-el-equipo)
-- [Inicio rapido](#inicio-rapido)
-- [Paquetes](#paquetes)
-- [Uso de cada paquete](#uso-de-cada-paquete)
-  - [`@devground/devground`](#devgrounddevground)
-  - [`@devground/prettier-config`](#devgroundprettier-config)
-  - [`@devground/eslint-config`](#devgroundeslint-config)
-  - [`@devground/tsconfig`](#devgroundtsconfig)
-  - [`@devground/commitlint-config`](#devgroundcommitlint-config)
-  - [`@devground/lint-staged-config`](#devgroundlint-staged-config)
-  - [`@devground/husky-config`](#devgroundhusky-config)
-  - [`@devground/agents-md`](#devgroundagents-md)
-  - [`@devground/architecture-guide`](#devgroundarchitecture-guide)
-- [Conceptos clave de arquitectura](#conceptos-clave-de-arquitectura-para-todo-el-equipo)
-- [Reglas de desarrollo incluidas](#reglas-de-desarrollo-incluidas)
-- [devground-init (CLI)](#devground-init-cli)
-- [Arquitectura del monorepo](#arquitectura-del-monorepo)
-- [Desarrollo](#desarrollo)
-- [CI/CD](#cicd)
-- [FAQ](#faq)
-- [¿Cuando NO usar devground?](#cuando-no-usar-devground)
-- [Como contribuir](#como-contribuir)
-- [Roadmap](#roadmap)
-- [Filosofia](#filosofia)
-- [Licencia](#licencia)
+<table>
+<tr>
+<td valign="top" width="33%">
+
+**Empezar**
+
+- [El problema](#-el-problema)
+- [Inicio rapido](#-inicio-rapido)
+- [Glosario express](#-glosario-express-para-todo-el-equipo)
+- [Paquetes](#-paquetes)
+
+</td>
+<td valign="top" width="33%">
+
+**Uso**
+
+- [Uso de cada paquete](#-uso-de-cada-paquete)
+- [Reglas incluidas](#-reglas-de-desarrollo-incluidas)
+- [CLI `devground-init`](#-devground-init-cli)
+- [Conceptos de arquitectura](#-conceptos-clave-de-arquitectura-para-todo-el-equipo)
+
+</td>
+<td valign="top" width="33%">
+
+**Proyecto**
+
+- [Arquitectura del monorepo](#-arquitectura-del-monorepo)
+- [Desarrollo](#-desarrollo)
+- [CI/CD](#-cicd)
+- [FAQ](#-faq)
+- [Cuando NO usar devground](#-cuando-no-usar-devground)
+- [Como contribuir](#-como-contribuir)
+- [Roadmap](#-roadmap)
+- [Filosofia](#-filosofia)
+
+</td>
+</tr>
+</table>
 
 ---
 
-## Glosario express (para todo el equipo)
+## <a name="-glosario-express-para-todo-el-equipo"></a>📖 Glosario express (para todo el equipo)
 
 Si lees este README y no sos developer, esta tabla te da el "para que sirve cada cosa" en una linea. Sin jerga.
 
@@ -73,15 +187,29 @@ Si lees este README y no sos developer, esta tabla te da el "para que sirve cada
 
 ---
 
-## El problema
+## <a name="-el-problema"></a>🎯 El problema
 
 Cada nuevo proyecto empieza con la misma fricción: configurar ESLint, Prettier, TypeScript, git hooks, commit conventions... y después documentar las reglas de desarrollo para que todo el equipo (humanos y agentes de IA) las siga.
+
+```
+   ANTES (cada proyecto, semana 1)        DESPUES (con devground)
+   ────────────────────────────────       ─────────────────────────
+   ⏳ configurar ESLint     ~2h           ✓ npx devground-init
+   ⏳ configurar Prettier   ~30min        ✓ ~ 60 segundos
+   ⏳ configurar TS strict  ~1h           ✓ todo listo
+   ⏳ husky + lint-staged   ~1h
+   ⏳ commitlint            ~30min        9 estandares activos.
+   ⏳ AGENTS.md a mano      ~2h           0 decisiones repetidas.
+   ⏳ ADR template          ~1h
+   ─────────────────────────
+   ⌚ ~ 8h de fricción
+```
 
 **devground** resuelve esto empaquetando todo en paquetes npm reutilizables. Instala uno, instala todos, o deja que el CLI lo haga por ti.
 
 ---
 
-## Inicio rapido
+## <a name="-inicio-rapido"></a>🚀 Inicio rapido
 
 ### Opcion 1: Instalacion rapida (recomendado)
 
@@ -145,26 +273,26 @@ npx devground-init --preset agents-only
 
 ---
 
-## Paquetes
+## <a name="-paquetes"></a>📦 Paquetes
 
 El monorepo contiene **9 paquetes** independientes. Cada uno se puede instalar por separado o todos juntos via el CLI.
 
-| Paquete | Version | Descripcion |
-|---------|---------|-------------|
-| [`@devground/devground`](#devgrounddevground) | `1.0.0` | **Todo en uno** — instala y configura todos los paquetes |
-| [`@devground/prettier-config`](#devgroundprettier-config) | `1.0.0` | Configuracion compartida de Prettier |
-| [`@devground/eslint-config`](#devgroundeslint-config) | `1.0.0` | ESLint Flat Config v9 (base + Next.js) |
-| [`@devground/tsconfig`](#devgroundtsconfig) | `1.0.0` | Presets de TypeScript (base, next, CI, node) |
-| [`@devground/commitlint-config`](#devgroundcommitlint-config) | `1.0.0` | Commits convencionales con commitlint |
-| [`@devground/lint-staged-config`](#devgroundlint-staged-config) | `1.0.0` | Reglas de linting para archivos staged |
-| [`@devground/husky-config`](#devgroundhusky-config) | `1.0.0` | Setup de git hooks con Husky |
-| [`@devground/agents-md`](#devgroundagents-md) | `1.0.0` | AGENTS.md + symlinks multi-agente |
-| [`@devground/architecture-guide`](#devgroundarchitecture-guide) | `1.0.0` | **Knowledge base** de arquitectura + ADRs (BD, patrones, sistemas) |
-| [`devground-init`](#devground-init-cli) | `1.0.0` | CLI para scaffolding completo |
+| | Paquete | Version | Descripcion |
+|---|---------|---------|-------------|
+| 🎁 | [`@devground/devground`](#devgrounddevground) | `1.0.0` | **Todo en uno** — instala y configura todos los paquetes |
+| 💅 | [`@devground/prettier-config`](#devgroundprettier-config) | `1.0.0` | Configuracion compartida de Prettier |
+| 🔍 | [`@devground/eslint-config`](#devgroundeslint-config) | `1.0.0` | ESLint Flat Config v9 (base + Next.js) |
+| 🧬 | [`@devground/tsconfig`](#devgroundtsconfig) | `1.0.0` | Presets de TypeScript (base, next, CI, node) |
+| ✍️ | [`@devground/commitlint-config`](#devgroundcommitlint-config) | `1.0.0` | Commits convencionales con commitlint |
+| 🧹 | [`@devground/lint-staged-config`](#devgroundlint-staged-config) | `1.0.0` | Reglas de linting para archivos staged |
+| 🪝 | [`@devground/husky-config`](#devgroundhusky-config) | `1.0.0` | Setup de git hooks con Husky |
+| 🤖 | [`@devground/agents-md`](#devgroundagents-md) | `1.0.0` | AGENTS.md + symlinks multi-agente |
+| 🏛️ | [`@devground/architecture-guide`](#devgroundarchitecture-guide) | `1.0.0` | **Knowledge base** de arquitectura + ADRs (BD, patrones, sistemas) |
+| ⚡ | [`devground-init`](#devground-init-cli) | `1.0.0` | CLI para scaffolding completo |
 
 ---
 
-## Uso de cada paquete
+## <a name="-uso-de-cada-paquete"></a>🛠️ Uso de cada paquete
 
 ### `@devground/devground`
 
@@ -465,7 +593,7 @@ La guia no te dice **que** hacer. Te da el **marco** para decidir con criterio y
 
 ---
 
-## Conceptos clave de arquitectura (para todo el equipo)
+## <a name="-conceptos-clave-de-arquitectura-para-todo-el-equipo"></a>🏛️ Conceptos clave de arquitectura (para todo el equipo)
 
 Esta seccion explica en lenguaje simple los conceptos que cubre `@devground/architecture-guide`. Util si trabajas con desarrolladores, lideras producto, o simplemente quieres entender de que habla el equipo tecnico.
 
@@ -616,9 +744,27 @@ En sistemas distribuidos solo puedes garantizar **dos** de tres:
 
 ---
 
-## Reglas de desarrollo incluidas
+## <a name="-reglas-de-desarrollo-incluidas"></a>📋 Reglas de desarrollo incluidas
 
-El `AGENTS.md` contiene 10 reglas de desarrollo probadas en produccion:
+El `AGENTS.md` contiene **10 reglas** de desarrollo probadas en produccion:
+
+<table>
+<tr>
+<td>1️⃣ TDD estricto</td>
+<td>2️⃣ Commits atomicos</td>
+<td>3️⃣ Doc continua</td>
+<td>4️⃣ Piramide testing</td>
+<td>5️⃣ Zero dead code</td>
+</tr>
+<tr>
+<td>6️⃣ Error handling</td>
+<td>7️⃣ ADRs</td>
+<td>8️⃣ READMEs</td>
+<td>9️⃣ Tokens semanticos</td>
+<td>🔟 Helper <code>cn()</code></td>
+</tr>
+</table>
+
 
 ### 1. TDD estricto
 Ciclo obligatorio: **Red** (test que falla) → **Green** (implementacion minima) → **Refactor**. Ninguna feature se considera completa sin tests.
@@ -652,7 +798,7 @@ Usar `cn()` (clsx + tailwind-merge) para combinar clases CSS. Sin concatenacion 
 
 ---
 
-## devground-init (CLI)
+## <a name="-devground-init-cli"></a>⚡ devground-init (CLI)
 
 El CLI que orquesta todo.
 
@@ -680,7 +826,7 @@ La deteccion determina que preset de ESLint y TSConfig usar automaticamente.
 
 ---
 
-## Arquitectura del monorepo
+## <a name="-arquitectura-del-monorepo"></a>🏗️ Arquitectura del monorepo
 
 ```
 devground/
@@ -707,7 +853,7 @@ devground/
 
 ---
 
-## Desarrollo
+## <a name="-desarrollo"></a>💻 Desarrollo
 
 ### Requisitos
 
@@ -744,7 +890,7 @@ Usamos [Changesets](https://github.com/changesets/changesets) para versionado in
 
 ---
 
-## CI/CD
+## <a name="-cicd"></a>🚦 CI/CD
 
 | Workflow | Trigger | Que hace |
 |----------|---------|----------|
@@ -755,7 +901,7 @@ El `NPM_TOKEN` se configura como secret en GitHub (Settings → Secrets → Acti
 
 ---
 
-## FAQ
+## <a name="-faq"></a>❓ FAQ
 
 ### ¿Sobreescribe mis archivos de configuracion existentes?
 
@@ -821,7 +967,7 @@ Filosofia: cada herramienta usa **su archivo nativo**. ESLint usa `eslint.config
 
 ---
 
-## ¿Cuando NO usar devground?
+## <a name="-cuando-no-usar-devground"></a>🚫 ¿Cuando NO usar devground?
 
 Ser honesto sobre el alcance importa. **devground no es para todos los casos.**
 
@@ -841,7 +987,7 @@ Ser honesto sobre el alcance importa. **devground no es para todos los casos.**
 
 ---
 
-## Como contribuir
+## <a name="-como-contribuir"></a>🤝 Como contribuir
 
 Las contribuciones son bienvenidas. Antes de abrir un PR:
 
@@ -893,31 +1039,56 @@ Discusiones tecnicas, no personales. Critica al codigo, no a quien lo escribio. 
 
 ---
 
-## Roadmap
+## <a name="-roadmap"></a>🗺️ Roadmap
 
-- [ ] `@devground/github-actions` — Workflows de CI reutilizables
-- [ ] `@devground/vscode-settings` — Configuracion compartida de VS Code
-- [ ] Presets de AGENTS.md por stack (React, Angular, Go, Python)
-- [ ] Plugin de ESLint para tokens semanticos (detectar hardcoded colors)
-- [ ] `@devground/testing-config` — Presets de Vitest / Jest / Playwright
-- [ ] Modo `--dry-run` en el CLI para previsualizar cambios sin escribir
+| Estado | Item |
+|:------:|------|
+| 🔜 | `@devground/github-actions` — Workflows de CI reutilizables |
+| 🔜 | `@devground/vscode-settings` — Configuracion compartida de VS Code |
+| 💡 | Presets de AGENTS.md por stack (React, Angular, Go, Python) |
+| 💡 | Plugin de ESLint para tokens semanticos (detectar hardcoded colors) |
+| 💡 | `@devground/testing-config` — Presets de Vitest / Jest / Playwright |
+| 💡 | Modo `--dry-run` en el CLI para previsualizar cambios sin escribir |
 
 ---
 
-## Filosofia
+## <a name="-filosofia"></a>💭 Filosofia
 
-> **Conceptos sobre codigo.** Entender los fundamentos antes de implementar.
->
-> **Fundamentos solidos.** Patrones de diseno, arquitectura y testing antes de frameworks.
->
-> **Sin atajos.** La calidad real requiere esfuerzo y tiempo.
->
-> **IA es una herramienta.** Los humanos dirigen, la IA ejecuta.
->
-> **Decisiones contextuales.** No existe la "mejor BD" ni la "mejor arquitectura" en abstracto — solo la adecuada para el problema.
+<table>
+<tr>
+<td width="20%" align="center"><h3>📐</h3><b>Conceptos sobre codigo</b></td>
+<td>Entender los fundamentos antes de implementar. Quien no sabe que problema resuelve un patron, no deberia aplicarlo.</td>
+</tr>
+<tr>
+<td align="center"><h3>🧱</h3><b>Fundamentos solidos</b></td>
+<td>Patrones de diseno, arquitectura y testing antes de frameworks. El framework cambia, los fundamentos no.</td>
+</tr>
+<tr>
+<td align="center"><h3>⏳</h3><b>Sin atajos</b></td>
+<td>La calidad real requiere esfuerzo y tiempo. No hay forma de saltarse el aprendizaje.</td>
+</tr>
+<tr>
+<td align="center"><h3>🤖</h3><b>IA es una herramienta</b></td>
+<td>Los humanos dirigen, la IA ejecuta. El criterio nunca se delega.</td>
+</tr>
+<tr>
+<td align="center"><h3>🎯</h3><b>Decisiones contextuales</b></td>
+<td>No existe la "mejor BD" ni la "mejor arquitectura" en abstracto — solo la adecuada para el problema.</td>
+</tr>
+</table>
 
 ---
 
 ## Licencia
 
 [MIT](LICENSE) — Usa, modifica y distribuye libremente.
+
+---
+
+<div align="center">
+
+**hecho con criterio** &nbsp;·&nbsp; **mantenido por** [@elkisdm](https://github.com/elkisdm)
+
+<sub>si te ahorra una hora la primera vez que lo usas, considera regalarle una ⭐ al repo</sub>
+
+</div>
