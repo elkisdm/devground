@@ -23,6 +23,56 @@ npx devground-init
 
 ---
 
+## Tabla de contenidos
+
+- [El problema](#el-problema)
+- [Glosario express (para todo el equipo)](#glosario-express-para-todo-el-equipo)
+- [Inicio rapido](#inicio-rapido)
+- [Paquetes](#paquetes)
+- [Uso de cada paquete](#uso-de-cada-paquete)
+  - [`@devground/devground`](#devgrounddevground)
+  - [`@devground/prettier-config`](#devgroundprettier-config)
+  - [`@devground/eslint-config`](#devgroundeslint-config)
+  - [`@devground/tsconfig`](#devgroundtsconfig)
+  - [`@devground/commitlint-config`](#devgroundcommitlint-config)
+  - [`@devground/lint-staged-config`](#devgroundlint-staged-config)
+  - [`@devground/husky-config`](#devgroundhusky-config)
+  - [`@devground/agents-md`](#devgroundagents-md)
+  - [`@devground/architecture-guide`](#devgroundarchitecture-guide)
+- [Conceptos clave de arquitectura](#conceptos-clave-de-arquitectura-para-todo-el-equipo)
+- [Reglas de desarrollo incluidas](#reglas-de-desarrollo-incluidas)
+- [devground-init (CLI)](#devground-init-cli)
+- [Arquitectura del monorepo](#arquitectura-del-monorepo)
+- [Desarrollo](#desarrollo)
+- [CI/CD](#cicd)
+- [FAQ](#faq)
+- [¿Cuando NO usar devground?](#cuando-no-usar-devground)
+- [Como contribuir](#como-contribuir)
+- [Roadmap](#roadmap)
+- [Filosofia](#filosofia)
+- [Licencia](#licencia)
+
+---
+
+## Glosario express (para todo el equipo)
+
+Si lees este README y no sos developer, esta tabla te da el "para que sirve cada cosa" en una linea. Sin jerga.
+
+| Herramienta | Que hace | Analogia |
+|-------------|----------|----------|
+| **ESLint** | Detecta errores y malas practicas en el codigo | El **ortografo** del codigo: te marca lo mal escrito |
+| **Prettier** | Da formato consistente al codigo (espacios, comillas, saltos de linea) | El **planchador**: deja todo prolijo y parejo |
+| **TypeScript** | Agrega "tipos" al codigo para evitar errores antes de ejecutarlo | Las **etiquetas** en los productos: si esperas un numero y llega texto, avisa antes |
+| **Commitlint** | Valida que los mensajes de commit sigan un formato estandar | El **portero del banco**: si no vienes con la documentacion bien, no entras |
+| **Lint-staged** | Aplica linters solo a los archivos que vas a guardar | El **filtro de aduana**: revisa solo lo que pasa, no toda la valija |
+| **Husky** | Ejecuta scripts automaticamente al hacer commit o push | El **timer del horno**: dispara acciones en el momento exacto |
+| **Changesets** | Maneja versiones y changelogs de paquetes automaticamente | El **registro civil**: lleva el acta de cada cambio publicado |
+| **pnpm** | Gestor de paquetes (instala las dependencias) | El **almacenero**: trae lo que necesitas, pero ocupando menos espacio que sus competidores |
+| **AGENTS.md** | Archivo con reglas que leen los agentes de IA (Claude, Cursor, Copilot) | El **manual de la casa**: para que cada visita sepa como te gustan las cosas |
+| **ADR** | Documento corto que explica por que se tomo una decision tecnica | El **acta de reunion**: deja registro de **por que** se decidio algo |
+
+---
+
 ## El problema
 
 Cada nuevo proyecto empieza con la misma fricción: configurar ESLint, Prettier, TypeScript, git hooks, commit conventions... y después documentar las reglas de desarrollo para que todo el equipo (humanos y agentes de IA) las siga.
@@ -66,6 +116,7 @@ El CLI detecta tu stack automaticamente (Next.js, React, Node.js), tu gestor de 
   ◉ Lint-staged config
   ◉ Husky pre-commit hooks
   ◉ AGENTS.md + symlinks
+  ◉ Architecture Guide (knowledge base + ADRs)
 
   Instalando...
   ✓ @devground/prettier-config
@@ -75,8 +126,9 @@ El CLI detecta tu stack automaticamente (Next.js, React, Node.js), tu gestor de 
   ✓ @devground/lint-staged-config
   ✓ Husky configurado con pre-commit hook
   ✓ AGENTS.md + symlinks para Claude, Cursor, Copilot, Gemini
+  ✓ knowledge/ + docs/adr/ con plantillas
 
-  ✓ Listo. 7 estandares de desarrollo activos.
+  ✓ Listo. 8 estandares de desarrollo activos.
 ```
 
 ### Opcion 3: Todo sin preguntas
@@ -95,7 +147,7 @@ npx devground-init --preset agents-only
 
 ## Paquetes
 
-El monorepo contiene **8 paquetes** independientes. Cada uno se puede instalar por separado o todos juntos via el CLI.
+El monorepo contiene **9 paquetes** independientes. Cada uno se puede instalar por separado o todos juntos via el CLI.
 
 | Paquete | Version | Descripcion |
 |---------|---------|-------------|
@@ -107,6 +159,7 @@ El monorepo contiene **8 paquetes** independientes. Cada uno se puede instalar p
 | [`@devground/lint-staged-config`](#devgroundlint-staged-config) | `1.0.0` | Reglas de linting para archivos staged |
 | [`@devground/husky-config`](#devgroundhusky-config) | `1.0.0` | Setup de git hooks con Husky |
 | [`@devground/agents-md`](#devgroundagents-md) | `1.0.0` | AGENTS.md + symlinks multi-agente |
+| [`@devground/architecture-guide`](#devgroundarchitecture-guide) | `1.0.0` | **Knowledge base** de arquitectura + ADRs (BD, patrones, sistemas) |
 | [`devground-init`](#devground-init-cli) | `1.0.0` | CLI para scaffolding completo |
 
 ---
@@ -355,6 +408,214 @@ cat node_modules/@devground/agents-md/PROMPT.md
 
 ---
 
+### `@devground/architecture-guide`
+
+> Una **biblioteca de decisiones tecnicas** que se instala en tu proyecto con un comando.
+
+Antes de empezar a programar, hay decisiones que marcan los proximos años del proyecto: ¿que base de datos uso?, ¿monolito o microservicios?, ¿cuando agrego cache?, ¿como escalo cuando llegan 10x usuarios? Equivocarse aqui cuesta meses de refactor.
+
+Este paquete trae **una guia escrita, organizada y con plantillas** para responder esas preguntas con criterio — no improvisando.
+
+```bash
+pnpm add -D @devground/architecture-guide
+npx devground-architecture
+```
+
+**Que copia en tu proyecto:**
+
+```
+tu-proyecto/
+└── knowledge/
+    ├── README.md                        ← indice general
+    ├── 01-database-architecture.md      ← guia de bases de datos
+    ├── 02-architectural-patterns.md     ← monolito, microservicios, hexagonal, CQRS
+    ├── 03-systems-design.md             ← cache, queues, replicas, circuit breakers
+    ├── BEST-PRACTICES.md                ← checklist de 6 pasos para arrancar
+    ├── CASE-STUDY-devground.md          ← caso real aplicado
+    └── adr/
+        ├── 0001-elegir-tipo-de-base-de-datos.md
+        ├── 0002-normalizar-vs-denormalizar.md
+        ├── 0003-cuando-usar-indices.md
+        ├── 0004-monolito-vs-microservicios.md
+        ├── 0005-cuando-aplicar-clean-hexagonal.md
+        ├── 0006-cuando-aplicar-cqrs.md
+        ├── 0007-serverless-vs-servidor-dedicado.md
+        ├── 0008-estrategia-de-cache.md
+        ├── 0009-read-replicas-vs-cache.md
+        ├── 0010-queues-y-workers-para-escrituras.md
+        └── 0011-timeouts-y-circuit-breakers.md
+```
+
+**Que es un ADR:** un **Architecture Decision Record** es un documento corto que captura **por que** se tomo una decision tecnica (no solo *que* se decidio). Cuando alguien nuevo entra al equipo seis meses despues y pregunta "¿por que usamos Postgres y no Mongo?", el ADR responde con contexto, alternativas evaluadas y consecuencias asumidas. Es memoria del equipo.
+
+**Crear un nuevo ADR:**
+
+```bash
+npx devground-adr new "Use Postgres for transactional data"
+# → Crea docs/adr/0001-use-postgres-for-transactional-data.md
+```
+
+El comando detecta el siguiente numero disponible, slugifica el titulo y crea el archivo con el template de [Michael Nygard](https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions) pre-poblado (Context → Decision → Consequences → Alternatives).
+
+**Filosofia del paquete:**
+
+> "No existe arquitectura, BD ni patron mejor en abstracto — solo decisiones contextuales."
+
+La guia no te dice **que** hacer. Te da el **marco** para decidir con criterio y dejar registro.
+
+---
+
+## Conceptos clave de arquitectura (para todo el equipo)
+
+Esta seccion explica en lenguaje simple los conceptos que cubre `@devground/architecture-guide`. Util si trabajas con desarrolladores, lideras producto, o simplemente quieres entender de que habla el equipo tecnico.
+
+### Que es una base de datos
+
+Es un programa especializado en **guardar y consultar informacion a gran escala**. Hay distintos tipos porque distintos problemas necesitan distintas garantias.
+
+```
+   APP  ───┐
+           │  "dame el usuario 42"
+           ▼
+   ┌───────────────────┐
+   │   BASE DE DATOS   │   ◄── guarda, ordena, indexa, responde
+   └───────────────────┘
+           │
+           ▼  usuario 42 → { nombre, email, ... }
+```
+
+### Tipos de base de datos
+
+| Tipo | Ejemplo | Para que sirve | Analogia |
+|------|---------|----------------|----------|
+| **Relacional (SQL)** | PostgreSQL, MySQL | Datos con reglas estrictas: pagos, ordenes, contabilidad | Una **planilla Excel** gigante con columnas fijas y reglas |
+| **Documental (NoSQL)** | MongoDB | Datos flexibles que aun no sabes como van a evolucionar | Una **carpeta de fichas** donde cada ficha puede tener campos distintos |
+| **Clave-Valor** | Redis, DynamoDB | Velocidad extrema: cache, sesiones, leaderboards | Un **diccionario** gigante: pides una palabra, te dan la definicion al instante |
+| **Grafos** | Neo4j | Relaciones complejas: redes sociales, recomendaciones | Un **mapa de amistades** que sabe encontrar caminos entre personas |
+| **Columnar / Time-series** | Cassandra, ClickHouse | Millones de eventos: metricas, telemetria, logs | Un **libro de bitacora** infinito optimizado para escribir y resumir |
+
+> **Aclaracion clave:** "SQL" es solo el **lenguaje** para preguntar. No define el tipo. DynamoDB acepta SQL y NO es relacional. El **modelo de datos** es lo que importa, no la sintaxis.
+
+### ¿Por que no uso una sola BD para todo?
+
+Las empresas reales **combinan varias**. Cada problema con la herramienta correcta.
+
+```
+   Netflix
+   ├── MySQL          → metadatos rigidos (catalogo, suscripciones)
+   └── Cassandra      → actividad masiva (que viste, cuando, por cuanto tiempo)
+
+   Uber
+   ├── PostgreSQL     → relaciones criticas (pagos, viajes)
+   └── Redis          → tiempo real (ubicacion del conductor, cache)
+```
+
+### Indices: el truco para que las consultas sean rapidas
+
+Sin indice, la base de datos lee **fila por fila** hasta encontrar lo que pides. Con 1 millon de usuarios, eso es lentisimo.
+
+Un indice funciona como el **indice de un libro**: en vez de leer todas las paginas, vas al final, buscas el tema, te dice "pagina 247". Saltas directo.
+
+```
+   SIN INDICE                        CON INDICE
+   ──────────                        ──────────
+   pagina 1   ¿es?                   indice
+   pagina 2   ¿es?                   ─────────
+   pagina 3   ¿es?                   "Juan"  → fila 47.213
+   ...                               "Maria" → fila 89.001
+   pagina 247 ¡SI!                   "Pedro" → fila 12.998
+   (247 lecturas)                    (1 lectura, vas directo)
+```
+
+**Trampa:** los indices **aceleran lecturas** pero **ralentizan escrituras** (cada vez que insertas datos, hay que actualizar el indice tambien). Por eso no se indexa todo: se indexa lo que se consulta seguido.
+
+### Normalizacion: evitar repetir datos
+
+Si en cada pedido guardas el email del cliente, y el cliente cambia el email, tienes que actualizarlo en **miles de pedidos**. Riesgo enorme de inconsistencia.
+
+**Normalizar** = separar la informacion en tablas relacionadas. El cliente vive en **una sola tabla**. Los pedidos solo guardan una **referencia** al cliente.
+
+```
+   SIN NORMALIZAR (mal)                  NORMALIZADO (bien)
+   ───────────────────                  ──────────────────
+   Pedido 1: Ana — ana@x.com            Clientes               Pedidos
+   Pedido 2: Ana — ana@x.com            ────────               ───────
+   Pedido 3: Ana — ana@x.com            id=7  Ana, ana@x.com   id=1  cliente=7
+   Pedido 4: Ana — ana@x.com                                   id=2  cliente=7
+                                                               id=3  cliente=7
+   (si Ana cambia email,                (si Ana cambia email,
+    actualizas 4 lugares)                actualizas 1 lugar)
+```
+
+> En bases NoSQL a veces se hace lo opuesto (**desnormalizar**): se duplica info a proposito para que las lecturas sean rapidas. Cada modelo tiene su filosofia.
+
+### Sharding: partir la base de datos en pedazos
+
+Cuando una sola maquina no aguanta, **partimos los datos por reglas**: ej. usuarios de America en un servidor, usuarios de Europa en otro, etc.
+
+```
+   ANTES (1 servidor saturado)         DESPUES (sharding)
+   ──────────────────────              ──────────────────
+                                       ┌──────────────┐
+   ┌──────────────┐                    │ Servidor A   │ usuarios A-H
+   │  Servidor    │ ◄── todos          ├──────────────┤
+   │  saturado    │                    │ Servidor B   │ usuarios I-P
+   └──────────────┘                    ├──────────────┤
+                                       │ Servidor C   │ usuarios Q-Z
+                                       └──────────────┘
+```
+
+La **shard key** (la regla por la que partes los datos) hay que elegirla bien **desde el inicio** — cambiarla despues es carisimo.
+
+### Teorema CAP: no podes tener todo a la vez
+
+En sistemas distribuidos solo puedes garantizar **dos** de tres:
+
+- **C** Consistencia — todos los nodos ven el mismo dato a la vez
+- **A** Disponibilidad — el sistema siempre responde
+- **P** Tolerancia a particiones — sobrevive a fallos de red
+
+> Es como "bueno, bonito y barato": elige dos.
+
+```
+                   CONSISTENCIA
+                       /\
+                      /  \
+                     /    \
+                    /      \
+                   /  CAP   \
+                  /          \
+                 /            \
+                /              \
+   DISPONIBILIDAD ──────────── PARTICIONES
+```
+
+### Patrones de arquitectura: como organizas el codigo
+
+| Patron | Cuando aplica | Analogia |
+|--------|---------------|----------|
+| **Monolito modular** | Equipo chico, producto en validacion | Una **casa grande** con habitaciones separadas pero un solo techo |
+| **Microservicios** | Equipos grandes, dominios independientes a escala | Un **barrio**: cada casa funciona sola, conectadas por calles (red) |
+| **Arquitectura hexagonal / Clean** | Logica de negocio compleja que debe sobrevivir cambios de framework | Una **central electrica**: el corazon no depende de que enchufe uses |
+| **CQRS** | Lecturas y escrituras tienen necesidades muy distintas | **Dos ventanillas** en un banco: una para depositar, otra para consultar — optimizadas distinto |
+| **Serverless** | Trafico variable, prototipos, eventos esporadicos | **Taxi a demanda**: pagas cuando lo usas, no tienes que mantener el auto |
+
+> **Regla de oro del proyecto:** empezar con **monolito modular**. Sumar complejidad **solo cuando el dolor sea real**, no por moda. Esto esta documentado en `knowledge/adr/0004-monolito-vs-microservicios.md`.
+
+### Diseño de sistemas: como escalas cuando crece
+
+| Concepto | Que resuelve | Analogia |
+|----------|--------------|----------|
+| **Cache** | Lecturas repetidas a la misma info | Memoria de corto plazo: no vuelves a abrir la nevera para el mismo huevo |
+| **Read replicas** | Muchas lecturas saturan la BD principal | **Fotocopias** del libro original para que muchos lectores no peleen |
+| **Queues + Workers** | Picos de escritura que la BD no aguanta | **Cola del banco**: en vez de atender todos a la vez, se procesa de a uno con orden |
+| **Circuit breaker** | Un servicio externo caido tumba todo el sistema | **Interruptor automatico**: si hay sobrecarga, corta antes de que se queme la casa |
+| **Timeouts** | Esperar indefinidamente a un servicio lento | **Limite de paciencia**: si no responde en X segundos, cortas y sigues |
+
+> Estos patrones estan en `knowledge/03-systems-design.md` con ejemplos y trade-offs concretos.
+
+---
+
 ## Reglas de desarrollo incluidas
 
 El `AGENTS.md` contiene 10 reglas de desarrollo probadas en produccion:
@@ -425,15 +686,19 @@ La deteccion determina que preset de ESLint y TSConfig usar automaticamente.
 devground/
 ├── .changeset/             # Versionado independiente por paquete
 ├── .github/workflows/      # CI (PRs) + Release automatico (merge a main)
+├── knowledge/              # Knowledge base de arquitectura (fuente)
+│   └── adr/                # 11 ADRs derivados
+├── docs/adr/               # ADRs propios del proyecto devground
 ├── packages/
-│   ├── prettier-config/    # JSON puro, sin build
-│   ├── eslint-config/      # ESM (.mjs), sin build
-│   ├── tsconfig/           # JSON puro, sin build
-│   ├── commitlint-config/  # CJS, sin build
-│   ├── lint-staged-config/ # CJS, sin build
-│   ├── husky-config/       # Script Node.js, sin build
-│   ├── agents-md/          # Markdown + script, sin build
-│   └── cli/                # TypeScript → tsc → dist/
+│   ├── prettier-config/      # JSON puro, sin build
+│   ├── eslint-config/        # ESM (.mjs), sin build
+│   ├── tsconfig/             # JSON puro, sin build
+│   ├── commitlint-config/    # CJS, sin build
+│   ├── lint-staged-config/   # CJS, sin build
+│   ├── husky-config/         # Script Node.js, sin build
+│   ├── agents-md/            # Markdown + script, sin build
+│   ├── architecture-guide/   # Knowledge base + ADR generator, sin build
+│   └── cli/                  # TypeScript → tsc → dist/
 ├── package.json            # pnpm workspaces
 └── pnpm-workspace.yaml
 ```
@@ -490,12 +755,152 @@ El `NPM_TOKEN` se configura como secret en GitHub (Settings → Secrets → Acti
 
 ---
 
+## FAQ
+
+### ¿Sobreescribe mis archivos de configuracion existentes?
+
+**No.** El setup detecta archivos existentes (`tsconfig.json`, `eslint.config.mjs`, `.prettierrc`, etc.) y los respeta. Si ya tienes una config, devground la deja intacta y solo agrega lo que falta.
+
+### ¿Funciona en monorepos?
+
+**Si**, especialmente bien con **pnpm workspaces** y **Turborepo**. Cada paquete puede consumir las configs de devground de forma independiente o compartirlas en el root.
+
+### ¿Funciona en proyectos legacy?
+
+**Si, con criterio.** Si tu proyecto ya tiene convenciones consolidadas hace años, devground puede generar mas fricción que valor. Recomendado: instalar **solo el `agents-md`** primero (para los agentes de IA), y evaluar el resto despues.
+
+### ¿Por que pnpm y no npm o yarn?
+
+devground **funciona con los tres**. Internamente el monorepo usa pnpm por velocidad y eficiencia de disco (un solo store compartido), pero las dependencias publicadas son compatibles con cualquier gestor. El CLI detecta tu `lock` file y usa el gestor que ya tengas.
+
+### ¿Como personalizo una regla de ESLint sin perder los presets?
+
+ESLint Flat Config (v9) permite **extender y sobreescribir**:
+
+```js
+import nextConfig from '@devground/eslint-config/next';
+
+export default [
+  ...nextConfig(),
+  {
+    rules: {
+      'no-console': 'off',           // tu override
+      'react-hooks/exhaustive-deps': 'warn',
+    },
+  },
+];
+```
+
+### ¿Puedo usar solo ESLint y nada mas?
+
+Si. Cada paquete es **independiente**. Instalas el que quieras y nada mas:
+
+```bash
+pnpm add -D @devground/eslint-config eslint eslint-config-next
+```
+
+### ¿Como desinstalo devground?
+
+```bash
+pnpm remove @devground/devground @devground/eslint-config @devground/tsconfig ...
+```
+
+Los archivos generados (`eslint.config.mjs`, `tsconfig.json`, `AGENTS.md`, etc.) **quedan en tu repo** porque son tuyos. Editalos o borralos a mano segun necesites.
+
+### ¿Por que no genera un solo archivo `.devgroundrc`?
+
+Filosofia: cada herramienta usa **su archivo nativo**. ESLint usa `eslint.config.mjs`, Prettier usa `package.json`, TypeScript usa `tsconfig.json`. Asi tu proyecto sigue siendo **portable** — si mañana sacas devground, las herramientas siguen funcionando.
+
+### ¿El paquete `architecture-guide` instala codigo?
+
+**No.** Solo copia documentacion (`knowledge/` con guias y ADRs). No agrega dependencias de runtime ni modifica tu codigo. Es **conocimiento como artefacto versionado**.
+
+### ¿devground reemplaza a Biome / xo / neostandard?
+
+**No compite con ellos.** devground es una **capa de orquestacion**: une ESLint + Prettier + TS + commitlint + hooks + ADRs en una sola decision. Si prefieres Biome, podes reemplazar el modulo de ESLint/Prettier y mantener el resto.
+
+---
+
+## ¿Cuando NO usar devground?
+
+Ser honesto sobre el alcance importa. **devground no es para todos los casos.**
+
+| Situacion | Por que no |
+|-----------|------------|
+| **Proyecto con 2+ años y convenciones consolidadas** | Instalarlo genera ruido y choques con tu config. Mejor adoptar **solo `agents-md`** si te interesa la parte de IA |
+| **Stack muy especifico no cubierto** (Deno, Bun-only, Rust, Go) | Los presets estan pensados para Node/TypeScript/Next.js. Otros stacks tienen sus propios estandares |
+| **Equipo que ya usa Biome / xo como linter unico** | Hay solape directo. Elige uno |
+| **Proyecto puramente de configuracion / scripts cortos** | Si tu repo son 3 scripts de bash, ESLint + Husky + commitlint es overkill |
+| **No quieres opiniones impuestas** | devground es **opinado a proposito**. Si necesitas neutralidad total, no es el toolkit indicado |
+
+**Caso donde si vale la pena:**
+- Empezas un proyecto nuevo Node/TS/React/Next.
+- Equipo de 2+ personas que necesita convenciones compartidas.
+- Trabajas con agentes de IA y querias un `AGENTS.md` ya armado.
+- Querias documentar decisiones tecnicas (ADRs) pero nunca arrancaste.
+
+---
+
+## Como contribuir
+
+Las contribuciones son bienvenidas. Antes de abrir un PR:
+
+### 1. Abre un issue primero (para cambios no triviales)
+
+Antes de invertir tiempo en una feature grande, abre un issue describiendo:
+- **Problema** que resuelve
+- **Propuesta** de solucion
+- **Alternativas** consideradas
+
+Esto evita PRs que no encajan con la filosofia del proyecto.
+
+### 2. Setup local
+
+```bash
+git clone https://github.com/elkisdm/devground.git
+cd devground
+pnpm install
+pnpm build
+pnpm test
+```
+
+### 3. Convenciones obligatorias
+
+- **Commits convencionales** (`feat:`, `fix:`, `docs:`, etc.) — el repo dogfooding su propio `commitlint-config`.
+- **Tests** para todo cambio en el CLI (no se aceptan PRs sin tests).
+- **Changeset** por cada cambio publicable: `pnpm changeset` y describi el cambio + bump.
+
+### 4. Tipos de contribucion bienvenidas
+
+| Tipo | Que esperamos |
+|------|----------------|
+| **Bug fix** | Test que reproduce el bug + fix. PR vinculado a issue. |
+| **Nuevo paquete** | Issue previo aceptado + paquete con README + tests + changeset |
+| **Mejora de doc** | Si es solo README o docs, PR directo sin issue esta OK |
+| **Nuevo ADR template** | Sigue el formato de los existentes en `packages/architecture-guide/knowledge/adr/` |
+| **Traduccion** | Bienvenidas, pero coordinamos por issue antes para no duplicar esfuerzos |
+
+### 5. Codigo de conducta
+
+Discusiones tecnicas, no personales. Critica al codigo, no a quien lo escribio. Sin esto, no hay comunidad.
+
+### 6. Que NO aceptamos
+
+- PRs sin issue previo para features grandes.
+- Cambios que rompen retrocompatibilidad sin un changeset `major` justificado.
+- "Estilo personal" como motivacion (ej. "yo prefiero tabs"). Las decisiones son comunitarias.
+- Dependencias nuevas sin justificacion clara (cada dep es deuda).
+
+---
+
 ## Roadmap
 
 - [ ] `@devground/github-actions` — Workflows de CI reutilizables
 - [ ] `@devground/vscode-settings` — Configuracion compartida de VS Code
 - [ ] Presets de AGENTS.md por stack (React, Angular, Go, Python)
 - [ ] Plugin de ESLint para tokens semanticos (detectar hardcoded colors)
+- [ ] `@devground/testing-config` — Presets de Vitest / Jest / Playwright
+- [ ] Modo `--dry-run` en el CLI para previsualizar cambios sin escribir
 
 ---
 
@@ -508,6 +913,8 @@ El `NPM_TOKEN` se configura como secret en GitHub (Settings → Secrets → Acti
 > **Sin atajos.** La calidad real requiere esfuerzo y tiempo.
 >
 > **IA es una herramienta.** Los humanos dirigen, la IA ejecuta.
+>
+> **Decisiones contextuales.** No existe la "mejor BD" ni la "mejor arquitectura" en abstracto — solo la adecuada para el problema.
 
 ---
 
