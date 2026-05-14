@@ -1,14 +1,24 @@
 {
   "name": "@devground/prettier-config",
   "version": "1.0.0",
-  "description": "Shared Prettier configuration",
+  "description": "Shared Prettier configuration (single quotes, semicolons, 100 col)",
   "main": "index.json",
   "files": ["index.json"],
-  "keywords": ["prettier", "config", "shared", "devground"],
+  "keywords": ["prettier", "config", "shared", "formatter", "devground"],
   "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/devground/devground.git",
+    "url": "https://github.com/elkisdm/devground.git",
     "directory": "packages/prettier-config"
+  },
+  "homepage": "https://github.com/elkisdm/devground/tree/main/packages/prettier-config#readme",
+  "bugs": {
+    "url": "https://github.com/elkisdm/devground/issues"
   }
 }

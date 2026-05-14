@@ -4,6 +4,12 @@
   "description": "All devground standards in one package. Install once, get everything.",
   "keywords": ["devground", "standards", "eslint", "prettier", "tsconfig", "commitlint", "husky", "agents-md"],
   "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@devground/prettier-config": "workspace:*",
     "@devground/eslint-config": "workspace:*",
@@ -33,5 +39,9 @@
     "type": "git",
     "url": "https://github.com/elkisdm/devground.git",
     "directory": "packages/devground"
+  },
+  "homepage": "https://github.com/elkisdm/devground#readme",
+  "bugs": {
+    "url": "https://github.com/elkisdm/devground/issues"
   }
 }

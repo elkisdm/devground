@@ -1,18 +1,28 @@
 {
   "name": "@devground/lint-staged-config",
   "version": "1.0.0",
-  "description": "Shared lint-staged configuration",
+  "description": "Shared lint-staged configuration (eslint + prettier on staged files)",
   "main": "index.js",
   "files": ["index.js"],
-  "keywords": ["lint-staged", "config", "shared", "devground"],
+  "keywords": ["lint-staged", "config", "shared", "eslint", "prettier", "devground"],
   "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "peerDependencies": {
     "eslint": ">=9.0.0",
     "prettier": ">=3.0.0"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/devground/devground.git",
+    "url": "https://github.com/elkisdm/devground.git",
     "directory": "packages/lint-staged-config"
+  },
+  "homepage": "https://github.com/elkisdm/devground/tree/main/packages/lint-staged-config#readme",
+  "bugs": {
+    "url": "https://github.com/elkisdm/devground/issues"
   }
 }

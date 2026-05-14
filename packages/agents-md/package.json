@@ -6,11 +6,30 @@
     "devground-agents": "./setup.js"
   },
   "files": ["setup.js", "AGENTS.md", "PROMPT.md"],
-  "keywords": ["agents-md", "claude", "cursor", "copilot", "gemini", "ai", "coding-standards", "devground"],
+  "keywords": [
+    "agents-md",
+    "claude",
+    "cursor",
+    "copilot",
+    "gemini",
+    "ai",
+    "coding-standards",
+    "devground"
+  ],
   "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/devground/devground.git",
+    "url": "https://github.com/elkisdm/devground.git",
     "directory": "packages/agents-md"
+  },
+  "homepage": "https://github.com/elkisdm/devground/tree/main/packages/agents-md#readme",
+  "bugs": {
+    "url": "https://github.com/elkisdm/devground/issues"
   }
 }

@@ -25,9 +25,19 @@
     "devground"
   ],
   "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/devground/devground.git",
+    "url": "https://github.com/elkisdm/devground.git",
     "directory": "packages/architecture-guide"
+  },
+  "homepage": "https://github.com/elkisdm/devground/tree/main/packages/architecture-guide#readme",
+  "bugs": {
+    "url": "https://github.com/elkisdm/devground/issues"
   }
 }

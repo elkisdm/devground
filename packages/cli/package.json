@@ -1,7 +1,7 @@
 {
   "name": "devground-init",
   "version": "1.0.0",
-  "description": "CLI to scaffold devground development standards in any project",
+  "description": "Interactive CLI to scaffold devground development standards (ESLint, Prettier, TypeScript, commitlint, husky, AGENTS.md, ADRs) in any Node/TypeScript/Next.js project",
   "bin": {
     "devground-init": "./dist/index.js"
   },
@@ -15,6 +15,34 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
   },
+  "keywords": [
+    "cli",
+    "scaffold",
+    "boilerplate",
+    "eslint",
+    "prettier",
+    "typescript",
+    "husky",
+    "commitlint",
+    "agents-md",
+    "devground"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/elkisdm/devground.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://github.com/elkisdm/devground#readme",
+  "bugs": {
+    "url": "https://github.com/elkisdm/devground/issues"
+  },
   "dependencies": {
     "commander": "^13.0.0",
     "prompts": "^2.4.2"
@@ -24,6 +52,5 @@
     "@types/prompts": "^2.4.9",
     "typescript": "^5.0.0",
     "vitest": "^2.1.0"
-  },
-  "license": "MIT"
+  }
 }

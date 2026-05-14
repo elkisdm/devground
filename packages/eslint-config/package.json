@@ -1,17 +1,24 @@
 {
   "name": "@devground/eslint-config",
   "version": "1.0.0",
-  "description": "Shared ESLint flat config presets",
+  "description": "Shared ESLint flat config presets (base + Next.js)",
   "type": "module",
   "exports": {
     ".": "./index.mjs",
     "./next": "./next.mjs"
   },
   "files": ["*.mjs"],
-  "keywords": ["eslint", "config", "flat-config", "shared", "devground"],
+  "keywords": ["eslint", "config", "flat-config", "shared", "nextjs", "devground"],
   "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "peerDependencies": {
-    "eslint": ">=9.0.0"
+    "eslint": ">=9.0.0",
+    "eslint-config-next": ">=14.0.0"
   },
   "peerDependenciesMeta": {
     "eslint-config-next": {
@@ -20,7 +27,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/devground/devground.git",
+    "url": "https://github.com/elkisdm/devground.git",
     "directory": "packages/eslint-config"
+  },
+  "homepage": "https://github.com/elkisdm/devground/tree/main/packages/eslint-config#readme",
+  "bugs": {
+    "url": "https://github.com/elkisdm/devground/issues"
   }
 }

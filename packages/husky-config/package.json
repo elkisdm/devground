@@ -1,19 +1,29 @@
 {
   "name": "@devground/husky-config",
   "version": "1.0.0",
-  "description": "Git hooks setup with Husky",
+  "description": "Git hooks setup with Husky (pre-commit runs lint-staged)",
   "bin": {
     "devground-husky": "./setup.js"
   },
   "files": ["setup.js", "hooks/"],
   "keywords": ["husky", "git-hooks", "pre-commit", "config", "devground"],
   "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "peerDependencies": {
     "husky": ">=9.0.0"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/devground/devground.git",
+    "url": "https://github.com/elkisdm/devground.git",
     "directory": "packages/husky-config"
+  },
+  "homepage": "https://github.com/elkisdm/devground/tree/main/packages/husky-config#readme",
+  "bugs": {
+    "url": "https://github.com/elkisdm/devground/issues"
   }
 }
