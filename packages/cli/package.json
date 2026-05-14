@@ -51,6 +51,6 @@
     "@types/node": "^20",
     "@types/prompts": "^2.4.9",
     "typescript": "^5.0.0",
-    "vitest": "^2.1.0"
+    "vitest": "^4.1.6"
   }
 }
