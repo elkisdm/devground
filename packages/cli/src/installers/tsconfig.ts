@@ -7,9 +7,9 @@ import type { InstallerOptions, InstallResult } from '../types.js';
 export function install(options: InstallerOptions): InstallResult {
   const { targetDir, stack } = options;
   const ops = resolveOps(options);
-  const isNext = stack.framework === 'nextjs';
 
-  if (isNext) {
+  if (stack.framework === 'nextjs' || stack.framework === 'astro') {
+    const isAstro = stack.framework === 'astro';
     const mainPath = join(targetDir, 'tsconfig.json');
     const typecheckPath = join(targetDir, 'tsconfig.typecheck.json');
 
@@ -21,37 +21,49 @@ export function install(options: InstallerOptions): InstallResult {
 
     ops.addDevDependency(targetDir, stack.packageManager, '@devground/tsconfig', 'typescript');
 
-    const tsconfig = {
-      extends: '@devground/tsconfig/next.json',
-      compilerOptions: {
-        paths: {
-          '@/*': ['./*'],
-        },
-      },
-      include: [
-        'next-env.d.ts',
-        '**/*.ts',
-        '**/*.tsx',
-        '.next/types/**/*.ts',
-      ],
-      exclude: ['node_modules'],
-    };
+    const tsconfig = isAstro
+      ? {
+          extends: '@devground/tsconfig/astro.json',
+          include: ['.astro/types.d.ts', 'src/**/*.ts', 'src/**/*.tsx', 'src/**/*.astro'],
+          exclude: ['node_modules', 'dist'],
+        }
+      : {
+          extends: '@devground/tsconfig/next.json',
+          compilerOptions: {
+            paths: {
+              '@/*': ['./*'],
+            },
+          },
+          include: [
+            'next-env.d.ts',
+            '**/*.ts',
+            '**/*.tsx',
+            '.next/types/**/*.ts',
+          ],
+          exclude: ['node_modules'],
+        };
 
-    const typecheckConfig = {
-      extends: '@devground/tsconfig/next-typecheck.json',
-      compilerOptions: {
-        paths: {
-          '@/*': ['./*'],
-        },
-      },
-      include: [
-        'next-env.d.ts',
-        '**/*.ts',
-        '**/*.tsx',
-        '.next/types/**/*.ts',
-      ],
-      exclude: ['node_modules'],
-    };
+    const typecheckConfig = isAstro
+      ? {
+          extends: '@devground/tsconfig/astro-typecheck.json',
+          include: ['.astro/types.d.ts', 'src/**/*.ts', 'src/**/*.tsx', 'src/**/*.astro'],
+          exclude: ['node_modules', 'dist'],
+        }
+      : {
+          extends: '@devground/tsconfig/next-typecheck.json',
+          compilerOptions: {
+            paths: {
+              '@/*': ['./*'],
+            },
+          },
+          include: [
+            'next-env.d.ts',
+            '**/*.ts',
+            '**/*.tsx',
+            '.next/types/**/*.ts',
+          ],
+          exclude: ['node_modules'],
+        };
 
     const wroteMain = writeFileGuarded(ops, mainPath, JSON.stringify(tsconfig, null, 2) + '\n', 'tsconfig.json');
     const wroteTypecheck = writeFileGuarded(
@@ -66,7 +78,8 @@ export function install(options: InstallerOptions): InstallResult {
       Boolean,
     );
     if (written.length > 0) {
-      success(`TypeScript configured with @devground/tsconfig/next.json (${written.join(' + ')})`);
+      const preset = isAstro ? 'astro' : 'next';
+      success(`TypeScript configured with @devground/tsconfig/${preset}.json (${written.join(' + ')})`);
     }
 
     // Partial skip: 'installed' as long as at least one file was written

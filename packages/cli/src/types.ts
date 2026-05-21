@@ -1,4 +1,4 @@
-export type Framework = 'nextjs' | 'react' | 'node' | 'unknown';
+export type Framework = 'nextjs' | 'astro' | 'react' | 'node' | 'unknown';
 export type PackageManager = 'pnpm' | 'yarn' | 'npm';
 
 export interface DetectedStack {
