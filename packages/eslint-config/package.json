@@ -6,7 +6,8 @@
   "exports": {
     ".": "./index.mjs",
     "./next": "./next.mjs",
-    "./ui": "./ui.mjs"
+    "./ui": "./ui.mjs",
+    "./astro": "./astro.mjs"
   },
   "files": [
     "*.mjs"
@@ -40,6 +41,9 @@
       "optional": true
     },
     "eslint-plugin-jsx-a11y": {
+      "optional": true
+    },
+    "eslint-plugin-astro": {
       "optional": true
     }
   },
