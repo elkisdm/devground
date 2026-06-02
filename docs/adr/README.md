@@ -8,6 +8,11 @@ A diferencia de [knowledge/adr/](../../knowledge/adr/) — que contiene template
 
 Sigue el mismo formato que [knowledge/adr/README.md](../../knowledge/adr/README.md): Michael Nygard, una decisión por ADR, inmutables.
 
+## Crear un ADR nuevo
+
+Copia [0000-template.md](0000-template.md), renómbralo a `NNNN-titulo-en-kebab-case.md` con el
+siguiente número de la secuencia, rellénalo y añádelo al índice de abajo.
+
 ## Índice
 
 - [ADR-0001 — pnpm workspace en lugar de npm/yarn](0001-pnpm-workspace.md)

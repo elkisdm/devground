@@ -30,7 +30,7 @@ packages:
 **Positivas**
 - Symlinks estrictos: cada paquete solo accede a sus dependencias declaradas (vs npm que hace hoisting permisivo, ocultando bugs de dependencias faltantes).
 - Disco: instalación 30–60% más pequeña por el content-addressable store global.
-- Velocidad de instalación medible mente superior a npm en cold installs.
+- Velocidad de instalación mediblemente superior a npm en cold installs.
 - `pnpm --filter <pkg>` para ejecutar scripts en paquetes específicos (usado en `scripts.build`).
 - Lockfile (`pnpm-lock.yaml`) determinista y legible.
 
