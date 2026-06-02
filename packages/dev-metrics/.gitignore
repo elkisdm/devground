@@ -2,3 +2,7 @@
 # except the events annotations file, which is the durable, hand-curated log.
 snapshots/*.json
 !snapshots/events.json
+
+# Per-user resolved config (repos/identities of the local machine), generated
+# by `dev-metrics init`. Not portable, so it is not versioned.
+dev-metrics.config.json

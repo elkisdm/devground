@@ -35,6 +35,19 @@ export function isGitRepo(dir: string): boolean {
   return existsSync(join(dir, '.git'));
 }
 
+/**
+ * Runs git and returns stdout, or '' when git fails (e.g. an empty repo with
+ * no commits yet). Such repos simply contribute no metrics rather than aborting
+ * the whole collection.
+ */
+function safeGitText(args: readonly string[], maxBuffer: number): string {
+  try {
+    return execFileSync('git', args as string[], { encoding: 'utf-8', maxBuffer });
+  } catch {
+    return '';
+  }
+}
+
 function gitLog(opts: GitCollectOptions): GitCommit[] {
   const args = [
     '-C',
@@ -48,7 +61,7 @@ function gitLog(opts: GitCollectOptions): GitCommit[] {
   if (opts.since) args.push(`--since=${opts.since}`);
   if (opts.until) args.push(`--until=${opts.until}`);
 
-  const out = execFileSync('git', args, { encoding: 'utf-8', maxBuffer: 64 * 1024 * 1024 });
+  const out = safeGitText(args, 64 * 1024 * 1024);
   const commits: GitCommit[] = [];
   for (const line of out.split('\n')) {
     if (line.trim() === '') continue;
@@ -83,7 +96,7 @@ function gitNumstat(opts: GitCollectOptions): NumstatTotals {
   if (opts.since) args.push(`--since=${opts.since}`);
   if (opts.until) args.push(`--until=${opts.until}`);
 
-  const out = execFileSync('git', args, { encoding: 'utf-8', maxBuffer: 256 * 1024 * 1024 });
+  const out = safeGitText(args, 256 * 1024 * 1024);
   const fileTouches = new Map<string, number>();
   let added = 0;
   let deleted = 0;
