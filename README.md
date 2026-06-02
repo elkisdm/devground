@@ -296,7 +296,9 @@ El monorepo contiene **9 paquetes** independientes. Cada uno se puede instalar p
 
 ### `@devground/devground`
 
-El meta-paquete que trae todo. Ideal para proyectos nuevos o cuando quieres adoptar todos los estandares de una vez.
+El meta-paquete agregador. Agrupa los **7 presets de configuracion** — prettier-config, eslint-config, tsconfig, commitlint-config, lint-staged-config, husky-config y agents-md — para adoptarlos todos de una vez en un proyecto nuevo.
+
+> **Alcance del agregador**: `@devground/devground` **solo** agrupa los presets de config de la lista anterior. Los paquetes `@devground/architecture-guide` (knowledge base + ADRs) y `@devground/dev-metrics` (CLI de metricas) son **standalone**: no forman parte del bundle y se instalan por separado segun se necesiten. Esto es intencional — la documentacion y las metricas no son configuracion que un proyecto deba heredar automaticamente.
 
 ```bash
 pnpm add -D @devground/devground eslint prettier typescript husky lint-staged @commitlint/cli
@@ -543,6 +545,8 @@ cat node_modules/@devground/agents-md/PROMPT.md
 Antes de empezar a programar, hay decisiones que marcan los proximos años del proyecto: ¿que base de datos uso?, ¿monolito o microservicios?, ¿cuando agrego cache?, ¿como escalo cuando llegan 10x usuarios? Equivocarse aqui cuesta meses de refactor.
 
 Este paquete trae **una guia escrita, organizada y con plantillas** para responder esas preguntas con criterio — no improvisando.
+
+> **Standalone**: `@devground/architecture-guide` es solo documentacion (no instala codigo ni dependencias de runtime) y **no** forma parte del agregador `@devground/devground`. Se instala por separado cuando lo necesites.
 
 ```bash
 pnpm add -D @devground/architecture-guide
@@ -795,6 +799,19 @@ Nunca hardcodear colores. Usar tokens como `bg-card`, `text-foreground`, `border
 
 ### 10. Helper `cn()` obligatorio
 Usar `cn()` (clsx + tailwind-merge) para combinar clases CSS. Sin concatenacion fragil de strings.
+
+### Estandares de seguridad y calidad (ADR 0007–0012)
+
+Mas alla de las 10 reglas de `AGENTS.md`, el repo documenta 6 estandares de seguridad y calidad como ADRs. Varios tienen **enforcement automatico** (hook pre-commit o reglas de ESLint); el resto son convenciones que un proyecto adopta segun su contexto. Detalle completo en [docs/adr/](docs/adr/).
+
+| # | Estandar | Enforcement |
+| --- | --- | --- |
+| [0007](docs/adr/0007-rate-limiting-distribuido.md) | Rate-limiting distribuido obligatorio en rutas API/webhooks (serverless) | Documental (revision en PR) |
+| [0008](docs/adr/0008-higiene-de-secretos.md) | Higiene de secretos: gitleaks pre-commit + politica de `.gitignore` | **Automatico**: hook `pre-commit` con gitleaks |
+| [0009](docs/adr/0009-validacion-entrada-webhooks.md) | Validacion de entrada en toda ruta API + verificacion de firma en webhooks | Documental (revision en PR) |
+| [0010](docs/adr/0010-limite-tamano-modulo-funcion.md) | Limite de tamano de modulo/funcion + container-presentational | **Automatico**: ESLint `max-lines` (400) y `max-lines-per-function` (80) |
+| [0011](docs/adr/0011-prohibido-any-fronteras-externas.md) | Prohibido `any` en fronteras externas (DB/API) | **Automatico**: ESLint `no-explicit-any` + `no-restricted-syntax` |
+| [0012](docs/adr/0012-tests-rutas-criticas.md) | Tests obligatorios en rutas criticas (dinero, leads, auth) | Documental (gate de CI recomendado) |
 
 ---
 

@@ -1,14 +1,14 @@
-import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { addDevDependency } from '../utils/package-json.js';
-import { success } from '../utils/logger.js';
+import { success } from '@devground/logger';
+import { resolveOps } from './ops.js';
 import type { InstallerOptions } from '../types.js';
 
 export function install(options: InstallerOptions): void {
   const { targetDir, stack } = options;
+  const ops = resolveOps(options);
   const isNext = stack.framework === 'nextjs';
 
-  addDevDependency(targetDir, stack.packageManager, '@devground/tsconfig', 'typescript');
+  ops.addDevDependency(targetDir, stack.packageManager, '@devground/tsconfig', 'typescript');
 
   if (isNext) {
     const tsconfig = {
@@ -27,10 +27,9 @@ export function install(options: InstallerOptions): void {
       exclude: ['node_modules'],
     };
 
-    writeFileSync(
+    ops.writeFile(
       join(targetDir, 'tsconfig.json'),
       JSON.stringify(tsconfig, null, 2) + '\n',
-      'utf-8',
     );
 
     const typecheckConfig = {
@@ -49,10 +48,9 @@ export function install(options: InstallerOptions): void {
       exclude: ['node_modules'],
     };
 
-    writeFileSync(
+    ops.writeFile(
       join(targetDir, 'tsconfig.typecheck.json'),
       JSON.stringify(typecheckConfig, null, 2) + '\n',
-      'utf-8',
     );
 
     success('TypeScript configured with @devground/tsconfig/next.json + typecheck variant');
@@ -63,10 +61,9 @@ export function install(options: InstallerOptions): void {
       exclude: ['node_modules', 'dist'],
     };
 
-    writeFileSync(
+    ops.writeFile(
       join(targetDir, 'tsconfig.json'),
       JSON.stringify(tsconfig, null, 2) + '\n',
-      'utf-8',
     );
 
     success('TypeScript configured with @devground/tsconfig/base.json');

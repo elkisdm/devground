@@ -13,9 +13,14 @@ pnpm add -D @devground/tsconfig typescript
 | Preset | Use case |
 |--------|----------|
 | `base.json` | Strict mode, ES2017, bundler resolution |
-| `next.json` | Next.js dev builds (extends base, strict off) |
+| `next.json` | Next.js builds (extends base, **strict on**, bundler resolution) — default |
+| `next-loose.json` | Migration ramp only (extends next, **strict off**) — temporary |
 | `next-typecheck.json` | CI type checking (extends next, no incremental) |
 | `node.json` | Node.js server projects |
+
+> **ADR-0011:** `next.json` enforces `strict: true` by default. If you need a
+> gradual adoption ramp for a legacy codebase, extend `next-loose.json`
+> (`strict: false`) and migrate to `next.json` as soon as the code type-checks.
 
 ## Usage
 

@@ -1,16 +1,16 @@
-import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { addDevDependency } from '../utils/package-json.js';
-import { success } from '../utils/logger.js';
+import { success } from '@devground/logger';
+import { resolveOps } from './ops.js';
 import type { InstallerOptions } from '../types.js';
 
 export function install(options: InstallerOptions): void {
   const { targetDir, stack } = options;
+  const ops = resolveOps(options);
 
-  addDevDependency(targetDir, stack.packageManager, '@devground/commitlint-config', '@commitlint/cli');
+  ops.addDevDependency(targetDir, stack.packageManager, '@devground/commitlint-config', '@commitlint/cli');
 
   const configContent = `module.exports = { extends: ['@devground/commitlint-config'] };\n`;
-  writeFileSync(join(targetDir, 'commitlint.config.js'), configContent, 'utf-8');
+  ops.writeFile(join(targetDir, 'commitlint.config.js'), configContent);
 
   success('Commitlint configured with @devground/commitlint-config');
 }

@@ -22,6 +22,26 @@ export default function nextConfig(options = {}) {
   return [
     ...nextCoreWebVitals,
     ...nextTs,
+    {
+      rules: {
+        // ADR-0010: tamaño como señal de refactor. `warn`, no `error`.
+        'max-lines': [
+          'warn',
+          { max: 400, skipBlankLines: true, skipComments: true },
+        ],
+        'max-lines-per-function': [
+          'warn',
+          { max: 80, skipBlankLines: true, skipComments: true, IIFEs: true },
+        ],
+
+        // ADR-0011: prohibido `any` en fronteras externas (DB/API).
+        // Aquí sí existe el plugin de TS (vía eslint-config-next/typescript),
+        // así que usamos la regla canónica. Genera tipos en la frontera.
+        // Escape justificado:
+        //   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- <razón>
+        '@typescript-eslint/no-explicit-any': 'warn',
+      },
+    },
     { ignores },
   ];
 }

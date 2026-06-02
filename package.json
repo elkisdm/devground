@@ -6,13 +6,17 @@
     "node": ">=20"
   },
   "scripts": {
-    "build": "pnpm --filter devground-init build",
-    "test": "pnpm --filter devground-init test",
-    "typecheck": "pnpm --filter devground-init typecheck",
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "eslint .",
     "changeset": "changeset",
     "publish-packages": "changeset publish"
   },
   "devDependencies": {
-    "@changesets/cli": "^2.27.0"
+    "@changesets/cli": "^2.27.0",
+    "@devground/eslint-config": "workspace:*",
+    "@typescript-eslint/parser": "^8.0.0",
+    "eslint": "^10.0.0"
   }
 }

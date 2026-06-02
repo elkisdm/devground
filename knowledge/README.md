@@ -2,6 +2,8 @@
 
 Conocimiento estructurado extraído de 3 transcripciones de YouTube. Diseñado para ser consultable por humanos y agentes de IA antes de tomar decisiones técnicas en proyectos reales.
 
+> **Fuente de verdad**: este directorio `knowledge/` en la raíz del repo es la **FUENTE ÚNICA** de esta base de conocimiento. La copia en `packages/architecture-guide/knowledge/` es un **espejo sincronizado**: el script `packages/architecture-guide/scripts/sync-knowledge.js` la regenera (copia `knowledge/` raíz → package) en el hook `prepublishOnly`. **No edites la copia del package a mano** — se sobreescribe al publicar. Para cambiar cualquier archivo de la base, **edita siempre `knowledge/` raíz**.
+
 ## Origen
 
 Las fuentes primarias están en la raíz del repo:
@@ -38,6 +40,7 @@ knowledge/
 ├── 02-architectural-patterns.md    síntesis de patron arq.md
 ├── 03-systems-design.md            síntesis de sistemas.md
 ├── BEST-PRACTICES.md               síntesis cruzada + checklist
+├── CASE-STUDY-devground.md         la guía aplicada al propio repo
 └── adr/
     ├── README.md                   qué es un ADR
     ├── 0001-elegir-tipo-de-base-de-datos.md

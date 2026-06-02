@@ -19,13 +19,13 @@ export function info(message: string): void {
 }
 
 export function success(message: string): void {
-  console.log(`${GREEN}\u2714${RESET} ${message}`);
+  console.log(`${GREEN}✔${RESET} ${message}`);
 }
 
 export function warn(message: string): void {
-  console.log(`${YELLOW}\u26A0${RESET} ${message}`);
+  console.log(`${YELLOW}⚠${RESET} ${message}`);
 }
 
 export function error(message: string): void {
-  console.error(`${RED}\u2718${RESET} ${message}`);
+  console.error(`${RED}✘${RESET} ${message}`);
 }

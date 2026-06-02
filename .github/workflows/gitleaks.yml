@@ -1,0 +1,30 @@
+name: Gitleaks
+
+# Gate obligatorio de secretos en CI (ADR-0008). El pre-commit local es la
+# primera línea (y se degrada si gitleaks no está instalado); este job es la
+# garantía dura: aquí el escaneo siempre corre y bloquea el merge.
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+# Permisos mínimos: solo lectura del repo para escanear.
+permissions:
+  contents: read
+
+jobs:
+  gitleaks:
+    name: Scan secrets
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Historial completo para escanear todos los commits del push/PR.
+          fetch-depth: 0
+
+      - name: Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

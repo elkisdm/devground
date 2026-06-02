@@ -1,15 +1,16 @@
-import { addDevDependency, readPackageJson, writePackageJson } from '../utils/package-json.js';
-import { success } from '../utils/logger.js';
+import { success } from '@devground/logger';
+import { resolveOps } from './ops.js';
 import type { InstallerOptions } from '../types.js';
 
 export function install(options: InstallerOptions): void {
   const { targetDir, stack } = options;
+  const ops = resolveOps(options);
 
-  addDevDependency(targetDir, stack.packageManager, '@devground/lint-staged-config', 'lint-staged');
+  ops.addDevDependency(targetDir, stack.packageManager, '@devground/lint-staged-config', 'lint-staged');
 
-  const pkg = readPackageJson(targetDir);
+  const pkg = ops.readPackageJson(targetDir);
   pkg['lint-staged'] = '@devground/lint-staged-config';
-  writePackageJson(targetDir, pkg);
+  ops.writePackageJson(targetDir, pkg);
 
   success('lint-staged configured with @devground/lint-staged-config');
 }

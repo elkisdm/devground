@@ -13,6 +13,8 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+      # OIDC: necesario para que npm genere provenance (provenance=true en .npmrc).
+      id-token: write
 
     steps:
       - name: Checkout

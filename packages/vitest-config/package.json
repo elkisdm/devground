@@ -1,0 +1,50 @@
+{
+  "name": "@devground/vitest-config",
+  "version": "0.1.0",
+  "description": "Shared Vitest configuration for devground packages (node env, no globals, v8 coverage profile)",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.mjs"
+    }
+  },
+  "main": "./index.mjs",
+  "files": [
+    "index.mjs",
+    "index.d.ts",
+    "README.md"
+  ],
+  "keywords": [
+    "vitest",
+    "config",
+    "coverage",
+    "testing",
+    "shared",
+    "devground"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "peerDependencies": {
+    "vitest": ">=2.0.0"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^2.1.0",
+    "vitest": "^2.1.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/elkisdm/devground.git",
+    "directory": "packages/vitest-config"
+  },
+  "homepage": "https://github.com/elkisdm/devground/tree/main/packages/vitest-config#readme",
+  "bugs": {
+    "url": "https://github.com/elkisdm/devground/issues"
+  },
+  "types": "./index.d.ts"
+}
