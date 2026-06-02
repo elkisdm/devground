@@ -7,6 +7,19 @@ const DEFAULT_IGNORES = [
   'tmp/**',
 ];
 
+// ADR-0011: la regla `no-restricted-syntax`/`TSAnyKeyword` SOLO matchea si el
+// parser produce nodos TS. El parser por defecto (espree) no entiende TS, así
+// que la regla quedaría INERTE sobre `.ts`/`.tsx`. Cargamos el parser de
+// @typescript-eslint si está presente (peerDependency opcional) y lo
+// registramos para los archivos TS. Si no está, el preset sigue siendo
+// framework-agnostic y válido para JS puro (la regla simplemente no aplica a TS).
+let tsParser;
+try {
+  tsParser = (await import('@typescript-eslint/parser')).default;
+} catch {
+  tsParser = undefined;
+}
+
 /**
  * Base ESLint flat config — framework-agnostic.
  * @param {object} [options]
@@ -18,6 +31,16 @@ export default function baseConfig(options = {}) {
 
   return [
     { ignores },
+    // Registra el parser de TS para archivos TS cuando esté disponible, de
+    // modo que `TSAnyKeyword` (ADR-0011) realmente matchee y no quede inerte.
+    ...(tsParser
+      ? [
+          {
+            files: ['**/*.ts', '**/*.tsx', '**/*.mts', '**/*.cts'],
+            languageOptions: { parser: tsParser },
+          },
+        ]
+      : []),
     {
       rules: {
         'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],

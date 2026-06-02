@@ -41,3 +41,15 @@ import baseConfig from '@devground/eslint-config';
 
 export default baseConfig();
 ```
+
+> **ADR-0011 / TypeScript:** la regla `no-restricted-syntax` con selector
+> `TSAnyKeyword` solo matchea si el parser entiende TypeScript. Para que aplique
+> a archivos `.ts`/`.tsx`, instala el parser (peerDependency **opcional**):
+>
+> ```bash
+> pnpm add -D @typescript-eslint/parser
+> ```
+>
+> Si no lo instalas, el preset base sigue siendo válido para JS puro, pero la
+> regla queda inerte sobre TS. El preset `next` no lo necesita: ya trae el
+> parser vía `eslint-config-next/typescript`.

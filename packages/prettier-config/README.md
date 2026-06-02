@@ -28,6 +28,6 @@ Or in `.prettierrc`:
 
 - Semicolons: enabled
 - Single quotes: enabled
-- Trailing commas: ES5
+- Trailing commas: all (Prettier 3 default)
 - Print width: 100
 - Tab width: 2

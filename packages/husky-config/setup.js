@@ -28,12 +28,18 @@ try {
   }
 }
 
-// Copy pre-commit hook
-const hookSource = path.join(__dirname, 'hooks', 'pre-commit.sh');
-const hookDest = path.join(huskyDir, 'pre-commit');
-const hookContent = fs.readFileSync(hookSource, 'utf8');
-fs.writeFileSync(hookDest, hookContent, { mode: 0o755 });
-log('Wrote .husky/pre-commit');
+// Copy hooks (source name -> husky hook name)
+const HOOKS = [
+  ['pre-commit.sh', 'pre-commit'],
+  ['commit-msg.sh', 'commit-msg'],
+];
+for (const [source, dest] of HOOKS) {
+  const hookSource = path.join(__dirname, 'hooks', source);
+  const hookDest = path.join(huskyDir, dest);
+  const hookContent = fs.readFileSync(hookSource, 'utf8');
+  fs.writeFileSync(hookDest, hookContent, { mode: 0o755 });
+  log(`Wrote .husky/${dest}`);
+}
 
 // Ensure "prepare": "husky" in package.json
 if (fs.existsSync(pkgPath)) {
@@ -46,4 +52,6 @@ if (fs.existsSync(pkgPath)) {
   }
 }
 
-console.log('\n  Husky configured. Pre-commit hook will run lint-staged.\n');
+console.log(
+  '\n  Husky configured. pre-commit runs lint-staged; commit-msg runs commitlint.\n'
+);
