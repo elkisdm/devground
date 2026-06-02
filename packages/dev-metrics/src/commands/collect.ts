@@ -4,6 +4,7 @@ import type {
   RepoBreakdown,
   RepoAdoption,
   EventAnnotation,
+  MemoryMetrics,
 } from '../types.js';
 import { collectGitRepo, mergeGitMetrics, isGitRepo, type GitRepoResult } from '../lib/git.js';
 import {
@@ -17,7 +18,6 @@ import {
   aggregateMemory,
   computeMemorySignals,
   defaultMemoryRoot,
-  OBSIDIAN_ADOPTION_DATE,
 } from '../lib/memory.js';
 import { findTranscripts } from '../lib/transcript-collect.js';
 import { totalTokens } from '../lib/transcript.js';
@@ -38,17 +38,27 @@ export interface CollectArgs {
   seedEvents?: boolean;
   /** Pre-seeded events from dev-metrics.config.json to merge in. */
   configEvents?: EventAnnotation[];
+  /**
+   * OPTIONAL backend-agnostic memory-backend migration date (YYYY-MM-DD). When
+   * set, enables the before/after note split, the mtime caveat, and auto-seeds
+   * a generic `memory backend migration` event. Unset = none of that.
+   */
+  memoryBackendMigrationDate?: string;
+  /** OPTIONAL backup dir (with a `projects/` subdir) of frozen transcripts. */
+  transcriptBackupDir?: string;
 }
 
 /**
- * Auto-seeds events.json with markers worth aligning diffs against: the
- * Obsidian memory adoption, plus each repo's key adoption markers. Idempotent
- * by (date,label): readEvents/addEvent re-sort and we skip already-present.
+ * Auto-seeds events.json with markers worth aligning diffs against: each repo's
+ * key adoption markers, plus — only when a memory-backend migration date is
+ * configured — a generic memory-backend migration event. Idempotent by
+ * (date,label): readEvents/addEvent re-sort and we skip already-present.
  */
 function seedEvents(
   eventsFile: string,
   adoption: readonly RepoAdoption[],
   configEvents: readonly EventAnnotation[] = [],
+  memoryBackendMigrationDate?: string,
 ): void {
   const existing = readEvents(eventsFile);
   const seen = new Set(existing.map((e) => `${e.date} ${e.label}`));
@@ -65,8 +75,15 @@ function seedEvents(
   // Config-provided events first (user-curated, highest intent).
   for (const e of configEvents) push(e.date, e.label, e.description);
 
-  // MEJORA 3: the Obsidian memory adoption.
-  push(OBSIDIAN_ADOPTION_DATE, 'Obsidian memory', 'Adopted persistent memory vault (continuity, not churn)');
+  // Memory backend migration: ONLY when a date is configured. Backend-agnostic;
+  // no memory tool is assumed and nothing is seeded by default.
+  if (memoryBackendMigrationDate !== undefined) {
+    push(
+      memoryBackendMigrationDate,
+      'memory backend migration',
+      'Migrated the memory backend (may have reset mtimes; affects pre-migration note volume)',
+    );
+  }
 
   // MEJORA 2: per-repo key markers (only the standards-defining ones).
   for (const a of adoption) {
@@ -105,7 +122,7 @@ export function runCollect(args: CollectArgs): string {
   const git = mergeGitMetrics(repoResults);
 
   info('Collecting Claude Code transcript metrics...');
-  const roots = args.transcriptRoots ?? defaultTranscriptRoots();
+  const roots = args.transcriptRoots ?? defaultTranscriptRoots(args.transcriptBackupDir);
   if (roots.length === 0) {
     warn('No transcript roots found (~/.claude/projects missing). Transcript metrics will be zero.');
   }
@@ -162,7 +179,7 @@ export function runCollect(args: CollectArgs): string {
   info('Measuring memory corpus and context-cost proxy...');
   const memoryRoot = defaultMemoryRoot();
   const notes = listMemoryNotes(memoryRoot);
-  const corpus = aggregateMemory(notes);
+  const corpus = aggregateMemory(notes, args.memoryBackendMigrationDate);
   const allFiles = findTranscripts(roots);
   const signals = computeMemorySignals({
     files: allFiles,
@@ -170,22 +187,28 @@ export function runCollect(args: CollectArgs): string {
     until: args.until,
   });
 
-  const memory = {
+  const memory: MemoryMetrics = {
     totalNotes: corpus.totalNotes,
     notesByProject: corpus.notesByProject,
     notesByWeek: corpus.notesByWeek,
-    notesAfterAdoption: corpus.notesAfterAdoption,
-    notesBeforeAdoption: corpus.notesBeforeAdoption,
     totalBytes: corpus.totalBytes,
     contextCost: signals.contextCost,
     reuse: signals.reuse,
   };
+  // Only carry the before/after split when a migration date was configured.
+  if (corpus.notesAfterMigration !== undefined) {
+    memory.notesAfterMigration = corpus.notesAfterMigration;
+  }
+  if (corpus.notesBeforeMigration !== undefined) {
+    memory.notesBeforeMigration = corpus.notesBeforeMigration;
+  }
 
-  // MEJORA D: warn if any memory note fell back to mtime (no `created:`).
-  if (corpus.notesFromMtime > 0) {
+  // Warn about mtime-derived dates only when a migration date is configured
+  // (otherwise the mtime fallback is just a normal best-effort, not unreliable).
+  if (args.memoryBackendMigrationDate !== undefined && corpus.notesFromMtime > 0) {
     warn(
       `${corpus.notesFromMtime}/${corpus.totalNotes} memory note(s) have no \`created:\` frontmatter; ` +
-        `their date falls back to mtime (UNRELIABLE before the 2026-05-16 migration).`,
+        `their date falls back to mtime (UNRELIABLE before the ${args.memoryBackendMigrationDate} memory backend migration).`,
     );
   }
 
@@ -201,9 +224,10 @@ export function runCollect(args: CollectArgs): string {
     info(`${args.emails.length} identities: per-identity commit breakdown enabled.`);
   }
 
-  // Auto-seed events (config + markers + Obsidian) BEFORE reading the window.
+  // Auto-seed events (config + markers + optional memory migration) BEFORE
+  // reading the window.
   if (args.seedEvents !== false) {
-    seedEvents(args.eventsFile, adoption, args.configEvents);
+    seedEvents(args.eventsFile, adoption, args.configEvents, args.memoryBackendMigrationDate);
   }
 
   const allEvents = readEvents(args.eventsFile);

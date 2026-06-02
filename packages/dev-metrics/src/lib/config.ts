@@ -45,6 +45,12 @@ export function normalizeConfig(obj: Record<string, unknown>): DevMetricsConfig 
   if (excludes.length > 0) config.excludes = excludes;
   const events = toEventArray(obj.events);
   if (events.length > 0) config.events = events;
+  if (typeof obj.memoryBackendMigrationDate === 'string' && obj.memoryBackendMigrationDate.trim() !== '') {
+    config.memoryBackendMigrationDate = obj.memoryBackendMigrationDate;
+  }
+  if (typeof obj.transcriptBackupDir === 'string' && obj.transcriptBackupDir.trim() !== '') {
+    config.transcriptBackupDir = obj.transcriptBackupDir;
+  }
   return config;
 }
 

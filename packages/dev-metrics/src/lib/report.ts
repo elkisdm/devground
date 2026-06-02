@@ -184,16 +184,24 @@ export function renderReport(s: Snapshot): string {
   lines.push(`| Metric | Value |`);
   lines.push(`| --- | --- |`);
   lines.push(`| Memory notes (excl. MEMORY.md) | ${fmt(mem.totalNotes)} |`);
-  lines.push(`| Notes after Obsidian adoption (mtime-reliable) | ${fmt(mem.notesAfterAdoption)} |`);
-  lines.push(`| Notes before adoption (mtime UNRELIABLE) | ${fmt(mem.notesBeforeAdoption)} |`);
+  // before/after split only present when a memory-backend migration date is set.
+  const hasMigrationSplit =
+    mem.notesAfterMigration !== undefined || mem.notesBeforeMigration !== undefined;
+  if (hasMigrationSplit) {
+    lines.push(`| Notes after backend migration (mtime-reliable) | ${fmt(mem.notesAfterMigration ?? null)} |`);
+    lines.push(`| Notes before migration (mtime UNRELIABLE) | ${fmt(mem.notesBeforeMigration ?? null)} |`);
+  }
   lines.push(`| Corpus size (bytes) | ${fmt(mem.totalBytes)} |`);
   lines.push(`| Context-cost proxy: mean early-output / session | ${fmt(mem.contextCost.meanEarlyOutputPerSession)} |`);
   lines.push(`| Context-cost first-N msgs | ${fmt(mem.contextCost.firstN)} |`);
   lines.push(`| Sessions reading /memory/ | ${fmt(mem.reuse.sessionsReadingMemory)} |`);
   lines.push(`| /memory/ Read ops | ${fmt(mem.reuse.memoryReadOps)} |`);
   lines.push('');
+  const mtimeCaveat = hasMigrationSplit
+    ? `(a) the memory backend migration RESET file mtimes, so pre-migration note volume is not reliable; `
+    : '';
   lines.push(
-    `> Caveats: (a) the 2026-05-16 Obsidian migration RESET file mtimes, so pre-adoption note volume is not reliable; (b) "context cost" is a PROXY = output tokens in the first ${mem.contextCost.firstN} assistant messages of each session (lower trend = better continuity, not a direct measure).`,
+    `> Caveats: ${mtimeCaveat}"context cost" is a PROXY = output tokens in the first ${mem.contextCost.firstN} assistant messages of each session (lower trend = better continuity, not a direct measure). dev-metrics is agnostic to the memory backend; note dates come from the \`created:\` frontmatter.`,
   );
   lines.push('');
 

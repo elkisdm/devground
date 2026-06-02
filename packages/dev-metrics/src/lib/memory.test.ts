@@ -3,9 +3,11 @@ import {
   isoWeek,
   aggregateMemory,
   parseCreatedFrontmatter,
-  OBSIDIAN_ADOPTION_DATE,
   type MemoryNote,
 } from './memory.js';
+
+/** A backend-agnostic migration date used to exercise the optional split. */
+const MIGRATION_DATE = '2026-05-16';
 
 function note(
   project: string,
@@ -44,15 +46,22 @@ describe('aggregateMemory', () => {
     expect(c.totalBytes).toBe(60);
   });
 
-  it('splits notes by the Obsidian adoption date', () => {
+  it('splits notes by a configured backend-migration date when provided', () => {
     const notes = [
       note('p', '2026-05-01'), // before
-      note('p', OBSIDIAN_ADOPTION_DATE), // on adoption -> after (inclusive)
+      note('p', MIGRATION_DATE), // on migration -> after (inclusive)
       note('p', '2026-06-01'), // after
     ];
-    const c = aggregateMemory(notes);
-    expect(c.notesBeforeAdoption).toBe(1);
-    expect(c.notesAfterAdoption).toBe(2);
+    const c = aggregateMemory(notes, MIGRATION_DATE);
+    expect(c.notesBeforeMigration).toBe(1);
+    expect(c.notesAfterMigration).toBe(2);
+  });
+
+  it('omits the before/after split when no migration date is given (default)', () => {
+    const c = aggregateMemory([note('p', '2026-05-01'), note('p', '2026-06-01')]);
+    expect(c.notesAfterMigration).toBeUndefined();
+    expect(c.notesBeforeMigration).toBeUndefined();
+    expect(c.totalNotes).toBe(2);
   });
 
   it('buckets notes by ISO week', () => {

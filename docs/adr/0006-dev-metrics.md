@@ -22,8 +22,8 @@ prioriza:
 3. **Anotaciones de eventos** que permitan separar transición de régimen.
 
 Las fuentes de datos son dos: el historial de git (varios repos) y los
-transcripts de Claude Code (`~/.claude/projects/**/*.jsonl` + el backup
-congelado `~/.claude/backups/memory-pre-obsidian-*/projects`).
+transcripts de Claude Code (`~/.claude/projects/**/*.jsonl` + un directorio de
+backup **opcional** configurable vía `transcriptBackupDir`).
 
 ## Decisión
 
@@ -109,14 +109,17 @@ del nacimiento), `retrofitted` (todos presentes pero alguno después) o `partial
 resto). `collect` auto-siembra `events.json` con los marcadores detectados
 (desactivable con `--no-seed-events`).
 
-### v2 — Memoria / costo de contexto (lente correcto para Obsidian)
+### v2 — Memoria / costo de contexto (opcional y agnóstica al backend)
 
-Obsidian (memoria) se adoptó el **2026-05-16**; su beneficio es continuidad de
-contexto a largo plazo, no churn. Métricas:
+La memoria es **opcional** y dev-metrics es **agnóstico al backend** que la
+respalde: no asume ninguna herramienta concreta. Si el usuario no usa memoria o
+no existen directorios `memory/`, la sección se omite con gracia. Su beneficio,
+cuando se usa, es continuidad de contexto a largo plazo, no churn. Métricas:
 
 - **Corpus de memoria**: nº de `.md` (excluyendo `MEMORY.md`) bajo
   `~/.claude/projects/<proyecto>/memory/`, por proyecto y por semana ISO, más
-  bytes totales.
+  bytes totales. La fecha de cada nota se toma del `created:` del frontmatter
+  (ruta robusta, inmune al reseteo de mtimes); fallback a mtime solo si falta.
 - **Tasa de crecimiento**: notas nuevas por semana (`notesByWeek`).
 - **Context cost (PROXY)**: tokens de output en los primeros N (=3) mensajes de
   cada sesión = costo de re-establecer contexto al arrancar; la tendencia a la
@@ -124,7 +127,14 @@ contexto a largo plazo, no churn. Métricas:
 - **Señal de reutilización**: sesiones con un `tool_use` `Read` sobre una ruta
   que contiene `/memory/`.
 
-`collect` auto-registra el evento `2026-05-16 | Obsidian memory`.
+Por defecto **no** se hace la partición antes/después, **no** se emite caveat de
+mtime y **no** se auto-siembra ningún evento de memoria. Solo si se configura
+`memoryBackendMigrationDate` (YYYY-MM-DD) —la fecha en que se migró el backend de
+memoria y eso pudo resetear mtimes— se habilita el split antes/después en
+términos genéricos ("migración de backend de memoria el `<fecha>`"), el caveat de
+mtime, y se auto-registra el evento genérico `<fecha> | memory backend
+migration`. Definir un **estándar de memoria agnóstico a la herramienta** queda
+como trabajo futuro.
 
 ### v3 — Reutilizable: config + auto-detección, sin asumir cardinalidad
 
@@ -218,9 +228,9 @@ finales).
    atribuible.
 
 2. **Ventana de retención ~33 días.** El cleanup de Claude Code borra
-   transcripts a ~33 días, así que los meses viejos quedan **parciales**. El
-   backup pre-obsidian (congelado 2026-05-16) recupera parte. Por eso `collect`
-   lee live + backup y **deduplica por uuid** (de lo contrario el solape
+   transcripts a ~33 días, así que los meses viejos quedan **parciales**. Un
+   directorio de backup **opcional** (`transcriptBackupDir`) recupera parte. Por
+   eso `collect` lee live + backup y **deduplica por uuid** (de lo contrario el solape
    duplica todo). Aplica también a la atribución por repo y a las señales de
    memoria.
 

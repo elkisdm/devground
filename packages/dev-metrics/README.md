@@ -8,8 +8,10 @@ a futuro, analizar causalidad (¿adoptar un estándar mejoró las métricas?).
 Fuentes de datos:
 
 - **git**: historial de una lista configurable de repos (filtrado por emails).
-- **transcripts de Claude Code**: `~/.claude/projects/**/*.jsonl` más el backup
-  congelado `~/.claude/backups/memory-pre-obsidian-*/projects`.
+- **transcripts de Claude Code**: `~/.claude/projects/**/*.jsonl`, más un
+  directorio de backup **opcional** si configuras `transcriptBackupDir` (se
+  espera un subdirectorio `projects/` dentro). Sin esa configuración no se lee
+  ningún backup.
 
 Ver [ADR-0006](../../docs/adr/0006-dev-metrics.md) para definiciones de métricas
 y los caveats metodológicos.
@@ -206,14 +208,23 @@ La detección de `"strict": true` **resuelve la cadena `extends`** del tsconfig
 correctamente; un `extends` a paquete como `@tsconfig/strictest` no se puede leer
 desde git y corta la cadena — limitación residual documentada).
 
-**Memoria / costo de contexto (v2/v3):** tamaño del corpus de memoria
-(`.md` bajo `~/.claude/projects/*/memory/`, excluyendo `MEMORY.md`) por proyecto y
-por semana ISO. La fecha de cada nota se toma del **`created:` del frontmatter**
-(v3, inmune al reseteo de mtimes); solo si falta se usa mtime con advertencia.
-"context cost" (PROXY) = tokens de output en los primeros N
+**Memoria / costo de contexto (opcional, agnóstica al backend):** tamaño del
+corpus de memoria (`.md` bajo `~/.claude/projects/*/memory/`, excluyendo
+`MEMORY.md`) por proyecto y por semana ISO. La fecha de cada nota se toma del
+**`created:` del frontmatter** (inmune al reseteo de mtimes y ruta robusta por
+defecto); solo si falta se usa mtime. dev-metrics **no asume ninguna herramienta
+de memoria**: si no usas memoria o no existen directorios `memory/`, la sección
+se omite con gracia. "context cost" (PROXY) = tokens de output en los primeros N
 mensajes de cada sesión (re-establecer contexto al arrancar; menor = mejor
 continuidad); señal de reutilización = sesiones con un `Read` sobre una ruta
-`/memory/`. `collect` auto-registra el evento `2026-05-16 | Obsidian memory`.
+`/memory/`.
+
+Por defecto **no** se hace la partición antes/después ni se siembra evento de
+memoria. Solo si configuras `memoryBackendMigrationDate` (YYYY-MM-DD) —la fecha
+en que migraste tu backend de memoria y eso pudo resetear mtimes— se habilita el
+split antes/después, el caveat de mtime y se auto-registra el evento genérico
+`<fecha> | memory backend migration`. Un estándar de memoria agnóstico a la
+herramienta queda como **trabajo futuro**.
 
 ## Caveats (importantes)
 
@@ -221,21 +232,25 @@ continuidad); señal de reutilización = sesiones con un `Read` sobre una ruta
    corrige el error de la v1). Lo ÚNICO inatribuible es la **CUENTA** que pagó
    (personal vs trabajo): los transcripts no guardan email/accountUuid por línea.
    El bucket `unattributed` aísla lo que no mapea a ningún repo pedido.
-2. Claude Code borra transcripts a ~33 días → meses viejos parciales; el backup
-   recupera parte; se deduplica por uuid al unir live+backup.
+2. Claude Code borra transcripts a ~33 días → meses viejos parciales; un backup
+   **opcional** (`transcriptBackupDir`) recupera parte; se deduplica por uuid al
+   unir live+backup.
 3. El R² churn↔tokens se calcula sobre **totales reales por repo**, pero con
    pocos repos es ruidoso (con 2 repos siempre da ±1: Pearson sobre 2 puntos).
    Interpreta con N ≥ 5 repos.
 4. Adoptar un estándar infla rework y tokens/commit temporalmente (transición ≠
    degradación) → usa `event` + `diff` para separarlos. Los marcadores
    auto-sembrados ayudan a alinear pre/post.
-5. **Memoria (v3):** la fecha de cada nota se toma del campo `created:` del
-   frontmatter (el vault fue backfilleado), que es **inmune al reseteo de
-   mtimes** de la migración del 2026-05-16 a Obsidian. Solo si una nota **no**
-   tiene `created` se cae a mtime (y `collect` avisa cuántas notas quedaron en
-   ese caso, porque su fecha sería poco confiable pre-migración). Esto corrige
-   la limitación de la v2. El "context cost" sigue siendo un **PROXY**, no una
-   medición directa de la efectividad de la memoria.
+5. **Memoria (agnóstica al backend):** la fecha de cada nota se toma del campo
+   `created:` del frontmatter, que es **inmune al reseteo de mtimes** y es la
+   ruta robusta por defecto. Solo si una nota **no** tiene `created` se cae a
+   mtime. La partición antes/después y el caveat de mtime solo aparecen si
+   configuras `memoryBackendMigrationDate` (genérica: "migración de backend de
+   memoria el `<fecha>`"); en ese caso `collect` avisa cuántas notas quedaron en
+   fallback a mtime. dev-metrics no asume ninguna herramienta concreta; un
+   estándar de memoria agnóstico a la herramienta es **trabajo futuro**. El
+   "context cost" sigue siendo un **PROXY**, no una medición directa de la
+   efectividad de la memoria.
 
 ## Primer snapshot (quickstart)
 

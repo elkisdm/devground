@@ -11,25 +11,17 @@ import {
   type TranscriptRecord,
 } from './transcript.js';
 
-/**
- * The date the Obsidian memory system was adopted. Before this date the
- * per-project `memory/` dirs (under ~/.claude/projects) were migrated
- * (symlinked into the Obsidian vault), which RESET file mtimes. Volume
- * "before" this date is not trustworthy from mtime alone — documented as a
- * caveat.
- */
-export const OBSIDIAN_ADOPTION_DATE = '2026-05-16';
-
 /** One memory note's metadata. */
 export interface MemoryNote {
   project: string;
   file: string;
   /**
-   * Content date (YYYY-MM-DD). v3: taken from the `created:` frontmatter field
-   * (the vault was backfilled with it), which is mtime-reset-proof. Falls back
-   * to the file mtime ONLY when `created` is missing/unparseable — and that
-   * fallback is UNRELIABLE before the 2026-05-16 Obsidian migration (mtimes
-   * were reset). `dateSource` records which one was used.
+   * Content date (YYYY-MM-DD). Taken from the `created:` frontmatter field,
+   * which is mtime-reset proof and is the robust default. Falls back to the
+   * file mtime ONLY when `created` is missing/unparseable. That mtime fallback
+   * can be unreliable if a memory-backend migration reset mtimes — see
+   * `DevMetricsConfig.memoryBackendMigrationDate`. `dateSource` records which
+   * one was used.
    */
   date: string;
   dateSource: 'frontmatter' | 'mtime';
@@ -64,18 +56,22 @@ export interface MemoryCorpus {
   totalNotes: number;
   /** Notes grouped by owning project dir. */
   notesByProject: Record<string, number>;
-  /** New notes per ISO week (`YYYY-Www`), by mtime. */
+  /** New notes per ISO week (`YYYY-Www`), by note date (`created:` frontmatter). */
   notesByWeek: Record<string, number>;
-  /** Notes whose date is on/after the Obsidian adoption (mtime-reliable). */
-  notesAfterAdoption: number;
-  /** Notes whose date predates adoption (mtime UNRELIABLE — see caveat). */
-  notesBeforeAdoption: number;
+  /**
+   * Notes on/after a configured memory-backend migration date (mtime-reliable).
+   * `undefined` when no migration date was supplied: without a known migration
+   * there is nothing to split, so the field is simply omitted.
+   */
+  notesAfterMigration?: number;
+  /** Notes before the migration date (mtime UNRELIABLE — see caveat). */
+  notesBeforeMigration?: number;
   /** Total bytes of memory corpus (proxy for context volume). */
   totalBytes: number;
   /**
-   * Notes whose date came from mtime (no `created:` frontmatter). v3: should
-   * be ~0 now that the vault was backfilled; a non-zero value flags notes
-   * whose date is mtime-derived (unreliable pre-migration).
+   * Notes whose date came from mtime (no `created:` frontmatter). A non-zero
+   * value flags notes whose date is mtime-derived (unreliable if a backend
+   * migration reset mtimes).
    */
   notesFromMtime: number;
 }
@@ -115,8 +111,8 @@ export function listMemoryNotes(projectsRoot: string): MemoryNote[] {
       }
       if (!st.isFile()) continue;
 
-      // v3 (MEJORA D): prefer the `created:` frontmatter date (mtime-reset
-      // proof). Fall back to mtime only when it is absent/unparseable.
+      // Prefer the `created:` frontmatter date (mtime-reset proof). Fall back
+      // to mtime only when it is absent/unparseable.
       let created: string | null = null;
       try {
         created = parseCreatedFrontmatter(readFileSync(full, 'utf-8'));
@@ -136,8 +132,20 @@ export function listMemoryNotes(projectsRoot: string): MemoryNote[] {
   return notes;
 }
 
-/** Aggregates a list of memory notes into corpus metrics. Pure. */
-export function aggregateMemory(notes: readonly MemoryNote[]): MemoryCorpus {
+/**
+ * Aggregates a list of memory notes into corpus metrics. Pure.
+ *
+ * `migrationDate` is OPTIONAL and backend-agnostic. When provided (a
+ * `YYYY-MM-DD` date on which a memory-backend migration may have reset
+ * mtimes), notes are split into before/after that date. When omitted (the
+ * default), no split is computed and `notesBeforeMigration`/`notesAfterMigration`
+ * are left `undefined` — note dates still come from the robust `created:`
+ * frontmatter, no tool is assumed.
+ */
+export function aggregateMemory(
+  notes: readonly MemoryNote[],
+  migrationDate?: string,
+): MemoryCorpus {
   const notesByProject: Record<string, number> = {};
   const notesByWeek: Record<string, number> = {};
   let totalBytes = 0;
@@ -150,20 +158,25 @@ export function aggregateMemory(notes: readonly MemoryNote[]): MemoryCorpus {
     const week = isoWeek(n.date);
     notesByWeek[week] = (notesByWeek[week] ?? 0) + 1;
     totalBytes += n.bytes;
-    if (n.date >= OBSIDIAN_ADOPTION_DATE) after++;
-    else before++;
+    if (migrationDate !== undefined) {
+      if (n.date >= migrationDate) after++;
+      else before++;
+    }
     if (n.dateSource === 'mtime') fromMtime++;
   }
 
-  return {
+  const corpus: MemoryCorpus = {
     totalNotes: notes.length,
     notesByProject,
     notesByWeek,
-    notesAfterAdoption: after,
-    notesBeforeAdoption: before,
     totalBytes,
     notesFromMtime: fromMtime,
   };
+  if (migrationDate !== undefined) {
+    corpus.notesAfterMigration = after;
+    corpus.notesBeforeMigration = before;
+  }
+  return corpus;
 }
 
 /**

@@ -81,6 +81,8 @@ program
           eventsFile: opts.eventsFile,
           seedEvents: opts.seedEvents,
           configEvents: resolved.config?.events,
+          memoryBackendMigrationDate: resolved.config?.memoryBackendMigrationDate,
+          transcriptBackupDir: resolved.config?.transcriptBackupDir,
         });
       } catch (err) {
         error(err instanceof Error ? err.message : String(err));

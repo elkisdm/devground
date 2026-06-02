@@ -151,10 +151,16 @@ export interface MemoryMetrics {
   /** `.md` notes (excluding MEMORY.md) under ~/.claude/projects/ * /memory/. */
   totalNotes: number;
   notesByProject: Record<string, number>;
-  /** New notes per ISO week (by mtime — see caveat 5). */
+  /** New notes per ISO week (by `created:` frontmatter, mtime-reset proof). */
   notesByWeek: Record<string, number>;
-  notesAfterAdoption: number;
-  notesBeforeAdoption: number;
+  /**
+   * Notes on/after `memoryBackendMigrationDate` (mtime-reliable). Only present
+   * when that config date is set; absent when no migration date is configured
+   * (the default), because without a known migration there is no split to make.
+   */
+  notesAfterMigration?: number;
+  /** Notes before the migration date (mtime UNRELIABLE). See above. */
+  notesBeforeMigration?: number;
   totalBytes: number;
   /** Context-cost PROXY: output tokens in the first N msgs of each session. */
   contextCost: {
@@ -206,6 +212,22 @@ export interface DevMetricsConfig {
   excludes?: string[];
   /** Optional pre-seeded event annotations to merge into events.json. */
   events?: EventAnnotation[];
+  /**
+   * OPTIONAL date (YYYY-MM-DD) on which you migrated your memory backend, if
+   * that migration may have reset file mtimes. Backend-agnostic: dev-metrics
+   * does not assume any particular memory tool. When set, the memory metric
+   * (a) splits note volume before/after this date, (b) emits an mtime caveat,
+   * and (c) auto-seeds a generic `memory backend migration` event. When unset
+   * (the default), note dates come purely from the `created:` frontmatter and
+   * none of the above happens — everything works with no tool assumed.
+   */
+  memoryBackendMigrationDate?: string;
+  /**
+   * OPTIONAL extra directory holding a frozen backup of Claude Code transcripts
+   * (a `projects/` subdir is expected inside). When set it is scanned alongside
+   * the live `~/.claude/projects`. When unset, no backup is read.
+   */
+  transcriptBackupDir?: string;
 }
 
 /** A full, self-describing, comparable snapshot. */
