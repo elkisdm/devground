@@ -275,20 +275,23 @@ npx devground-init --preset agents-only
 
 ## <a name="-paquetes"></a>📦 Paquetes
 
-El monorepo contiene **9 paquetes** independientes. Cada uno se puede instalar por separado o todos juntos via el CLI.
+El monorepo contiene **13 paquetes** independientes. Cada uno se puede instalar por separado o todos juntos via el CLI. (Las versiones publicadas se ven en los badges de npm de cada paquete — no se listan aqui para evitar que queden desactualizadas.)
 
-| | Paquete | Version | Descripcion |
-|---|---------|---------|-------------|
-| 🎁 | [`@devground/devground`](#devgrounddevground) | `1.0.0` | **Todo en uno** — instala y configura todos los paquetes |
-| 💅 | [`@devground/prettier-config`](#devgroundprettier-config) | `1.0.0` | Configuracion compartida de Prettier |
-| 🔍 | [`@devground/eslint-config`](#devgroundeslint-config) | `1.0.0` | ESLint Flat Config v9 (base + Next.js) |
-| 🧬 | [`@devground/tsconfig`](#devgroundtsconfig) | `1.0.0` | Presets de TypeScript (base, next, CI, node) |
-| ✍️ | [`@devground/commitlint-config`](#devgroundcommitlint-config) | `1.0.0` | Commits convencionales con commitlint |
-| 🧹 | [`@devground/lint-staged-config`](#devgroundlint-staged-config) | `1.0.0` | Reglas de linting para archivos staged |
-| 🪝 | [`@devground/husky-config`](#devgroundhusky-config) | `1.0.0` | Setup de git hooks con Husky |
-| 🤖 | [`@devground/agents-md`](#devgroundagents-md) | `1.0.0` | AGENTS.md + symlinks multi-agente |
-| 🏛️ | [`@devground/architecture-guide`](#devgroundarchitecture-guide) | `1.0.0` | **Knowledge base** de arquitectura + ADRs (BD, patrones, sistemas) |
-| ⚡ | [`devground-init`](#devground-init-cli) | `1.0.0` | CLI para scaffolding completo |
+| | Paquete | Descripcion |
+|---|---------|-------------|
+| 🎁 | [`@devground/devground`](#devgrounddevground) | **Todo en uno** — instala y configura los presets de config |
+| 💅 | [`@devground/prettier-config`](#devgroundprettier-config) | Configuracion compartida de Prettier |
+| 🔍 | [`@devground/eslint-config`](#devgroundeslint-config) | ESLint Flat Config (base + Next.js), con `max-lines` y `no-explicit-any` |
+| 🧬 | [`@devground/tsconfig`](#devgroundtsconfig) | Presets de TypeScript (base strict, next, next-loose, CI, node) |
+| ✍️ | [`@devground/commitlint-config`](#devgroundcommitlint-config) | Commits convencionales con commitlint |
+| 🧹 | [`@devground/lint-staged-config`](#devgroundlint-staged-config) | Reglas de linting para archivos staged |
+| 🪝 | [`@devground/husky-config`](#devgroundhusky-config) | Git hooks con Husky (pre-commit con gitleaks + commit-msg) |
+| 🤖 | [`@devground/agents-md`](#devgroundagents-md) | AGENTS.md + symlinks multi-agente |
+| 🏛️ | [`@devground/architecture-guide`](#devgroundarchitecture-guide) | **Knowledge base** de arquitectura + ADRs (BD, patrones, sistemas) |
+| 📊 | [`@devground/dev-metrics`](packages/dev-metrics#readme) | CLI de metricas de desarrollo con agentes (velocidad, calidad, eficiencia) — standalone |
+| 🪵 | [`@devground/logger`](packages/logger#readme) | Logger minimalista compartido (sin dependencias) |
+| 🧪 | [`@devground/vitest-config`](packages/vitest-config#readme) | Config Vitest compartida (entorno node, cobertura v8) |
+| ⚡ | [`devground-init`](#devground-init-cli) | CLI para scaffolding completo |
 
 ---
 
