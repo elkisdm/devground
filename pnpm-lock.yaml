@@ -15,10 +15,10 @@ importers:
         specifier: workspace:*
         version: link:packages/eslint-config
       '@typescript-eslint/parser':
-        specifier: ^8.60.1
+        specifier: ^8.0.0
         version: 8.60.1(eslint@10.4.1(jiti@2.6.1))(typescript@5.9.3)
       eslint:
-        specifier: ^10.4.1
+        specifier: ^10.0.0
         version: 10.4.1(jiti@2.6.1)
 
   packages/agents-md: {}
@@ -3607,7 +3607,7 @@ snapshots:
   '@typescript-eslint/project-service@8.59.3(typescript@5.9.3)':
     dependencies:
       '@typescript-eslint/tsconfig-utils': 8.59.3(typescript@5.9.3)
-      '@typescript-eslint/types': 8.59.3
+      '@typescript-eslint/types': 8.60.1
       debug: 4.4.3
       typescript: 5.9.3
     transitivePeerDependencies:
