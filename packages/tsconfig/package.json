@@ -1,6 +1,6 @@
 {
   "name": "@devground/tsconfig",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "description": "Shared TypeScript configuration presets (base, next, next-typecheck, node)",
   "files": [
     "base.json",

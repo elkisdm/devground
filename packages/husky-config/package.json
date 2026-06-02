@@ -1,6 +1,6 @@
 {
   "name": "@devground/husky-config",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Git hooks setup with Husky (pre-commit runs lint-staged, commit-msg runs commitlint)",
   "bin": {
     "devground-husky": "./setup.js"

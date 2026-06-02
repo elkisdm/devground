@@ -1,6 +1,6 @@
 {
   "name": "devground-init",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Interactive CLI to scaffold devground development standards (ESLint, Prettier, TypeScript, commitlint, husky, AGENTS.md, ADRs) in any Node/TypeScript/Next.js project",
   "bin": {
     "devground-init": "./dist/index.js"
