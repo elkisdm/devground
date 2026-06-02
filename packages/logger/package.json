@@ -1,6 +1,6 @@
 {
   "name": "@devground/logger",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Tiny dependency-free console logger with ANSI-colored levels (header, info, success, warn, error) shared across devground packages",
   "type": "module",
   "exports": {

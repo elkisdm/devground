@@ -1,5 +1,15 @@
 # @devground/devground
 
+## 1.0.2
+
+### Patch Changes
+
+- Updated dependencies [eecadb9]
+  - @devground/tsconfig@2.0.0
+  - @devground/husky-config@1.1.0
+  - @devground/eslint-config@1.0.2
+  - @devground/prettier-config@1.0.2
+
 ## 1.0.1
 
 ### Patch Changes

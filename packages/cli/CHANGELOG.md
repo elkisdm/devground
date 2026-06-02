@@ -1,5 +1,12 @@
 # devground-init
 
+## 1.0.2
+
+### Patch Changes
+
+- Updated dependencies [38a68ec]
+  - @devground/logger@0.2.0
+
 ## 1.0.1
 
 ### Patch Changes
