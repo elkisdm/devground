@@ -1,13 +1,13 @@
-import { addDevDependency } from '../utils/package-json.js';
-import { run } from '../utils/exec.js';
 import { success } from '../utils/logger.js';
+import { resolveOps } from './ops.js';
 import type { InstallerOptions } from '../types.js';
 
 export function install(options: InstallerOptions): void {
   const { targetDir, stack } = options;
+  const ops = resolveOps(options);
 
-  addDevDependency(targetDir, stack.packageManager, '@devground/architecture-guide');
-  run('npx devground-architecture', targetDir);
+  ops.addDevDependency(targetDir, stack.packageManager, '@devground/architecture-guide');
+  ops.run('npx devground-architecture', targetDir);
 
   success('Architecture knowledge base installed at knowledge/');
 }

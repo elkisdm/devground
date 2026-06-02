@@ -5,8 +5,11 @@ import type {
   RepoAdoption,
   EventAnnotation,
   MemoryMetrics,
+  GitMetrics,
+  TranscriptMetrics,
 } from '../types.js';
 import { collectGitRepo, mergeGitMetrics, isGitRepo, type GitRepoResult } from '../lib/git.js';
+import type { AttributionResult } from '../lib/repo-attribution.js';
 import {
   collectTranscripts,
   defaultTranscriptRoots,
@@ -97,8 +100,12 @@ function seedEvents(
   for (const ev of toAdd) addEvent(eventsFile, ev);
 }
 
-/** Runs the collect command: produces a snapshot JSON file and returns its path. */
-export function runCollect(args: CollectArgs): string {
+/** Per-repo git collection: filters to git working trees and merges metrics. */
+function collectGitPhase(args: CollectArgs): {
+  git: GitMetrics;
+  repoResults: GitRepoResult[];
+  repoPaths: string[];
+} {
   const repoResults: GitRepoResult[] = [];
   const repoPaths: string[] = [];
 
@@ -119,8 +126,26 @@ export function runCollect(args: CollectArgs): string {
     repoPaths.push(repoPath);
   }
 
-  const git = mergeGitMetrics(repoResults);
+  return { git: mergeGitMetrics(repoResults), repoResults, repoPaths };
+}
 
+/**
+ * Transcript collection + REAL per-repo token attribution (MEJORA 1). Each
+ * repo's tokens are MEASURED from its `~/.claude/projects/<DIR>` transcripts
+ * (live + backup), deduped by uuid and period-filtered. The only thing still
+ * inattributable is the ACCOUNT (personal vs work) that paid — NOT the
+ * project. See ADR-0006. Returns the data later phases also need (roots).
+ */
+function collectTranscriptPhase(
+  args: CollectArgs,
+  repoResults: readonly GitRepoResult[],
+  repoPaths: readonly string[],
+): {
+  transcript: TranscriptMetrics;
+  breakdown: RepoBreakdown[];
+  attribution: AttributionResult;
+  roots: string[];
+} {
   info('Collecting Claude Code transcript metrics...');
   const roots = args.transcriptRoots ?? defaultTranscriptRoots(args.transcriptBackupDir);
   if (roots.length === 0) {
@@ -128,13 +153,9 @@ export function runCollect(args: CollectArgs): string {
   }
   const transcript = collectTranscripts({ roots, since: args.since, until: args.until });
 
-  // MEJORA 1: REAL per-repo token attribution. Each repo's tokens are MEASURED
-  // from its `~/.claude/projects/<DIR>` transcripts (live + backup), deduped by
-  // uuid and period-filtered. The only thing still inattributable is the
-  // ACCOUNT (personal vs work) that paid — NOT the project. See ADR-0006.
   info('Attributing tokens to repos by project directory...');
   const attribution = attributeTokensByRepo({
-    repoPaths,
+    repoPaths: [...repoPaths],
     roots,
     since: args.since,
     until: args.until,
@@ -161,9 +182,13 @@ export function runCollect(args: CollectArgs): string {
     );
   }
 
-  // MEJORA 2: per-repo standards adoption + cohort.
+  return { transcript, breakdown, attribution, roots };
+}
+
+/** Per-repo standards adoption + cohort classification (MEJORA 2). */
+function collectAdoptionPhase(repoPaths: readonly string[]): RepoAdoption[] {
   info('Detecting standards-adoption markers per repo...');
-  const adoption: RepoAdoption[] = repoPaths.map((path) => {
+  return repoPaths.map((path) => {
     const markers = detectAdoptionMarkers(path);
     const cls = classifyCohort(markers);
     return {
@@ -174,13 +199,15 @@ export function runCollect(args: CollectArgs): string {
       missingKeyMarkers: cls.missingKeyMarkers,
     };
   });
+}
 
-  // MEJORA 3: memory corpus + context-cost proxy.
+/** Memory corpus aggregation + context-cost proxy (MEJORA 3). */
+function collectMemoryPhase(args: CollectArgs, roots: readonly string[]): MemoryMetrics {
   info('Measuring memory corpus and context-cost proxy...');
   const memoryRoot = defaultMemoryRoot();
   const notes = listMemoryNotes(memoryRoot);
   const corpus = aggregateMemory(notes, args.memoryBackendMigrationDate);
-  const allFiles = findTranscripts(roots);
+  const allFiles = findTranscripts([...roots]);
   const signals = computeMemorySignals({
     files: allFiles,
     since: args.since,
@@ -212,6 +239,11 @@ export function runCollect(args: CollectArgs): string {
     );
   }
 
+  return memory;
+}
+
+/** Reads the configured events file and returns events within the window. */
+function collectEventsPhase(args: CollectArgs, adoption: readonly RepoAdoption[]): EventAnnotation[] {
   // MEJORA B: N-identity. With a single identity the per-account attribution
   // dimension is meaningless and is simply omitted downstream (report); with
   // 2+ it is enabled. Token attribution by ACCOUNT remains impossible either
@@ -231,7 +263,20 @@ export function runCollect(args: CollectArgs): string {
   }
 
   const allEvents = readEvents(args.eventsFile);
-  const events = eventsInPeriod(allEvents, args.since, args.until);
+  return eventsInPeriod(allEvents, args.since, args.until);
+}
+
+/** Runs the collect command: produces a snapshot JSON file and returns its path. */
+export function runCollect(args: CollectArgs): string {
+  const { git, repoResults, repoPaths } = collectGitPhase(args);
+  const { transcript, breakdown, attribution, roots } = collectTranscriptPhase(
+    args,
+    repoResults,
+    repoPaths,
+  );
+  const adoption = collectAdoptionPhase(repoPaths);
+  const memory = collectMemoryPhase(args, roots);
+  const events = collectEventsPhase(args, adoption);
 
   const snapshot = buildSnapshot({
     label: args.label,
