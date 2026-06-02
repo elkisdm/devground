@@ -40,7 +40,8 @@ por CLI y dejar que las identidades vengan del config o de la auto-detección.
 ```jsonc
 {
   "repos": ["/ruta/repoA", "/ruta/repoB"],        // 1..N (nunca un número fijo)
-  "identities": ["tu@correo.com"],                  // 1..N emails de autor
+  "identities": ["123+tuusuario@users.noreply.github.com", "tu@correo.com"], // CONFIRMADAS
+  "candidateIdentities": ["colega@empresa.cl"],     // ambiguas: revísalas y promuévelas a mano
   "baseDir": "/Users/tu/Documents",                 // carpeta a escanear por `init`
   "excludes": ["vendor", "legacy"],                 // fragmentos de ruta a excluir
   "events": [{ "date": "2026-05-14", "label": "adopté eslint" }] // opcional
@@ -69,9 +70,21 @@ Qué hace:
 - **Repos**: escanea `baseDir` (profundidad acotada, default 2) buscando `.git`.
   Excluye forks de terceros heurísticamente (owner del remote `origin` distinto
   a tus logins de `gh`); `--include-forks` lo desactiva.
-- **Identidades**: infiere emails reales del `git log` de los repos descubiertos,
-  ordenados por frecuencia y filtrando bots/agentes (noreply, `[bot]`, Anthropic,
-  Cursor, etc.).
+- **Identidades**: infiere emails reales del `git log` y los **ancla a las
+  cuentas detectadas por `gh`**. Los noreply de GitHub tienen forma
+  `<id>+<usuario>@users.noreply.github.com`: `parseNoreplyUsername` extrae el
+  `<usuario>` y, si coincide (case-insensitive) con una cuenta `gh`, esa identidad
+  es del usuario y se **CONFIRMA** (esos noreply son el identificador canónico de
+  la cuenta, no se filtran). Resultado en dos buckets:
+  - `identities` (alta confianza): noreply que matchean una cuenta `gh` + emails
+    personales cuyo local-part mapea a un login `gh` (ej. `edaza@…` ↔ `edaza-create`)
+    o que co-ocurren con una identidad confirmada en 2+ repos.
+  - `candidateIdentities` (ambiguas): emails que no mapean a ninguna cuenta (ej. un
+    colega, o automatización que pasó el filtro). NO se usan para filtrar git;
+    el usuario las revisa y mueve las suyas a `identities`.
+  Se filtran bots/agentes (`[bot]`, Anthropic, Cursor, `codex`, `cursoragent`,
+  `github-actions`, `@local`) vía `isBotEmail`. El log avisa: "N identidades
+  confirmadas, M candidatas".
 
 El config resultante es **editable a mano** (override manual de repos/identidades).
 

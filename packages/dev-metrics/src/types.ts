@@ -188,8 +188,18 @@ export interface EventAnnotation {
 export interface DevMetricsConfig {
   /** Absolute repo paths to analyse. 1..N — never a fixed count. */
   repos: string[];
-  /** Author identities (emails) to filter git by. 1..N. */
+  /**
+   * CONFIRMED author identities (emails) to filter git by. 1..N. High
+   * confidence: GitHub noreply addresses that map to a detected `gh` account
+   * plus personal emails that co-occur with them in the same repos.
+   */
   identities: string[];
+  /**
+   * AMBIGUOUS identities `init` could not confirm as the user's own (e.g. a
+   * colleague's email, or automation that slipped the bot filter). They are NOT
+   * used for filtering. Review them and move the real ones into `identities`.
+   */
+  candidateIdentities?: string[];
   /** Base dir scanned by `init` to auto-discover repos (e.g. ~/Documents). */
   baseDir?: string;
   /** Glob/substring fragments of paths to exclude from discovery. */

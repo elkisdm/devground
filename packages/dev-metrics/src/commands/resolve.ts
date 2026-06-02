@@ -1,6 +1,11 @@
 import type { DevMetricsConfig } from '../types.js';
 import { loadConfig, resolveList, type Source } from '../lib/config.js';
-import { discoverRepos, inferIdentities, defaultBaseDir } from '../lib/detect.js';
+import {
+  discoverRepos,
+  inferIdentities,
+  detectGithubAccounts,
+  defaultBaseDir,
+} from '../lib/detect.js';
 
 /** Flags the user actually passed (undefined = not passed, so fall through). */
 export interface CollectFlags {
@@ -43,7 +48,15 @@ export function resolveCollectInputs(opts: ResolveOptions): ResolvedCollectInput
   const configPath = opts.configPath;
   const config = configPath !== undefined ? loadConfig(configPath) : null;
   const discover = opts.discover ?? ((baseDir: string) => discoverRepos({ baseDir }));
-  const infer = opts.infer ?? ((repos) => inferIdentities(repos));
+  // Auto-inference returns CONFIRMED identities only (candidates are never used
+  // for git filtering). Anchored to the detected gh logins so a colleague's
+  // email is never silently attributed to the user.
+  const infer =
+    opts.infer ??
+    ((repos): string[] => {
+      const own = new Set(detectGithubAccounts().accounts.map((a) => a.login.toLowerCase()));
+      return inferIdentities(repos, own).identities;
+    });
   const baseDir = config?.baseDir ?? defaultBaseDir();
 
   const repos = resolveList(opts.flags.repos, config?.repos, () => {

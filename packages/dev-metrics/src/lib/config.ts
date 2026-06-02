@@ -38,6 +38,8 @@ export function normalizeConfig(obj: Record<string, unknown>): DevMetricsConfig 
     repos: toStringArray(obj.repos),
     identities: toStringArray(obj.identities),
   };
+  const candidates = toStringArray(obj.candidateIdentities);
+  if (candidates.length > 0) config.candidateIdentities = candidates;
   if (typeof obj.baseDir === 'string') config.baseDir = obj.baseDir;
   const excludes = toStringArray(obj.excludes);
   if (excludes.length > 0) config.excludes = excludes;

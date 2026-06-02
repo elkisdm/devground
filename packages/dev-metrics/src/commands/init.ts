@@ -99,22 +99,32 @@ export function runInit(args: InitArgs): InitResult {
     );
   }
 
-  // 3. Infer real identities (emails) from the discovered repos' git logs.
+  // 3. Infer real identities (emails) from the discovered repos' git logs,
+  //    anchored to the detected gh accounts (noreply username match + repo
+  //    co-occurrence). Splits into CONFIRMED vs. CANDIDATE so colleagues'
+  //    emails are never auto-attributed to the user.
   info('Inferring author identities from git history...');
-  const identities = inferIdentities(repos);
+  const { identities, candidateIdentities } = inferIdentities(repos, ownUsernames);
   if (identities.length === 0) {
     warnings.push(
-      'No author identities inferred from git history. Add identities manually in the config.',
+      'No author identities confirmed from git history. ' +
+        (candidateIdentities.length > 0
+          ? 'Review candidateIdentities in the config and move the ones that are yours into identities.'
+          : 'Add identities manually in the config.'),
     );
-  } else {
-    info(`Inferred ${identities.length} identity/identities: ${identities.join(', ')}`);
   }
+  info(
+    `${identities.length} identidades confirmadas, ${candidateIdentities.length} candidatas (revísalas en el config).`,
+  );
+  if (identities.length > 0) info(`Confirmadas: ${identities.join(', ')}`);
+  if (candidateIdentities.length > 0) info(`Candidatas: ${candidateIdentities.join(', ')}`);
 
   const config: DevMetricsConfig = {
     repos,
     identities,
     baseDir,
   };
+  if (candidateIdentities.length > 0) config.candidateIdentities = candidateIdentities;
   if (args.excludes !== undefined && args.excludes.length > 0) config.excludes = args.excludes;
 
   writeFileSync(path, JSON.stringify(config, null, 2) + '\n', 'utf-8');

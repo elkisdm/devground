@@ -146,14 +146,29 @@ versionable. Degrada con gracia en cada paso (nunca crashea):
   de terceros heurísticamente (`isLikelyThirdPartyFork`: el owner del remote
   `origin` no coincide con ninguno de los logins de `gh`); `--include-forks` lo
   desactiva. Parsers (`parseRemoteOwner`) **puros y testeados**.
-- **Identidades**: `inferIdentities` infiere emails reales del `git log` de los
-  repos descubiertos, ordenados por frecuencia y filtrando bots/agentes
-  (noreply de GitHub, `[bot]`, Anthropic, Cursor, etc. vía `isBotEmail`).
-- **Override manual**: el config es editable a mano (repos/identidades/excludes/
-  events).
+- **Identidades** (v4 — corrige inferencia sobre-eager): `inferIdentities`
+  infiere emails del `git log` y los **ancla a las cuentas detectadas por `gh`**.
+  Los noreply de GitHub `<id>+<usuario>@users.noreply.github.com` son el
+  identificador **canónico** de la cuenta, NO un marcador de bot: `parseNoreplyUsername`
+  (pura y testeada) extrae el `<usuario>` y, si matchea (case-insensitive) un login
+  `gh`, la identidad se CONFIRMA (el código anterior los filtraba — estaba al revés).
+  El resultado se separa en dos buckets:
+  - `identities` (alta confianza): noreply que matchean cuenta `gh` + emails
+    personales con evidencia fuerte de ser la misma persona (local-part que mapea a
+    un login `gh` vía `localPartMatchesAccount`, ej. `edaza@…` ↔ `edaza-create`; o
+    co-ocurrencia con una identidad confirmada en 2+ repos distintos).
+  - `candidateIdentities` (ambiguas): emails que no mapean a ninguna cuenta (un
+    colega que comparte un solo repo, automatización que pasó el filtro). NO se usan
+    para filtrar git — el usuario las revisa y promueve a mano.
+  Bots/agentes se descartan vía `isBotEmail` (`[bot]`, `noreply@anthropic.com`,
+  `@local`, `codex`, `cursoragent`, `@cursor.com`, `github-actions`). En particular
+  `codex@local` ahora se filtra (antes pasaba). `init` escribe ambos campos y avisa:
+  "N identidades confirmadas, M candidatas (revísalas en el config)".
+- **Override manual**: el config es editable a mano (repos/identidades/candidatas/
+  excludes/events).
 
 **Shape del config** (`DevMetricsConfig`):
-`{ repos: string[], identities: string[], baseDir?, excludes?, events? }`.
+`{ repos: string[], identities: string[], candidateIdentities?: string[], baseDir?, excludes?, events? }`.
 
 **Precedencia de configuración** (documentada y testeada en
 `commands/resolve.ts`): **flags CLI > `dev-metrics.config.json` > auto-detección**,
