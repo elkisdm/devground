@@ -87,8 +87,8 @@ AGENTS.md multi-agente
 
 # devground
 
-> **9 paquetes npm. Un solo comando.**
-> Configura TDD, linting, formateo, commits convencionales, git hooks, reglas para agentes de IA y una knowledge base de arquitectura — en cualquier proyecto Node/TypeScript/Next.js.
+> **13 paquetes npm. Un solo comando.**
+> Configura TDD, linting, formateo, commits convencionales, git hooks, reglas para agentes de IA, una knowledge base de arquitectura y metricas de desarrollo — en cualquier proyecto Node/TypeScript/Next.js.
 
 ```bash
 # Instalacion rapida — todo en dos comandos
