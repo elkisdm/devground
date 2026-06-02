@@ -14,10 +14,20 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# Env files
+# Env files (ADR-0008) — solo .env.example se versiona
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
+
+# Datos / binarios (ADR-0008) — nunca versionar (PII, dumps, pesos)
+*.csv
+*.xlsx
+*.xls
+*.mov
+*.mp4
+*.zip
+*.sqlite
+*.db
 
 # Cache
 .cache/
