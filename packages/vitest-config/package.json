@@ -4,15 +4,17 @@
   "description": "Shared Vitest configuration for devground packages (node env, no globals, v8 coverage profile)",
   "type": "module",
   "exports": {
-    ".": "./index.ts"
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.mjs"
+    }
   },
-  "main": "./index.ts",
+  "main": "./index.mjs",
   "files": [
-    "index.ts"
+    "index.mjs",
+    "index.d.ts",
+    "README.md"
   ],
-  "scripts": {
-    "typecheck": "tsc --noEmit"
-  },
   "keywords": [
     "vitest",
     "config",
@@ -33,7 +35,6 @@
   },
   "devDependencies": {
     "@vitest/coverage-v8": "^2.1.0",
-    "typescript": "^5.0.0",
     "vitest": "^2.1.0"
   },
   "repository": {
@@ -44,5 +45,6 @@
   "homepage": "https://github.com/elkisdm/devground/tree/main/packages/vitest-config#readme",
   "bugs": {
     "url": "https://github.com/elkisdm/devground/issues"
-  }
+  },
+  "types": "./index.d.ts"
 }

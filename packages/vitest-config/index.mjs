@@ -3,14 +3,11 @@ import { defineConfig } from 'vitest/config';
 /**
  * Shared Vitest config for devground packages.
  *
- * Node environment, no globals (tests import from `vitest` explicitly), and a
- * v8 coverage profile that excludes build output, type declarations, configs
- * and the test files themselves. Coverage is opt-in: the v8 provider is only
- * loaded when a package runs with `--coverage`, so a plain `vitest run` keeps
- * working even if `@vitest/coverage-v8` is not installed.
+ * Authored as plain ESM (.mjs) so it can be imported at config-load time by
+ * any supported Node version (Node 20 cannot load a raw .ts config). Node
+ * environment, no globals, and an opt-in v8 coverage profile.
  *
- * Consume it with `mergeConfig` so packages can extend (e.g. tweak `include`)
- * without losing these defaults.
+ * Consume with `mergeConfig` so packages can extend (e.g. tweak `include`).
  */
 export default defineConfig({
   test: {
