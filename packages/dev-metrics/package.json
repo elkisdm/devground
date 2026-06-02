@@ -1,0 +1,53 @@
+{
+  "name": "@devground/dev-metrics",
+  "version": "0.1.0",
+  "description": "Continuous, labelled time-series of how a developer evolves while coding with AI agents: code volume, quality, velocity and efficiency, computed from git history and Claude Code transcripts",
+  "bin": {
+    "dev-metrics": "./dist/index.js"
+  },
+  "files": [
+    "dist/"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "metrics",
+    "git",
+    "churn",
+    "conventional-commits",
+    "claude-code",
+    "tokens",
+    "developer-productivity",
+    "time-series",
+    "devground"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/elkisdm/devground.git",
+    "directory": "packages/dev-metrics"
+  },
+  "homepage": "https://github.com/elkisdm/devground#readme",
+  "bugs": {
+    "url": "https://github.com/elkisdm/devground/issues"
+  },
+  "dependencies": {
+    "commander": "^13.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "typescript": "^5.0.0",
+    "vitest": "^2.1.0"
+  }
+}

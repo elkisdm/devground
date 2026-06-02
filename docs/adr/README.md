@@ -15,3 +15,4 @@ Sigue el mismo formato que [knowledge/adr/README.md](../../knowledge/adr/README.
 - [ADR-0003 — ESLint v9 Flat Config](0003-eslint-flat-config.md)
 - [ADR-0004 — TypeScript strict por defecto](0004-typescript-strict.md)
 - [ADR-0005 — Husky + lint-staged para git hooks](0005-husky-lint-staged.md)
+- [ADR-0006 — dev-metrics: serie temporal de "codificar con agentes"](0006-dev-metrics.md) (Propuesto)

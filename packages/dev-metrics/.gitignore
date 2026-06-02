@@ -1,0 +1,4 @@
+# Generated snapshots (local time-series data). Keep the dir, ignore contents
+# except the events annotations file, which is the durable, hand-curated log.
+snapshots/*.json
+!snapshots/events.json
