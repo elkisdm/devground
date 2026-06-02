@@ -14,9 +14,9 @@
     "publish-packages": "changeset publish"
   },
   "devDependencies": {
-    "@changesets/cli": "^2.27.0",
+    "@changesets/cli": "^2.31.0",
     "@devground/eslint-config": "workspace:*",
-    "@typescript-eslint/parser": "^8.0.0",
-    "eslint": "^10.0.0"
+    "@typescript-eslint/parser": "^8.60.1",
+    "eslint": "^10.4.1"
   }
 }
