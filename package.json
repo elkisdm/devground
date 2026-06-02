@@ -6,9 +6,10 @@
     "node": ">=20"
   },
   "scripts": {
-    "build": "pnpm --filter devground-init build",
-    "test": "pnpm --filter devground-init test",
-    "typecheck": "pnpm --filter devground-init typecheck",
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "echo 'TODO(lint): no hay config eslint a nivel root; el lint vive en pre-commit (lint-staged: eslint --fix sobre *.{ts,tsx} staged, ver @devground/lint-staged-config y ADR-0005). Para habilitar lint de repo completo en CI, agregar un eslint.config.js root que extienda @devground/eslint-config y cambiar este script a: eslint .' && exit 0",
     "changeset": "changeset",
     "publish-packages": "changeset publish"
   },

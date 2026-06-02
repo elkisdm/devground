@@ -6,6 +6,15 @@ on:
   push:
     branches: [main]
 
+# Permisos mínimos: el job de CI solo necesita leer el repo.
+permissions:
+  contents: read
+
+# Cancela runs obsoletos del mismo ref (PR que recibe pushes seguidos).
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-test:
     name: Build & Test (Node ${{ matrix.node }})
@@ -32,11 +41,19 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # pnpm -r recorre los 11 packages del workspace; salta los que no
+      # definan el script (no falla por ausencia).
       - name: Typecheck
-        run: pnpm --filter devground-init typecheck
+        run: pnpm -r typecheck
 
       - name: Build
-        run: pnpm build
+        run: pnpm -r build
 
       - name: Test
-        run: pnpm test
+        run: pnpm -r test
+
+      # Lint de repo completo: hoy es un no-op documentado (el lint real vive
+      # en pre-commit vía lint-staged, ADR-0005). Cuando exista un eslint.config
+      # root, el script `lint` correrá eslint sobre todo el repo aquí.
+      - name: Lint
+        run: pnpm lint
