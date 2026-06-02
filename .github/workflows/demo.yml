@@ -1,0 +1,40 @@
+name: Demo GIF
+
+# Renderiza demo/devground.gif cuando cambia el tape.
+# NO es bloqueante: no corre en PR ni gatea merges. Solo refresca el artefacto
+# en push a main que toque el .tape y commitea el GIF resultante.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'demo/devground.tape'
+      - '.github/workflows/demo.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  render:
+    name: Render VHS demo
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Render GIF with VHS
+        uses: charmbracelet/vhs-action@v2
+        with:
+          path: demo/devground.tape
+
+      - name: Commit rendered GIF
+        run: |
+          if [ -n "$(git status --porcelain demo/devground.gif)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add demo/devground.gif
+            git commit -m "chore(demo): re-render devground.gif"
+            git push
+          else
+            echo "No changes to demo/devground.gif"
+          fi
