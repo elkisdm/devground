@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { success } from '../utils/logger.js';
+import { success } from '@devground/logger';
 import { resolveOps } from './ops.js';
 import type { InstallerOptions } from '../types.js';
 

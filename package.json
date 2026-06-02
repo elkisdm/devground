@@ -9,11 +9,14 @@
     "build": "pnpm -r build",
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck",
-    "lint": "echo 'TODO(lint): no hay config eslint a nivel root; el lint vive en pre-commit (lint-staged: eslint --fix sobre *.{ts,tsx} staged, ver @devground/lint-staged-config y ADR-0005). Para habilitar lint de repo completo en CI, agregar un eslint.config.js root que extienda @devground/eslint-config y cambiar este script a: eslint .' && exit 0",
+    "lint": "eslint .",
     "changeset": "changeset",
     "publish-packages": "changeset publish"
   },
   "devDependencies": {
-    "@changesets/cli": "^2.27.0"
+    "@changesets/cli": "^2.27.0",
+    "@devground/eslint-config": "workspace:*",
+    "@typescript-eslint/parser": "^8.0.0",
+    "eslint": "^10.0.0"
   }
 }

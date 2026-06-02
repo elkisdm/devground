@@ -45,10 +45,12 @@
     "url": "https://github.com/elkisdm/devground/issues"
   },
   "dependencies": {
+    "@devground/logger": "workspace:*",
     "commander": "^13.0.0",
     "prompts": "^2.4.2"
   },
   "devDependencies": {
+    "@devground/vitest-config": "workspace:*",
     "@types/node": "^20",
     "@types/prompts": "^2.4.9",
     "typescript": "^5.0.0",

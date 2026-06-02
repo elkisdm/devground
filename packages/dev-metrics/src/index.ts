@@ -11,7 +11,7 @@ import { renderReport } from './lib/report.js';
 import { renderDiff } from './lib/diff.js';
 import { addEvent } from './lib/events.js';
 import { defaultConfigPath } from './lib/config.js';
-import { header, log, info, warn, success, error } from './lib/logger.js';
+import { header, log, info, warn, success, error } from '@devground/logger';
 
 const PKG_DIR = process.cwd();
 const DEFAULT_OUT_DIR = join(PKG_DIR, 'snapshots');

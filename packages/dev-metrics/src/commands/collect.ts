@@ -26,7 +26,7 @@ import { findTranscripts } from '../lib/transcript-collect.js';
 import { totalTokens } from '../lib/transcript.js';
 import { buildSnapshot } from '../lib/snapshot.js';
 import { readEvents, eventsInPeriod, addEvent } from '../lib/events.js';
-import { info, success, warn, error } from '../lib/logger.js';
+import { info, success, warn, error } from '@devground/logger';
 
 export interface CollectArgs {
   repos: string[];

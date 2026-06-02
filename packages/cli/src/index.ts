@@ -3,7 +3,7 @@
 import { Command } from 'commander';
 import prompts from 'prompts';
 import { detectStack } from './detect-stack.js';
-import { header, info, success, error, log } from './utils/logger.js';
+import { header, info, success, error, log } from '@devground/logger';
 import * as prettier from './installers/prettier.js';
 import * as eslint from './installers/eslint.js';
 import * as tsconfig from './installers/tsconfig.js';

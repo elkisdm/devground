@@ -8,7 +8,7 @@ import {
   defaultBaseDir,
 } from '../lib/detect.js';
 import { defaultConfigPath } from '../lib/config.js';
-import { info, success, warn } from '../lib/logger.js';
+import { info, success, warn } from '@devground/logger';
 
 export interface InitArgs {
   /** Where to write the config (default: ./dev-metrics.config.json). */
