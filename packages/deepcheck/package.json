@@ -14,7 +14,9 @@
     "setup.js"
   ],
   "scripts": {
-    "typecheck": "echo \"deepcheck ships static skills + workflow scripts; no build yet (pilot)\""
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
   },
   "keywords": [
     "qa",
@@ -41,5 +43,11 @@
   "homepage": "https://github.com/elkisdm/devground/tree/main/packages/deepcheck#readme",
   "bugs": {
     "url": "https://github.com/elkisdm/devground/issues"
+  },
+  "devDependencies": {
+    "@devground/vitest-config": "workspace:*",
+    "@types/node": "^25",
+    "typescript": "^5.0.0",
+    "vitest": "^2.1.0"
   }
 }

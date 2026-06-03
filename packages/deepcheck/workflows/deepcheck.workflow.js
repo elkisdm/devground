@@ -9,24 +9,101 @@ export const meta = {
 }
 
 // ---------------------------------------------------------------------------
+// Pure helpers — MIRROR de src/lib.ts.
+// NOTA: estos helpers son espejo de src/lib.ts (el runtime de Workflow es
+// self-contained y no puede importar). Mantener en sync: cualquier cambio de
+// lógica aquí debe reflejarse en src/lib.ts (y sus tests) y viceversa.
+// ---------------------------------------------------------------------------
+const sevRank = { critical: 0, high: 1, medium: 2, low: 3, info: 4 }
+
+// args may arrive as an object OR as a JSON-encoded string depending on how the
+// caller serialized it — normalize both so we never silently audit nothing.
+function parseArgs(args) {
+  const A = typeof args === 'string' ? JSON.parse(args) : (args ?? {})
+  return {
+    flow: A.flow ?? 'unknown-flow',
+    rootDir: A.rootDir ?? '.',
+    paths: A.paths ?? [],
+    readmePaths: A.readmePaths ?? [],
+    adrDir: A.adrDir ?? '',
+    priorSkill: A.priorSkill ?? null,
+    priorSkillPath: A.priorSkillPath ?? null,
+    ledgerPath: A.ledgerPath ?? null,
+    stamp: A.stamp ?? 'unstamped',
+    distill: A.distill === true,
+    skillOutPath: A.skillOutPath ?? null,
+    templatePath: A.templatePath ?? null,
+    runs: A.runs ?? 1,
+  }
+}
+
+// confirmed if a MAJORITY of refuters could NOT refute it
+function isConfirmed(refutedCount, voteCount) {
+  return voteCount > 0 && refutedCount < Math.ceil(voteCount / 2)
+}
+
+function partition(findings) {
+  const confirmed = findings
+    .filter((f) => isConfirmed(f.refutedCount, f.voteCount))
+    .sort((a, b) => (sevRank[a.severity] ?? 9) - (sevRank[b.severity] ?? 9))
+  const discarded = findings.filter((f) => !isConfirmed(f.refutedCount, f.voteCount))
+  return { confirmed, discarded }
+}
+
+function formatReport(flow, stamp, confirmed, discarded) {
+  const byRole = (role) => confirmed.filter((f) => f.role === role)
+  const fmt = (f) =>
+    `- **[${f.severity.toUpperCase()}] ${f.title}** (\`${f.dimension}\`)\n  - \`${f.file}:${f.line}\`\n  - Evidencia: ${f.evidence}\n  - Por qué importa: ${f.rationale}`
+  const fmtDiscarded = (f) =>
+    `- ~~${f.title}~~ (\`${f.dimension}\`, ${f.severity}) — refutado ${f.refutedCount}/${f.voteCount}. Razón: ${f.verdicts.find((v) => v.refuted)?.reason ?? 'n/a'}`
+
+  return `# deepcheck — auditoría de "${flow}"
+
+> Corrida: ${stamp} · ${confirmed.length} hallazgos confirmados · ${discarded.length} descartados
+
+## Resumen por rol
+
+| Rol | Confirmados |
+|-----|-------------|
+| QA | ${byRole('QA').length} |
+| Validación | ${byRole('Validacion').length} |
+| Auditoría | ${byRole('Auditoria').length} |
+
+## Hallazgos confirmados
+
+### QA — ¿funciona?
+${byRole('QA').map(fmt).join('\n') || '_Sin hallazgos confirmados._'}
+
+### Validación — ¿es lo que se pedía?
+${byRole('Validacion').map(fmt).join('\n') || '_Sin hallazgos confirmados._'}
+
+### Auditoría — ¿está bien construida?
+${byRole('Auditoria').map(fmt).join('\n') || '_Sin hallazgos confirmados._'}
+
+## Descartados por el filtro adversarial (transparencia)
+${discarded.map(fmtDiscarded).join('\n') || '_Ninguno._'}
+`
+}
+
+// ---------------------------------------------------------------------------
 // Inputs (via `args`) — see skills/deepcheck/SKILL.md
 //   flow, rootDir, paths[], readmePaths[], adrDir, priorSkill, ledgerPath, stamp
 // ---------------------------------------------------------------------------
-// args may arrive as an object OR as a JSON-encoded string depending on how the
-// caller serialized it — normalize both so we never silently audit nothing.
-const A = typeof args === 'string' ? JSON.parse(args) : (args ?? {})
-const flow = A.flow ?? 'unknown-flow'
-const rootDir = A.rootDir ?? '.'
-const paths = A.paths ?? []
-const readmePaths = A.readmePaths ?? []
-const adrDir = A.adrDir ?? ''
-const priorSkill = A.priorSkill ?? null
-const ledgerPath = A.ledgerPath ?? null
-const stamp = A.stamp ?? 'unstamped'
-const distill = A.distill === true
-const skillOutPath = A.skillOutPath ?? null
-const templatePath = A.templatePath ?? null
-const runs = A.runs ?? 1
+const {
+  flow,
+  rootDir,
+  paths,
+  readmePaths,
+  adrDir,
+  priorSkill,
+  priorSkillPath,
+  ledgerPath,
+  stamp,
+  distill,
+  skillOutPath,
+  templatePath,
+  runs,
+} = parseArgs(args)
 
 if (flow === 'unknown-flow' || paths.length === 0) {
   log('⚠️ ADVERTENCIA: flow sin identificar o paths vacío — args no llegó bien. Los agentes explorarán el repo a ciegas.')
@@ -35,7 +112,9 @@ if (flow === 'unknown-flow' || paths.length === 0) {
 const pathList = paths.join('\n  - ')
 const priorBlock = priorSkill
   ? `\n\nCONOCIMIENTO PREVIO de auditorías anteriores de este flujo (úsalo como piso, pero RE-VERIFICA que siga vigente — el código pudo cambiar):\n${priorSkill}`
-  : ''
+  : priorSkillPath
+    ? `\n\nHAY una skill de auditoría destilada de corridas anteriores de este flujo en ${priorSkillPath}. LÉELA con Read ANTES de revisar y úsala como piso:\n- RESPETA sus supresiones: NO re-reportes lo que ya está documentado como falso positivo, SALVO que el código haya cambiado y la supresión ya no aplique (revisa el gatillo de re-validación de cada una).\n- Ataca primero sus hotspots.\n- RE-VERIFICA lo que la skill daba por confirmado: si ya lo arreglaron, NO lo reportes; si sigue roto, repórtalo.`
+    : ''
 
 // Common context every reviewer gets.
 const ctx = `Flujo bajo auditoría: "${flow}".
@@ -132,13 +211,11 @@ const DIMENSIONS = [
   { role: 'Auditoria', key: 'aud-tests', ask: 'COBERTURA DE TESTS EN RUTAS CRÍTICAS (ADR 0012): ¿qué comportamiento crítico NO está cubierto por tests? Lee los .test.ts existentes y contrasta contra la lógica crítica.' },
 ]
 
-const sevRank = { critical: 0, high: 1, medium: 2, low: 3, info: 4 }
-
 // ---------------------------------------------------------------------------
 // Pipeline: each dimension reviews, then each of its findings is adversarially
 // verified — no barrier, so a dimension's findings verify while others review.
 // ---------------------------------------------------------------------------
-log(`deepcheck "${flow}": ${DIMENSIONS.length} dimensiones, 3 roles. priorSkill=${priorSkill ? 'sí' : 'no'}`)
+log(`deepcheck "${flow}": ${DIMENSIONS.length} dimensiones, 3 roles. priorSkill=${priorSkill || priorSkillPath ? 'sí' : 'no'}`)
 
 // Three independent refutation lenses (was two — with only two voters the
 // "majority" rule collapsed to unanimity, killing real findings on a single
@@ -194,8 +271,7 @@ const all = (
           ...f,
           refutedCount,
           voteCount: valid.length,
-          // confirmed if a MAJORITY of refuters could NOT refute it
-          confirmed: valid.length > 0 && refutedCount < Math.ceil(valid.length / 2),
+          confirmed: isConfirmed(refutedCount, valid.length),
           verdicts: valid,
         }
       }),
@@ -203,10 +279,7 @@ const all = (
   )
 ).filter(Boolean)
 
-const confirmed = all
-  .filter((f) => f.confirmed)
-  .sort((a, b) => (sevRank[a.severity] ?? 9) - (sevRank[b.severity] ?? 9))
-const discarded = all.filter((f) => !f.confirmed)
+const { confirmed, discarded } = partition(all)
 
 log(`Hallazgos: ${all.length} únicos → ${confirmed.length} confirmados, ${discarded.length} descartados por el filtro adversarial`)
 
@@ -215,38 +288,7 @@ log(`Hallazgos: ${all.length} únicos → ${confirmed.length} confirmados, ${dis
 // ---------------------------------------------------------------------------
 phase('Synthesize')
 
-const byRole = (role) => confirmed.filter((f) => f.role === role)
-const fmt = (f) =>
-  `- **[${f.severity.toUpperCase()}] ${f.title}** (\`${f.dimension}\`)\n  - \`${f.file}:${f.line}\`\n  - Evidencia: ${f.evidence}\n  - Por qué importa: ${f.rationale}`
-const fmtDiscarded = (f) =>
-  `- ~~${f.title}~~ (\`${f.dimension}\`, ${f.severity}) — refutado ${f.refutedCount}/${f.voteCount}. Razón: ${f.verdicts.find((v) => v.refuted)?.reason ?? 'n/a'}`
-
-const report = `# deepcheck — auditoría de "${flow}"
-
-> Corrida: ${stamp} · ${confirmed.length} hallazgos confirmados · ${discarded.length} descartados
-
-## Resumen por rol
-
-| Rol | Confirmados |
-|-----|-------------|
-| QA | ${byRole('QA').length} |
-| Validación | ${byRole('Validacion').length} |
-| Auditoría | ${byRole('Auditoria').length} |
-
-## Hallazgos confirmados
-
-### QA — ¿funciona?
-${byRole('QA').map(fmt).join('\n') || '_Sin hallazgos confirmados._'}
-
-### Validación — ¿es lo que se pedía?
-${byRole('Validacion').map(fmt).join('\n') || '_Sin hallazgos confirmados._'}
-
-### Auditoría — ¿está bien construida?
-${byRole('Auditoria').map(fmt).join('\n') || '_Sin hallazgos confirmados._'}
-
-## Descartados por el filtro adversarial (transparencia)
-${discarded.map(fmtDiscarded).join('\n') || '_Ninguno._'}
-`
+const report = formatReport(flow, stamp, confirmed, discarded)
 
 if (ledgerPath) {
   await agent(
@@ -270,7 +312,9 @@ if (distill && skillOutPath && templatePath) {
       `1. Lee la plantilla en ${templatePath} (tiene placeholders {{FLOW}}, {{STAMP}}, {{RUNS}}, {{FLOW_MAP}}, {{INVARIANTS}}, {{HOTSPOTS}}, {{SUPPRESSIONS}}, {{EDGE_CASES}}).\n` +
       (priorSkill
         ? `2. YA EXISTE una skill previa (te la paso abajo). FUSIONA: conserva lo que sigue vigente, actualiza lo que cambió. RE-VALIDA las supresiones viejas — si una supresión ya no aplica (el código cambió), quítala. No acumules supresiones ciegamente: una skill que solo dice "ignora esto" se vuelve ciega a regresiones reales.\n`
-        : `2. Es la PRIMERA corrida: destila desde cero.\n`) +
+        : priorSkillPath
+          ? `2. YA EXISTE una skill previa en ${priorSkillPath}. LÉELA con Read y FUSIONA: conserva lo que sigue vigente, actualiza lo que cambió, SUBE el contador {{RUNS}}. RE-VALIDA las supresiones viejas — si una ya no aplica (el código cambió), quítala. No acumules supresiones ciegamente: una skill que solo dice "ignora esto" se vuelve ciega a regresiones reales.\n`
+          : `2. Es la PRIMERA corrida: destila desde cero.\n`) +
       `3. Rellena los placeholders con conocimiento REAL de esta corrida:\n` +
       `   - {{FLOW}}=${flow}, {{STAMP}}=${stamp}, {{RUNS}}=${runs}\n` +
       `   - {{FLOW_MAP}}: 2-4 líneas de cómo funciona el flujo (archivos y responsabilidades clave).\n` +
