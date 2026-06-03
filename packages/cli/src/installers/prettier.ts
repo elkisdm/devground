@@ -1,8 +1,8 @@
 import { success, warn } from '@devground/logger';
 import { resolveOps } from './ops.js';
-import type { InstallerOptions } from '../types.js';
+import type { InstallerOptions, InstallResult } from '../types.js';
 
-export function install(options: InstallerOptions): void {
+export function install(options: InstallerOptions): InstallResult {
   const { targetDir, stack } = options;
   const ops = resolveOps(options);
 
@@ -14,7 +14,7 @@ export function install(options: InstallerOptions): void {
   // the package.json key is the correct mechanism here.
   if ('prettier' in pkg) {
     warn('Prettier config skipped: a "prettier" key already exists in package.json (left untouched).');
-    return;
+    return 'skipped';
   }
 
   ops.addDevDependency(targetDir, stack.packageManager, '@devground/prettier-config', 'prettier');
@@ -23,4 +23,5 @@ export function install(options: InstallerOptions): void {
   ops.writePackageJson(targetDir, pkg);
 
   success('Prettier configured with @devground/prettier-config');
+  return 'installed';
 }

@@ -34,3 +34,11 @@ export interface InstallerOptions {
   /** Injectable side-effects. Defaults to real FS/exec when omitted. */
   ops?: InstallerOps;
 }
+
+/**
+ * Outcome of an installer run. `'installed'` means it wrote at least one
+ * artifact; `'skipped'` means it respected pre-existing config and did nothing.
+ * A thrown error means the install failed. The CLI tallies these honestly
+ * instead of counting skips as successes.
+ */
+export type InstallResult = 'installed' | 'skipped';

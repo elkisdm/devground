@@ -2,9 +2,9 @@ import { join } from 'node:path';
 import { success, warn } from '@devground/logger';
 import { resolveOps } from './ops.js';
 import { writeFileGuarded } from './write-guard.js';
-import type { InstallerOptions } from '../types.js';
+import type { InstallerOptions, InstallResult } from '../types.js';
 
-export function install(options: InstallerOptions): void {
+export function install(options: InstallerOptions): InstallResult {
   const { targetDir, stack } = options;
   const ops = resolveOps(options);
   const isNext = stack.framework === 'nextjs';
@@ -16,7 +16,7 @@ export function install(options: InstallerOptions): void {
     // Nothing to do if both already exist — skip the dependency too.
     if (ops.fileExists(mainPath) && ops.fileExists(typecheckPath)) {
       warn('TypeScript config skipped: tsconfig.json and tsconfig.typecheck.json already exist (left untouched).');
-      return;
+      return 'skipped';
     }
 
     ops.addDevDependency(targetDir, stack.packageManager, '@devground/tsconfig', 'typescript');
@@ -68,12 +68,16 @@ export function install(options: InstallerOptions): void {
     if (written.length > 0) {
       success(`TypeScript configured with @devground/tsconfig/next.json (${written.join(' + ')})`);
     }
+
+    // Partial skip: 'installed' as long as at least one file was written
+    // (the guard above already handled the both-exist case as 'skipped').
+    return written.length > 0 ? 'installed' : 'skipped';
   } else {
     const mainPath = join(targetDir, 'tsconfig.json');
 
     if (ops.fileExists(mainPath)) {
       warn(`TypeScript config skipped: ${mainPath} already exists (left untouched).`);
-      return;
+      return 'skipped';
     }
 
     ops.addDevDependency(targetDir, stack.packageManager, '@devground/tsconfig', 'typescript');
@@ -87,5 +91,6 @@ export function install(options: InstallerOptions): void {
     ops.writeFile(mainPath, JSON.stringify(tsconfig, null, 2) + '\n');
 
     success('TypeScript configured with @devground/tsconfig/base.json');
+    return 'installed';
   }
 }

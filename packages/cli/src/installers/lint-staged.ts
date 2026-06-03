@@ -1,16 +1,16 @@
 import { join } from 'node:path';
 import { success, warn } from '@devground/logger';
 import { resolveOps } from './ops.js';
-import type { InstallerOptions } from '../types.js';
+import type { InstallerOptions, InstallResult } from '../types.js';
 
-export function install(options: InstallerOptions): void {
+export function install(options: InstallerOptions): InstallResult {
   const { targetDir, stack } = options;
   const ops = resolveOps(options);
   const configPath = join(targetDir, 'lint-staged.config.cjs');
 
   if (ops.fileExists(configPath)) {
     warn(`lint-staged config skipped: ${configPath} already exists (left untouched).`);
-    return;
+    return 'skipped';
   }
 
   ops.addDevDependency(targetDir, stack.packageManager, '@devground/lint-staged-config', 'lint-staged');
@@ -25,4 +25,5 @@ export function install(options: InstallerOptions): void {
   ops.writeFile(configPath, configContent);
 
   success('lint-staged configured with @devground/lint-staged-config');
+  return 'installed';
 }

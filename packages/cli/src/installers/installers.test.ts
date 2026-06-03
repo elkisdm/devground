@@ -104,8 +104,9 @@ describe('prettier installer', () => {
   it('adds prettier deps and sets the prettier key in package.json', () => {
     const { ops, devDeps, pkg } = makeRecordingOps({ name: 'app' });
 
-    prettier.install(optionsFor(NODE_STACK, ops));
+    const result = prettier.install(optionsFor(NODE_STACK, ops));
 
+    expect(result).toBe('installed');
     expect(devDeps).toHaveLength(1);
     expect(devDeps[0]?.pm).toBe('pnpm');
     expect(devDeps[0]?.packages).toEqual(['@devground/prettier-config', 'prettier']);
@@ -119,8 +120,9 @@ describe('lint-staged installer', () => {
   it('adds deps and writes a .cjs config that re-exports the shared rules (not a bare string)', () => {
     const { ops, devDeps, writes, pkg } = makeRecordingOps({ name: 'app' });
 
-    lintStaged.install(optionsFor(NODE_STACK, ops));
+    const result = lintStaged.install(optionsFor(NODE_STACK, ops));
 
+    expect(result).toBe('installed');
     expect(devDeps[0]?.packages).toEqual(['@devground/lint-staged-config', 'lint-staged']);
     // It must NOT write the broken package.json string that lint-staged rejects.
     expect(pkg()['lint-staged']).toBeUndefined();
@@ -134,8 +136,9 @@ describe('eslint installer', () => {
   it('writes a base flat config for a non-Next project', () => {
     const { ops, devDeps, writes } = makeRecordingOps();
 
-    eslint.install(optionsFor(NODE_STACK, ops));
+    const result = eslint.install(optionsFor(NODE_STACK, ops));
 
+    expect(result).toBe('installed');
     expect(devDeps[0]?.packages).toEqual(['@devground/eslint-config', 'eslint']);
     expect(writes).toHaveLength(1);
     expect(writes[0]?.path).toBe('/proj/eslint.config.mjs');
@@ -162,8 +165,9 @@ describe('commitlint installer', () => {
   it('adds deps and writes commitlint.config.js', () => {
     const { ops, devDeps, writes } = makeRecordingOps();
 
-    commitlint.install(optionsFor(NODE_STACK, ops));
+    const result = commitlint.install(optionsFor(NODE_STACK, ops));
 
+    expect(result).toBe('installed');
     expect(devDeps[0]?.packages).toEqual(['@devground/commitlint-config', '@commitlint/cli']);
     expect(writes[0]?.path).toBe('/proj/commitlint.config.js');
     expect(writes[0]?.content).toContain("extends: ['@devground/commitlint-config']");
@@ -174,8 +178,9 @@ describe('tsconfig installer', () => {
   it('writes a single base tsconfig for a non-Next project', () => {
     const { ops, devDeps, writes } = makeRecordingOps();
 
-    tsconfig.install(optionsFor(NODE_STACK, ops));
+    const result = tsconfig.install(optionsFor(NODE_STACK, ops));
 
+    expect(result).toBe('installed');
     expect(devDeps[0]?.packages).toEqual(['@devground/tsconfig', 'typescript']);
     expect(writes).toHaveLength(1);
     expect(writes[0]?.path).toBe('/proj/tsconfig.json');
@@ -187,8 +192,9 @@ describe('tsconfig installer', () => {
   it('writes both tsconfig.json and tsconfig.typecheck.json for a Next project', () => {
     const { ops, writes } = makeRecordingOps();
 
-    tsconfig.install(optionsFor(NEXT_STACK, ops));
+    const result = tsconfig.install(optionsFor(NEXT_STACK, ops));
 
+    expect(result).toBe('installed');
     expect(writes).toHaveLength(2);
     const paths = writes.map((w) => w.path);
     expect(paths).toContain('/proj/tsconfig.json');
@@ -210,8 +216,9 @@ describe('husky installer', () => {
   it('adds deps and runs the husky setup binary in the target dir', () => {
     const { ops, devDeps, runs } = makeRecordingOps();
 
-    husky.install(optionsFor(NODE_STACK, ops));
+    const result = husky.install(optionsFor(NODE_STACK, ops));
 
+    expect(result).toBe('installed');
     expect(devDeps[0]?.packages).toEqual(['@devground/husky-config', 'husky']);
     expect(runs).toHaveLength(1);
     expect(runs[0]?.cmd).toBe('npx devground-husky');
@@ -223,8 +230,9 @@ describe('agents-md installer', () => {
   it('adds the agents-md dep and runs the agents binary', () => {
     const { ops, devDeps, runs } = makeRecordingOps();
 
-    agentsMd.install(optionsFor(NODE_STACK, ops));
+    const result = agentsMd.install(optionsFor(NODE_STACK, ops));
 
+    expect(result).toBe('installed');
     expect(devDeps[0]?.packages).toEqual(['@devground/agents-md']);
     expect(runs[0]?.cmd).toBe('npx devground-agents');
     expect(runs[0]?.cwd).toBe('/proj');
@@ -235,8 +243,9 @@ describe('architecture-guide installer', () => {
   it('adds the architecture-guide dep and runs the architecture binary', () => {
     const { ops, devDeps, runs } = makeRecordingOps();
 
-    architectureGuide.install(optionsFor(NODE_STACK, ops));
+    const result = architectureGuide.install(optionsFor(NODE_STACK, ops));
 
+    expect(result).toBe('installed');
     expect(devDeps[0]?.packages).toEqual(['@devground/architecture-guide']);
     expect(runs[0]?.cmd).toBe('npx devground-architecture');
     expect(runs[0]?.cwd).toBe('/proj');
@@ -247,8 +256,9 @@ describe('overwrite guard (honors "no sobreescribe nada existente")', () => {
   it('eslint skips writing AND installing deps when eslint.config.mjs already exists', () => {
     const { ops, writes, devDeps } = makeRecordingOps({}, ['/proj/eslint.config.mjs']);
 
-    eslint.install(optionsFor(NODE_STACK, ops));
+    const result = eslint.install(optionsFor(NODE_STACK, ops));
 
+    expect(result).toBe('skipped');
     expect(writes).toHaveLength(0);
     // skipping must not leave a dirty tree by installing deps anyway
     expect(devDeps).toHaveLength(0);
@@ -257,8 +267,9 @@ describe('overwrite guard (honors "no sobreescribe nada existente")', () => {
   it('commitlint skips writing and deps when commitlint.config.js already exists', () => {
     const { ops, writes, devDeps } = makeRecordingOps({}, ['/proj/commitlint.config.js']);
 
-    commitlint.install(optionsFor(NODE_STACK, ops));
+    const result = commitlint.install(optionsFor(NODE_STACK, ops));
 
+    expect(result).toBe('skipped');
     expect(writes).toHaveLength(0);
     expect(devDeps).toHaveLength(0);
   });
@@ -266,8 +277,9 @@ describe('overwrite guard (honors "no sobreescribe nada existente")', () => {
   it('tsconfig skips an existing tsconfig.json (non-Next) without installing deps', () => {
     const { ops, writes, devDeps } = makeRecordingOps({}, ['/proj/tsconfig.json']);
 
-    tsconfig.install(optionsFor(NODE_STACK, ops));
+    const result = tsconfig.install(optionsFor(NODE_STACK, ops));
 
+    expect(result).toBe('skipped');
     expect(writes).toHaveLength(0);
     expect(devDeps).toHaveLength(0);
   });
@@ -278,17 +290,20 @@ describe('overwrite guard (honors "no sobreescribe nada existente")', () => {
       '/proj/tsconfig.typecheck.json',
     ]);
 
-    tsconfig.install(optionsFor(NEXT_STACK, ops));
+    const result = tsconfig.install(optionsFor(NEXT_STACK, ops));
 
+    expect(result).toBe('skipped');
     expect(writes).toHaveLength(0);
     expect(devDeps).toHaveLength(0);
   });
 
-  it('tsconfig (Next) writes only the missing file when one pre-exists', () => {
+  it('tsconfig (Next) writes only the missing file when one pre-exists (partial skip = installed)', () => {
     const { ops, writes, devDeps } = makeRecordingOps({}, ['/proj/tsconfig.json']);
 
-    tsconfig.install(optionsFor(NEXT_STACK, ops));
+    const result = tsconfig.install(optionsFor(NEXT_STACK, ops));
 
+    // wrote at least one file -> 'installed'
+    expect(result).toBe('installed');
     // dep still installed (work remains), only the missing file written
     expect(devDeps).toHaveLength(1);
     expect(writes).toHaveLength(1);
@@ -298,8 +313,9 @@ describe('overwrite guard (honors "no sobreescribe nada existente")', () => {
   it('lint-staged skips writing and deps when lint-staged.config.cjs already exists', () => {
     const { ops, writes, devDeps } = makeRecordingOps({}, ['/proj/lint-staged.config.cjs']);
 
-    lintStaged.install(optionsFor(NODE_STACK, ops));
+    const result = lintStaged.install(optionsFor(NODE_STACK, ops));
 
+    expect(result).toBe('skipped');
     expect(writes).toHaveLength(0);
     expect(devDeps).toHaveLength(0);
   });
@@ -307,8 +323,9 @@ describe('overwrite guard (honors "no sobreescribe nada existente")', () => {
   it('prettier skips and does not install deps when a prettier key already exists', () => {
     const { ops, pkg, devDeps } = makeRecordingOps({ prettier: './existing-config.js' });
 
-    prettier.install(optionsFor(NODE_STACK, ops));
+    const result = prettier.install(optionsFor(NODE_STACK, ops));
 
+    expect(result).toBe('skipped');
     // existing config preserved, not overwritten; no deps installed
     expect(pkg().prettier).toBe('./existing-config.js');
     expect(devDeps).toHaveLength(0);

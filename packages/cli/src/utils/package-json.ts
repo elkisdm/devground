@@ -5,11 +5,25 @@ import type { PackageManager } from '../types.js';
 
 /**
  * Reads and parses the package.json from the given directory.
+ *
+ * Validates that the parsed value is a plain object. A package.json that is
+ * valid JSON but not an object (array, scalar, null) would otherwise corrupt
+ * downstream consumers: `'prettier' in pkg` throws a misleading TypeError on a
+ * scalar, an array passes the guard then loses all content on stringify, and
+ * `null` reads as a missing file. Centralizing the defense here keeps every
+ * installer simple.
  */
 export function readPackageJson(dir: string): Record<string, unknown> {
   const filePath = join(dir, 'package.json');
   const raw = readFileSync(filePath, 'utf-8');
-  return JSON.parse(raw) as Record<string, unknown>;
+  const parsed: unknown = JSON.parse(raw);
+
+  if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    const got = parsed === null ? 'null' : Array.isArray(parsed) ? 'array' : typeof parsed;
+    throw new Error(`package.json is not a valid object (got ${got})`);
+  }
+
+  return parsed as Record<string, unknown>;
 }
 
 /**

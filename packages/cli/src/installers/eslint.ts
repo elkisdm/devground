@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { success, warn } from '@devground/logger';
 import { resolveOps } from './ops.js';
-import type { InstallerOptions } from '../types.js';
+import type { InstallerOptions, InstallResult } from '../types.js';
 
-export function install(options: InstallerOptions): void {
+export function install(options: InstallerOptions): InstallResult {
   const { targetDir, stack } = options;
   const ops = resolveOps(options);
   const isNext = stack.framework === 'nextjs';
@@ -14,7 +14,7 @@ export function install(options: InstallerOptions): void {
   // leave a dirty tree while claiming to have left things untouched.
   if (ops.fileExists(configPath)) {
     warn(`ESLint config skipped: ${configPath} already exists (left untouched).`);
-    return;
+    return 'skipped';
   }
 
   const packages = isNext
@@ -30,4 +30,5 @@ export function install(options: InstallerOptions): void {
   ops.writeFile(configPath, configContent);
 
   success('ESLint configured with @devground/eslint-config' + (isNext ? '/next' : ''));
+  return 'installed';
 }

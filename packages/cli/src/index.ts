@@ -15,12 +15,13 @@ import * as lintStaged from './installers/lint-staged.js';
 import * as husky from './installers/husky.js';
 import * as agentsMd from './installers/agents-md.js';
 import * as architectureGuide from './installers/architecture-guide.js';
-import type { InstallerOptions } from './types.js';
+import { formatTally, type InstallTally } from './tally.js';
+import type { InstallerOptions, InstallResult } from './types.js';
 
 interface Installer {
   name: string;
   value: string;
-  install: (options: InstallerOptions) => void;
+  install: (options: InstallerOptions) => InstallResult;
 }
 
 const ALL_INSTALLERS: Installer[] = [
@@ -128,28 +129,32 @@ program
     log('');
     header('Installing...');
 
-    let failures = 0;
+    const tally: InstallTally = { installed: 0, skipped: 0, failed: 0 };
     for (const installer of selectedInstallers) {
       try {
-        installer.install(options);
+        const result = installer.install(options);
+        if (result === 'skipped') {
+          tally.skipped++;
+        } else {
+          tally.installed++;
+        }
       } catch (err) {
-        failures++;
+        tally.failed++;
         const message = err instanceof Error ? err.message : String(err);
         error(`Failed to install ${installer.name}: ${message}`);
       }
     }
 
-    const succeeded = selectedInstallers.length - failures;
-
     log('');
     header('Done!');
-    if (failures > 0) {
+    const summary = formatTally(tally);
+    if (tally.failed > 0) {
       // Report the real tally and fail loudly so CI doesn't read a partial
       // install as success.
-      error(`${succeeded}/${selectedInstallers.length} tool(s) configured; ${failures} failed.`);
+      error(summary);
       process.exit(1);
     }
-    success(`${succeeded} tool(s) configured successfully.`);
+    success(summary);
     log('');
   });
 
