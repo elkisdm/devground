@@ -1,0 +1,45 @@
+{
+  "name": "@devground/deepcheck",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Self-improving multi-agent verification system (QA + Validation + Audit) that deeply checks features and flows in parallel and distills a per-flow audit skill that gets sharper on every run",
+  "type": "module",
+  "bin": {
+    "devground-deepcheck": "./setup.js"
+  },
+  "files": [
+    "skills/",
+    "workflows/",
+    "templates/",
+    "setup.js"
+  ],
+  "scripts": {
+    "typecheck": "echo \"deepcheck ships static skills + workflow scripts; no build yet (pilot)\""
+  },
+  "keywords": [
+    "qa",
+    "audit",
+    "validation",
+    "verification",
+    "agents",
+    "workflow",
+    "self-improving",
+    "devground"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/elkisdm/devground.git",
+    "directory": "packages/deepcheck"
+  },
+  "homepage": "https://github.com/elkisdm/devground/tree/main/packages/deepcheck#readme",
+  "bugs": {
+    "url": "https://github.com/elkisdm/devground/issues"
+  }
+}
