@@ -1,8 +1,11 @@
 #!/usr/bin/env node
 
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { Command } from 'commander';
 import prompts from 'prompts';
 import { detectStack } from './detect-stack.js';
+import { isValidPreset, selectPresetValues, VALID_PRESETS } from './select.js';
 import { header, info, success, error, log } from '@devground/logger';
 import * as prettier from './installers/prettier.js';
 import * as eslint from './installers/eslint.js';
@@ -31,25 +34,46 @@ const ALL_INSTALLERS: Installer[] = [
   { name: 'Architecture guide + ADR templates', value: 'architecture-guide', install: architectureGuide.install },
 ];
 
+// Single source of truth for the version: the package manifest, not a literal.
+// __dirname is dist/ at runtime (CommonJS output), so ../package.json is the
+// package manifest.
+const pkgVersion = (
+  JSON.parse(readFileSync(join(__dirname, '../package.json'), 'utf-8')) as { version: string }
+).version;
+
 const program = new Command();
 
 program
   .name('devground-init')
   .description('Scaffold @devground development standards into any project')
-  .version('1.0.0')
+  .version(pkgVersion)
   .option('--preset <name>', 'Install preset (full | agents-only)')
   .option('-y, --yes', 'Skip prompts, install everything')
   .action(async (opts: { preset?: string; yes?: boolean }) => {
-    header('devground-init v1.0.0');
+    header(`devground-init v${pkgVersion}`);
+
+    // Validate the preset up front instead of silently falling through to the
+    // interactive prompt on a typo (which read as success in CI).
+    if (opts.preset !== undefined && !isValidPreset(opts.preset)) {
+      error(`Unknown preset "${opts.preset}". Valid presets: ${VALID_PRESETS.join(', ')}.`);
+      process.exit(1);
+    }
 
     const targetDir = process.cwd();
 
     let stack;
     try {
       stack = detectStack(targetDir);
-    } catch {
-      error('Could not read package.json in the current directory.');
-      error('Make sure you run devground-init from a project root.');
+    } catch (err) {
+      // Preserve the real cause: only blame a missing manifest when it's
+      // actually missing; surface parse/permission errors instead of hiding them.
+      const code = (err as NodeJS.ErrnoException)?.code;
+      if (code === 'ENOENT') {
+        error('Could not find package.json in the current directory.');
+        error('Make sure you run devground-init from a project root.');
+      } else {
+        error(`Could not read package.json: ${err instanceof Error ? err.message : String(err)}`);
+      }
       process.exit(1);
     }
 
@@ -62,11 +86,22 @@ program
 
     let selectedInstallers: Installer[];
 
-    if (opts.yes || opts.preset === 'full') {
-      selectedInstallers = ALL_INSTALLERS;
-    } else if (opts.preset === 'agents-only') {
-      selectedInstallers = ALL_INSTALLERS.filter((i) => i.value === 'agents-md');
+    const presetValues = selectPresetValues(
+      ALL_INSTALLERS.map((i) => i.value),
+      opts,
+    );
+
+    if (presetValues !== null) {
+      selectedInstallers = ALL_INSTALLERS.filter((i) => presetValues.includes(i.value));
     } else {
+      // Interactive mode needs a TTY. In CI / piped stdin the prompt resolves
+      // empty and the process would exit 0 having installed nothing — a false
+      // success. Refuse loudly instead.
+      if (!process.stdin.isTTY) {
+        error('Non-interactive environment detected: re-run with --yes or --preset <full|agents-only>.');
+        process.exit(1);
+      }
+
       const response = await prompts({
         type: 'multiselect',
         name: 'tools',
@@ -93,18 +128,28 @@ program
     log('');
     header('Installing...');
 
+    let failures = 0;
     for (const installer of selectedInstallers) {
       try {
         installer.install(options);
       } catch (err) {
+        failures++;
         const message = err instanceof Error ? err.message : String(err);
         error(`Failed to install ${installer.name}: ${message}`);
       }
     }
 
+    const succeeded = selectedInstallers.length - failures;
+
     log('');
     header('Done!');
-    success(`${selectedInstallers.length} tool(s) configured successfully.`);
+    if (failures > 0) {
+      // Report the real tally and fail loudly so CI doesn't read a partial
+      // install as success.
+      error(`${succeeded}/${selectedInstallers.length} tool(s) configured; ${failures} failed.`);
+      process.exit(1);
+    }
+    success(`${succeeded} tool(s) configured successfully.`);
     log('');
   });
 

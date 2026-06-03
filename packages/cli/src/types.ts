@@ -22,6 +22,8 @@ export interface InstallerOps {
   writePackageJson: (dir: string, data: Record<string, unknown>) => void;
   /** Writes a file at an absolute path. */
   writeFile: (path: string, content: string) => void;
+  /** Returns whether a file already exists at an absolute path. */
+  fileExists: (path: string) => boolean;
   /** Runs a shell command in `cwd`, returning trimmed stdout. */
   run: (cmd: string, cwd: string) => string;
 }

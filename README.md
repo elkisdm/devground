@@ -53,6 +53,7 @@ npx devground-init
 + tsconfig.json                  ← preset strict para tu stack
 + tsconfig.typecheck.json        ← preset CI
 + commitlint.config.js           ← conventional commits
++ lint-staged.config.cjs         ← re-exporta @devground/lint-staged-config
 + .husky/pre-commit              ← lint-staged en cada commit
 + AGENTS.md                      ← reglas para IA (source of truth)
 + CLAUDE.md → AGENTS.md          ← symlink (Claude Code)
@@ -60,10 +61,10 @@ npx devground-init
 + .github/copilot-instructions.md → AGENTS.md
 + .gemini/styleguide.md → AGENTS.md
 + knowledge/                     ← guias + 11 ADRs de arquitectura
-~ package.json                   ← prettier, lint-staged, prepare script
+~ package.json                   ← prettier, prepare script
 ```
 
-**No sobreescribe nada existente.** Si ya tienes `tsconfig.json`, lo respeta.
+**No sobreescribe tus configs.** Cada instalador de archivo de config (ESLint, TypeScript, Commitlint, lint-staged) respeta un archivo existente: lo deja intacto y no instala nada. Prettier respeta una clave `"prettier"` previa. Los instaladores que delegan (Husky, AGENTS.md, Architecture guide) ejecutan sus propios binarios.
 
 </details>
 

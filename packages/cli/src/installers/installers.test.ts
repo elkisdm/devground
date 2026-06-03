@@ -39,7 +39,10 @@ interface RunCall {
  * that read-modify-write package.json (prettier, lint-staged) round-trip
  * correctly. Mirrors how dev-metrics injects a fake `run`.
  */
-function makeRecordingOps(initialPkg: Record<string, unknown> = {}): {
+function makeRecordingOps(
+  initialPkg: Record<string, unknown> = {},
+  existingFiles: string[] = [],
+): {
   ops: InstallerOps;
   devDeps: DevDepCall[];
   writes: WriteCall[];
@@ -62,6 +65,7 @@ function makeRecordingOps(initialPkg: Record<string, unknown> = {}): {
     writeFile: (path, content) => {
       writes.push({ path, content });
     },
+    fileExists: (path) => existingFiles.includes(path),
     run: (cmd, cwd) => {
       runs.push({ cmd, cwd });
       return '';
@@ -112,13 +116,17 @@ describe('prettier installer', () => {
 });
 
 describe('lint-staged installer', () => {
-  it('adds deps and sets the lint-staged key in package.json', () => {
-    const { ops, devDeps, pkg } = makeRecordingOps({ name: 'app' });
+  it('adds deps and writes a .cjs config that re-exports the shared rules (not a bare string)', () => {
+    const { ops, devDeps, writes, pkg } = makeRecordingOps({ name: 'app' });
 
     lintStaged.install(optionsFor(NODE_STACK, ops));
 
     expect(devDeps[0]?.packages).toEqual(['@devground/lint-staged-config', 'lint-staged']);
-    expect(pkg()['lint-staged']).toBe('@devground/lint-staged-config');
+    // It must NOT write the broken package.json string that lint-staged rejects.
+    expect(pkg()['lint-staged']).toBeUndefined();
+    expect(writes).toHaveLength(1);
+    expect(writes[0]?.path).toBe('/proj/lint-staged.config.cjs');
+    expect(writes[0]?.content).toContain("require('@devground/lint-staged-config')");
   });
 });
 
@@ -232,6 +240,78 @@ describe('architecture-guide installer', () => {
     expect(devDeps[0]?.packages).toEqual(['@devground/architecture-guide']);
     expect(runs[0]?.cmd).toBe('npx devground-architecture');
     expect(runs[0]?.cwd).toBe('/proj');
+  });
+});
+
+describe('overwrite guard (honors "no sobreescribe nada existente")', () => {
+  it('eslint skips writing AND installing deps when eslint.config.mjs already exists', () => {
+    const { ops, writes, devDeps } = makeRecordingOps({}, ['/proj/eslint.config.mjs']);
+
+    eslint.install(optionsFor(NODE_STACK, ops));
+
+    expect(writes).toHaveLength(0);
+    // skipping must not leave a dirty tree by installing deps anyway
+    expect(devDeps).toHaveLength(0);
+  });
+
+  it('commitlint skips writing and deps when commitlint.config.js already exists', () => {
+    const { ops, writes, devDeps } = makeRecordingOps({}, ['/proj/commitlint.config.js']);
+
+    commitlint.install(optionsFor(NODE_STACK, ops));
+
+    expect(writes).toHaveLength(0);
+    expect(devDeps).toHaveLength(0);
+  });
+
+  it('tsconfig skips an existing tsconfig.json (non-Next) without installing deps', () => {
+    const { ops, writes, devDeps } = makeRecordingOps({}, ['/proj/tsconfig.json']);
+
+    tsconfig.install(optionsFor(NODE_STACK, ops));
+
+    expect(writes).toHaveLength(0);
+    expect(devDeps).toHaveLength(0);
+  });
+
+  it('tsconfig (Next) skips entirely only when BOTH config files already exist', () => {
+    const { ops, writes, devDeps } = makeRecordingOps({}, [
+      '/proj/tsconfig.json',
+      '/proj/tsconfig.typecheck.json',
+    ]);
+
+    tsconfig.install(optionsFor(NEXT_STACK, ops));
+
+    expect(writes).toHaveLength(0);
+    expect(devDeps).toHaveLength(0);
+  });
+
+  it('tsconfig (Next) writes only the missing file when one pre-exists', () => {
+    const { ops, writes, devDeps } = makeRecordingOps({}, ['/proj/tsconfig.json']);
+
+    tsconfig.install(optionsFor(NEXT_STACK, ops));
+
+    // dep still installed (work remains), only the missing file written
+    expect(devDeps).toHaveLength(1);
+    expect(writes).toHaveLength(1);
+    expect(writes[0]?.path).toBe('/proj/tsconfig.typecheck.json');
+  });
+
+  it('lint-staged skips writing and deps when lint-staged.config.cjs already exists', () => {
+    const { ops, writes, devDeps } = makeRecordingOps({}, ['/proj/lint-staged.config.cjs']);
+
+    lintStaged.install(optionsFor(NODE_STACK, ops));
+
+    expect(writes).toHaveLength(0);
+    expect(devDeps).toHaveLength(0);
+  });
+
+  it('prettier skips and does not install deps when a prettier key already exists', () => {
+    const { ops, pkg, devDeps } = makeRecordingOps({ prettier: './existing-config.js' });
+
+    prettier.install(optionsFor(NODE_STACK, ops));
+
+    // existing config preserved, not overwritten; no deps installed
+    expect(pkg().prettier).toBe('./existing-config.js');
+    expect(devDeps).toHaveLength(0);
   });
 });
 
