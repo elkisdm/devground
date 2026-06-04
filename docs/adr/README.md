@@ -27,6 +27,7 @@ siguiente número de la secuencia, rellénalo y añádelo al índice de abajo.
 - [ADR-0010 — Límite de tamaño de módulo/función + container-presentational](0010-limite-tamano-modulo-funcion.md) (Propuesto)
 - [ADR-0011 — Prohibido `any` en fronteras externas (DB/API)](0011-prohibido-any-fronteras-externas.md) (Propuesto)
 - [ADR-0012 — Tests obligatorios en rutas críticas](0012-tests-rutas-criticas.md) (Propuesto)
+- [ADR-0013 — Sistema de agentes de auditoría auto-mejorable (deepcheck)](0013-sistema-de-agentes-de-auditoria.md) (Propuesto)
 
 ## Estándares con enforcement automático
 

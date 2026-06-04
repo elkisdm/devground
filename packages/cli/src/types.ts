@@ -22,6 +22,8 @@ export interface InstallerOps {
   writePackageJson: (dir: string, data: Record<string, unknown>) => void;
   /** Writes a file at an absolute path. */
   writeFile: (path: string, content: string) => void;
+  /** Returns whether a file already exists at an absolute path. */
+  fileExists: (path: string) => boolean;
   /** Runs a shell command in `cwd`, returning trimmed stdout. */
   run: (cmd: string, cwd: string) => string;
 }
@@ -32,3 +34,11 @@ export interface InstallerOptions {
   /** Injectable side-effects. Defaults to real FS/exec when omitted. */
   ops?: InstallerOps;
 }
+
+/**
+ * Outcome of an installer run. `'installed'` means it wrote at least one
+ * artifact; `'skipped'` means it respected pre-existing config and did nothing.
+ * A thrown error means the install failed. The CLI tallies these honestly
+ * instead of counting skips as successes.
+ */
+export type InstallResult = 'installed' | 'skipped';

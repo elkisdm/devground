@@ -1,4 +1,4 @@
-import { writeFileSync } from 'node:fs';
+import { writeFileSync, existsSync } from 'node:fs';
 import {
   addDevDependency,
   readPackageJson,
@@ -18,6 +18,7 @@ export const defaultInstallerOps: InstallerOps = {
   readPackageJson,
   writePackageJson,
   writeFile: (path, content) => writeFileSync(path, content, 'utf-8'),
+  fileExists: (path) => existsSync(path),
   run,
 };
 

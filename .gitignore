@@ -46,3 +46,7 @@ coverage/
 
 # Local tooling (AI snapshots, etc.)
 .snapshots/
+# dev-metrics output — PII derivada de transcripts (ADR-0008), nunca versionar
+packages/dev-metrics/snapshots/
+# spec-flow telemetría: labels benignos, SÍ se versiona (ver measurement-design)
+!.spec-flow/

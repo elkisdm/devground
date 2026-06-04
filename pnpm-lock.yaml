@@ -59,6 +59,21 @@ importers:
         specifier: '>=19.0.0'
         version: 20.5.0(@types/node@25.9.1)(conventional-commits-parser@6.4.0)(typescript@5.9.3)
 
+  packages/deepcheck:
+    devDependencies:
+      '@devground/vitest-config':
+        specifier: workspace:*
+        version: link:../vitest-config
+      '@types/node':
+        specifier: ^25
+        version: 25.9.1
+      typescript:
+        specifier: ^5.0.0
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@25.9.1)
+
   packages/dev-metrics:
     dependencies:
       '@devground/logger':

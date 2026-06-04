@@ -1,16 +1,23 @@
 import { join } from 'node:path';
-import { success } from '@devground/logger';
+import { success, warn } from '@devground/logger';
 import { resolveOps } from './ops.js';
-import type { InstallerOptions } from '../types.js';
+import type { InstallerOptions, InstallResult } from '../types.js';
 
-export function install(options: InstallerOptions): void {
+export function install(options: InstallerOptions): InstallResult {
   const { targetDir, stack } = options;
   const ops = resolveOps(options);
+  const configPath = join(targetDir, 'commitlint.config.js');
+
+  if (ops.fileExists(configPath)) {
+    warn(`Commitlint config skipped: ${configPath} already exists (left untouched).`);
+    return 'skipped';
+  }
 
   ops.addDevDependency(targetDir, stack.packageManager, '@devground/commitlint-config', '@commitlint/cli');
 
   const configContent = `module.exports = { extends: ['@devground/commitlint-config'] };\n`;
-  ops.writeFile(join(targetDir, 'commitlint.config.js'), configContent);
+  ops.writeFile(configPath, configContent);
 
   success('Commitlint configured with @devground/commitlint-config');
+  return 'installed';
 }

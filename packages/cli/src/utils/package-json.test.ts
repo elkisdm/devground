@@ -45,6 +45,38 @@ describe('readPackageJson', () => {
 
     expect(() => readPackageJson(tmpDir)).toThrow();
   });
+
+  it('throws a clear error when the JSON is an array', () => {
+    writeFileSync(join(tmpDir, 'package.json'), '[]');
+
+    expect(() => readPackageJson(tmpDir)).toThrow(
+      'package.json is not a valid object (got array)',
+    );
+  });
+
+  it('throws a clear error when the JSON is a scalar', () => {
+    writeFileSync(join(tmpDir, 'package.json'), '42');
+
+    expect(() => readPackageJson(tmpDir)).toThrow(
+      'package.json is not a valid object (got number)',
+    );
+  });
+
+  it('throws a clear error when the JSON is a string scalar', () => {
+    writeFileSync(join(tmpDir, 'package.json'), '"x"');
+
+    expect(() => readPackageJson(tmpDir)).toThrow(
+      'package.json is not a valid object (got string)',
+    );
+  });
+
+  it('throws a clear error when the JSON is null', () => {
+    writeFileSync(join(tmpDir, 'package.json'), 'null');
+
+    expect(() => readPackageJson(tmpDir)).toThrow(
+      'package.json is not a valid object (got null)',
+    );
+  });
 });
 
 describe('writePackageJson', () => {
