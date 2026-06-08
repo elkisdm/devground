@@ -119,6 +119,19 @@ El monorepo contiene **13 paquetes** independientes. Cada uno se instala por sep
 
 ---
 
+## 🧪 Experimental
+
+Capacidades en incubacion dentro del repo. **Aun no se publican a npm** — estan en validacion antes de definir su forma de entrega. Se documentan aqui para que sean visibles, pero hoy no se instalan como paquete.
+
+| | Que es | Estado |
+|---|--------|--------|
+| 🔬 [`@devground/deepcheck`](packages/deepcheck#readme) | Verificacion profunda **multi-agente** (QA · Validacion · Auditoria) que audita un flujo en paralelo por dimensiones, confirma cada hallazgo de forma **adversarial** (refutadores con lentes distintas) y **destila una skill de auditoria** que se vuelve mas afilada en cada corrida. No es un linter: razona sobre el flujo y acumula conocimiento para no re-descubrir lo mismo. | Piloto privado |
+| 🧭 [skill `cimientos`](.claude/skills/cimientos/SKILL.md) | Flujo **guiado** de decisiones de arquitectura para proyectos nuevos: entrevista fase por fase, razona con la knowledge base (ADRs 0001–0011) y escribe las decisiones como ADRs (status Propuesto) + un `DECISIONS.md`. Garantiza bases solidas sin sobre-ingenieria. | Skill del repo (Claude Code) |
+
+> deepcheck nacio **auditando el propio CLI de devground** y cazo bugs reales que hoy estan corregidos (ver el changeset de `devground-init`). Su [README](packages/deepcheck#readme) detalla los 3 roles ortogonales y el ciclo de aprendizaje.
+
+---
+
 ## Documentacion
 
 | Tema | Donde |
@@ -145,7 +158,7 @@ devground/
 ├── docs/                   # Documentacion del README: usage, faq, glossary, conceptos
 │   └── adr/                # ADRs propios del proyecto devground
 ├── demo/                   # Tape VHS + GIF de demostracion del CLI
-├── packages/               # Los 13 paquetes (config presets, CLI, standalone)
+├── packages/               # 14 paquetes (13 publicados + deepcheck en incubacion)
 ├── package.json            # pnpm workspaces
 └── pnpm-workspace.yaml
 ```
