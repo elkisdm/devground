@@ -1,6 +1,6 @@
 {
   "name": "@devground/dev-metrics",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Continuous, labelled time-series of how a developer evolves while coding with AI agents: code volume, quality, velocity and efficiency, computed from git history and Claude Code transcripts",
   "bin": {
     "dev-metrics": "./dist/index.js"
