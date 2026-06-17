@@ -26,3 +26,33 @@ export function selectPresetValues(
   if (opts.preset === 'agents-only') return allValues.filter((v) => v === 'agents-md');
   return null;
 }
+
+/** How the CLI should obtain the installer selection. */
+export type InstallResolution =
+  | { kind: 'install'; values: string[]; defaulted: boolean }
+  | { kind: 'prompt' };
+
+/**
+ * Resolves the installer selection without any IO, so the precedence is
+ * testable:
+ *
+ * 1. An explicit `--yes`/`--preset` wins.
+ * 2. Otherwise, in a NON-interactive environment we cannot show a multiselect,
+ *    so we default to the full preset and flag it (`defaulted`) so the caller
+ *    can log the choice. This replaces an earlier hard error: refusing to
+ *    install anything turned every CI/piped run red, while the real risk the
+ *    refusal guarded against — a silent "installed nothing" success — is avoided
+ *    here by installing the full set (and the write-guard still skips existing
+ *    files, so a re-run on a configured project stays safe).
+ * 3. Only an interactive TTY falls through to `prompt`.
+ */
+export function resolveInstall(
+  allValues: string[],
+  opts: { yes?: boolean; preset?: string },
+  isTTY: boolean,
+): InstallResolution {
+  const preset = selectPresetValues(allValues, opts);
+  if (preset !== null) return { kind: 'install', values: preset, defaulted: false };
+  if (!isTTY) return { kind: 'install', values: allValues, defaulted: true };
+  return { kind: 'prompt' };
+}
