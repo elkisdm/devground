@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { Command } from 'commander';
 import prompts from 'prompts';
 import { detectStack } from './detect-stack.js';
-import { isValidPreset, selectPresetValues, VALID_PRESETS } from './select.js';
+import { isValidPreset, resolveInstall, VALID_PRESETS } from './select.js';
 import { header, info, success, error, log } from '@devground/logger';
 import * as prettier from './installers/prettier.js';
 import * as eslint from './installers/eslint.js';
@@ -87,22 +87,24 @@ program
 
     let selectedInstallers: Installer[];
 
-    const presetValues = selectPresetValues(
+    const resolution = resolveInstall(
       ALL_INSTALLERS.map((i) => i.value),
       opts,
+      Boolean(process.stdin.isTTY),
     );
 
-    if (presetValues !== null) {
-      selectedInstallers = ALL_INSTALLERS.filter((i) => presetValues.includes(i.value));
-    } else {
-      // Interactive mode needs a TTY. In CI / piped stdin the prompt resolves
-      // empty and the process would exit 0 having installed nothing — a false
-      // success. Refuse loudly instead.
-      if (!process.stdin.isTTY) {
-        error('Non-interactive environment detected: re-run with --yes or --preset <full|agents-only>.');
-        process.exit(1);
+    if (resolution.kind === 'install') {
+      // Either an explicit --yes/--preset, or a non-interactive environment
+      // where we default to the full preset instead of refusing (the write-guard
+      // keeps a re-run on a configured project safe).
+      if (resolution.defaulted) {
+        info(
+          'Non-interactive environment: defaulting to the full preset ' +
+            '(pass --preset <full|agents-only> or --yes to choose explicitly).',
+        );
       }
-
+      selectedInstallers = ALL_INSTALLERS.filter((i) => resolution.values.includes(i.value));
+    } else {
       const response = await prompts({
         type: 'multiselect',
         name: 'tools',
