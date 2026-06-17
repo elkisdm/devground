@@ -1,0 +1,38 @@
+{
+  "name": "@devground/sdd",
+  "version": "0.1.0",
+  "description": "spec-flow: the spec-driven development intake skill — classify, enrich and route any change to the right amount of process, installable into any project",
+  "bin": {
+    "devground-sdd": "./setup.js"
+  },
+  "files": [
+    "setup.js",
+    "skill/"
+  ],
+  "scripts": {},
+  "keywords": [
+    "spec-driven-development",
+    "sdd",
+    "spec-flow",
+    "claude-code",
+    "skill",
+    "intake",
+    "devground"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/elkisdm/devground.git",
+    "directory": "packages/sdd"
+  },
+  "homepage": "https://github.com/elkisdm/devground/tree/main/packages/sdd#readme",
+  "bugs": {
+    "url": "https://github.com/elkisdm/devground/issues"
+  }
+}
