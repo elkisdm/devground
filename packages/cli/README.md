@@ -18,10 +18,18 @@ npx devground-init
 | `-V, --version` | Output version |
 | `-h, --help` | Display help |
 
+### Non-interactive environments (CI, piped stdin, some IDE terminals)
+
+The interactive picker needs a TTY. When there isn't one, `devground-init` **defaults
+to the full preset** and logs that it did so, instead of failing. Pass `--preset
+agents-only` or `--yes` to be explicit. Re-running stays safe — existing configs are
+left untouched (see below).
+
 ## What it does
 
 1. **Detects your stack** -- framework (Next.js / React / Node), TypeScript, and package manager.
-2. **Prompts for tool selection** (or installs all with `--yes`).
+2. **Prompts for tool selection** — or installs the full preset when run with `--yes`,
+   `--preset`, or in a non-interactive environment.
 3. **Installs and configures** each selected tool:
 
 | Tool | What it does |
