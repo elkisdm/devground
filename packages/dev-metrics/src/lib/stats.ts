@@ -72,3 +72,15 @@ export function round(value: number, decimals = 4): number {
   const factor = 10 ** decimals;
   return Math.round(value * factor) / factor;
 }
+
+/**
+ * Median of a numeric series, or `null` when empty. Preferred over the mean for
+ * skewed distributions (e.g. token counts) where a few large values would drag
+ * the mean away from the typical case.
+ */
+export function median(xs: readonly number[]): number | null {
+  if (xs.length === 0) return null;
+  const s = [...xs].sort((a, b) => a - b);
+  const mid = Math.floor(s.length / 2);
+  return s.length % 2 === 0 ? (s[mid - 1]! + s[mid]!) / 2 : s[mid]!;
+}

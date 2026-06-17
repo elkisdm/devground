@@ -164,6 +164,31 @@ dev-metrics event \
 Se guarda en `snapshots/events.json` (ese archivo SÍ se commitea; los snapshots
 no, ver `.gitignore`).
 
+### `spec-flow-impact`
+
+Mide el impacto REAL de spec-flow: segmenta cada repo en cambios **spec-flow** (el
+commit que toca `.spec-flow/events.jsonl`) vs un **control** pre-rollout del mismo repo,
+y reporta test-coupling, ADR-coupling, atomicidad, supervivencia y fricción. Tres reglas
+anti-trampa (ver ADR-0014): detectores estrictos (no substring), agregación
+baseline-relative (mediana de deltas por-repo), y control recency-matched (los K commits
+más recientes pre-rollout, no una ventana calendario que mata la muestra).
+
+```bash
+dev-metrics spec-flow-impact                 # usa repos/identidades del config
+dev-metrics spec-flow-impact --repos ~/a,~/b --emails me@x.com
+```
+
+### `orientation`
+
+Mide el **costo de orientación**: output tokens gastados antes del primer `Edit`/`Write`
+por sesión (lo que cuesta orientarse antes de tocar código), más un *share* robusto al
+tamaño de tarea, y una comparación del payoff del codemap restringida a repos que
+realmente tienen `docs/codemap.md` (ver ADR-0015).
+
+```bash
+dev-metrics orientation --repos ~/a,~/b      # repos para detectar cuáles tienen codemap
+```
+
 ## Métricas
 
 **N-identidad (1..N, degrada con gracia):** toda la lógica funciona con 1, 2 o

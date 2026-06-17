@@ -213,13 +213,13 @@ export interface MemorySignals {
   reuse: MemoryReuse;
 }
 
-interface SessionRecord {
+export interface SessionRecord {
   sessionId: string;
   record: TranscriptRecord;
 }
 
 /** Reads + parses all records under transcript files, tagging sessionId. */
-function readSessionRecords(files: readonly string[]): SessionRecord[] {
+export function readSessionRecords(files: readonly string[]): SessionRecord[] {
   const all: SessionRecord[] = [];
   for (const file of files) {
     const raw = readFileSync(file, 'utf-8');

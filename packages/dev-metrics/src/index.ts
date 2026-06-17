@@ -7,6 +7,8 @@ import type { Snapshot } from './types.js';
 import { runCollect } from './commands/collect.js';
 import { resolveCollectInputs } from './commands/resolve.js';
 import { runInit } from './commands/init.js';
+import { runSpecFlowImpact } from './commands/spec-flow-impact.js';
+import { runOrientation } from './commands/orientation.js';
 import { renderReport } from './lib/report.js';
 import { renderDiff } from './lib/diff.js';
 import { addEvent } from './lib/events.js';
@@ -169,6 +171,51 @@ program
         description: opts.description,
       });
       success(`Event recorded in ${opts.eventsFile}`);
+    } catch (err) {
+      error(err instanceof Error ? err.message : String(err));
+      process.exit(1);
+    }
+  });
+
+program
+  .command('spec-flow-impact')
+  .description('Measure spec-flow impact: spec-flow changes vs same-repo pre-rollout control')
+  .option('--repos <paths>', 'Comma-separated repo paths (overrides config/auto-detect)', splitList)
+  .option('--emails <emails>', 'Comma-separated author emails (overrides config/auto-detect)', splitList)
+  .option('--config <path>', 'Path to dev-metrics.config.json', DEFAULT_CONFIG_PATH)
+  .option('--until <date>', 'Only include commits on/before this date (YYYY-MM-DD)')
+  .action((opts: { repos?: string[]; emails?: string[]; config: string; until?: string }) => {
+    try {
+      const resolved = resolveCollectInputs({
+        flags: { repos: opts.repos, emails: opts.emails },
+        configPath: opts.config,
+      });
+      for (const w of resolved.warnings) warn(w);
+      log(
+        runSpecFlowImpact({
+          repos: resolved.repos,
+          emails: resolved.identities,
+          since: null,
+          until: opts.until ?? null,
+        }),
+      );
+    } catch (err) {
+      error(err instanceof Error ? err.message : String(err));
+      process.exit(1);
+    }
+  });
+
+program
+  .command('orientation')
+  .description('Measure orientation cost (output tokens before first edit) and the code map payoff')
+  .option('--repos <paths>', 'Comma-separated repo paths (overrides config/auto-detect)', splitList)
+  .option('--config <path>', 'Path to dev-metrics.config.json', DEFAULT_CONFIG_PATH)
+  .option('--backup-dir <dir>', 'Extra frozen-backup transcript dir (with a projects/ subtree)')
+  .action((opts: { repos?: string[]; config: string; backupDir?: string }) => {
+    try {
+      const resolved = resolveCollectInputs({ flags: { repos: opts.repos }, configPath: opts.config });
+      for (const w of resolved.warnings) warn(w);
+      log(runOrientation({ repos: resolved.repos, backupDir: opts.backupDir }));
     } catch (err) {
       error(err instanceof Error ? err.message : String(err));
       process.exit(1);

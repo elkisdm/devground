@@ -90,6 +90,7 @@ No tienes que instalar todo. Empieza por tu caso:
 | **Solo reglas para agentes de IA** | `npx devground-init --preset agents-only` (genera `AGENTS.md` + symlinks) |
 | **Documentar decisiones de arquitectura** | `@devground/architecture-guide` (standalone) |
 | **Medir velocidad/calidad del equipo** | `@devground/dev-metrics` (standalone) |
+| **Convertir peticiones vagas en specs right-sized** | `@devground/sdd` (`npx @devground/sdd`, skill spec-flow) |
 
 Cada paquete es independiente: instala solo lo que necesitas. Detalle de uso en [docs/usage.md](docs/usage.md).
 
@@ -110,7 +111,8 @@ El monorepo contiene **13 paquetes** independientes. Cada uno se instala por sep
 | 🪝 | [`@devground/husky-config`](packages/husky-config#readme) | Git hooks con Husky (pre-commit con gitleaks + commit-msg) |
 | 🤖 | [`@devground/agents-md`](packages/agents-md#readme) | AGENTS.md + symlinks multi-agente |
 | 🏛️ | [`@devground/architecture-guide`](packages/architecture-guide#readme) | **Knowledge base** de arquitectura + ADRs (BD, patrones, sistemas) |
-| 📊 | [`@devground/dev-metrics`](packages/dev-metrics#readme) | CLI de metricas de desarrollo con agentes (velocidad, calidad, eficiencia) — standalone |
+| 📊 | [`@devground/dev-metrics`](packages/dev-metrics#readme) | CLI de metricas de desarrollo con agentes (velocidad, calidad, eficiencia) + impacto de spec-flow y costo de orientación — standalone |
+| 📐 | [`@devground/sdd`](packages/sdd#readme) | **spec-flow** — skill de intake SDD instalable (clasifica, enriquece y rutea cualquier cambio al proceso mínimo que merece) |
 | 🪵 | [`@devground/logger`](packages/logger#readme) | Logger minimalista compartido (sin dependencias) |
 | 🧪 | [`@devground/vitest-config`](packages/vitest-config#readme) | Config Vitest compartida (entorno node, cobertura v8) |
 | ⚡ | [`devground-init`](packages/cli#readme) | CLI para scaffolding completo |
