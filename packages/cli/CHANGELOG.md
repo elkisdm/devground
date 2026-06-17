@@ -1,11 +1,20 @@
 # devground-init
 
+## 1.0.4
+
+### Patch Changes
+
+- 3f0d6a1: Fix: in a non-interactive environment (CI, piped stdin, some IDE terminals)
+  `devground-init` no longer errors out with a hard exit 1 when no `--preset`/`--yes`
+  is given. It now defaults to the full preset and logs that choice. The write-guard
+  still skips existing files, so re-running on an already-configured project stays
+  safe. Use `--preset agents-only` or `--yes` to choose explicitly.
+
 ## 1.0.3
 
 ### Patch Changes
 
 - 8cb5936: Arregla bugs que rompían la promesa de uso del CLI (hallados y re-verificados auditando el flujo con @devground/deepcheck):
-
   - **No sobreescribe tus configs.** Los instaladores de archivo de config (ESLint, Commitlint, TypeScript, lint-staged) ahora respetan un archivo preexistente: lo dejan intacto **y no instalan dependencias**, en vez de truncar tu config mientras dicen haberla respetado. Prettier respeta una clave `"prettier"` previa.
   - **lint-staged queda realmente configurado.** Antes escribía `"lint-staged": "@devground/lint-staged-config"` (un string) en package.json, que lint-staged rechaza en runtime. Ahora escribe `lint-staged.config.cjs` que re-exporta el config compartido.
   - **El código de salida refleja los fallos.** Si algún instalador falla, el CLI reporta el conteo real y sale con código distinto de 0 (antes siempre salía 0, ocultando fallos en CI).
@@ -31,7 +40,6 @@
 - ff712ba: Initial public release of the devground toolkit.
 
   Publishes the 9 packages to the npm registry for the first time:
-
   - `@devground/devground` — all-in-one meta-package
   - `@devground/prettier-config` — shared Prettier configuration
   - `@devground/eslint-config` — ESLint flat config (base + Next.js)
