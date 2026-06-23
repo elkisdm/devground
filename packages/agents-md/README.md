@@ -1,6 +1,6 @@
 # @devground/agents-md
 
-AI agent development rules as AGENTS.md — the universal format recognized by Claude Code, Cursor, GitHub Copilot, and Gemini CLI.
+AI agent development rules as AGENTS.md — the universal format recognized by Claude Code, Cursor, GitHub Copilot, Gemini CLI, and OpenAI Codex CLI.
 
 ## Install
 
@@ -23,6 +23,11 @@ npx devground-agents
    - `.cursorrules` → `AGENTS.md`
    - `.github/copilot-instructions.md` → `AGENTS.md`
    - `.gemini/styleguide.md` → `AGENTS.md`
+3. Configures **OpenAI Codex CLI**, which reads `AGENTS.md` from the repo root
+   _natively_ — no symlink needed. A project-scoped `.codex/config.toml` is
+   written to mark the project Codex-aware and align doc discovery
+   (`project_doc_fallback_filenames`, `project_doc_max_bytes`). An existing
+   `.codex/config.toml` is left untouched.
 
 ## Rules Included
 

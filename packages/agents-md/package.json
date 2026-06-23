@@ -1,7 +1,7 @@
 {
   "name": "@devground/agents-md",
   "version": "1.0.1",
-  "description": "AI agent development rules — AGENTS.md + symlinks for Claude, Cursor, Copilot, Gemini",
+  "description": "AI agent development rules — AGENTS.md + symlinks for Claude, Cursor, Copilot, Gemini, and native + .codex config for Codex",
   "bin": {
     "devground-agents": "./setup.js"
   },
@@ -16,6 +16,7 @@
     "cursor",
     "copilot",
     "gemini",
+    "codex",
     "ai",
     "coding-standards",
     "devground"
