@@ -60,6 +60,7 @@ npx devground-init
 + .cursorrules → AGENTS.md       ← symlink (Cursor)
 + .github/copilot-instructions.md → AGENTS.md
 + .gemini/styleguide.md → AGENTS.md
++ .codex/config.toml             ← Codex (lee AGENTS.md nativo, sin symlink)
 + knowledge/                     ← guias + 11 ADRs de arquitectura
 ~ package.json                   ← prettier, prepare script
 ```
@@ -109,7 +110,7 @@ El monorepo contiene **13 paquetes** independientes. Cada uno se instala por sep
 | ✍️ | [`@devground/commitlint-config`](packages/commitlint-config#readme) | Commits convencionales con commitlint |
 | 🧹 | [`@devground/lint-staged-config`](packages/lint-staged-config#readme) | Reglas de linting para archivos staged |
 | 🪝 | [`@devground/husky-config`](packages/husky-config#readme) | Git hooks con Husky (pre-commit con gitleaks + commit-msg) |
-| 🤖 | [`@devground/agents-md`](packages/agents-md#readme) | AGENTS.md + symlinks multi-agente |
+| 🤖 | [`@devground/agents-md`](packages/agents-md#readme) | AGENTS.md + symlinks multi-agente (Claude, Cursor, Copilot, Gemini) + config nativo para Codex |
 | 🏛️ | [`@devground/architecture-guide`](packages/architecture-guide#readme) | **Knowledge base** de arquitectura + ADRs (BD, patrones, sistemas) |
 | 📊 | [`@devground/dev-metrics`](packages/dev-metrics#readme) | CLI de metricas de desarrollo con agentes (velocidad, calidad, eficiencia) + impacto de spec-flow y costo de orientación — standalone |
 | 📐 | [`@devground/sdd`](packages/sdd#readme) | **spec-flow** — skill de intake SDD instalable (clasifica, enriquece y rutea cualquier cambio al proceso mínimo que merece) |
