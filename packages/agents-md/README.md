@@ -17,7 +17,7 @@ npx devground-agents
 
 ## What it does
 
-1. Copies `AGENTS.md` to your project root with 10 development rules
+1. Copies `AGENTS.md` to your project root with 10 development rules + a working-approach section
 2. Creates symlinks so every AI coding agent reads the same rules:
    - `CLAUDE.md` → `AGENTS.md`
    - `.cursorrules` → `AGENTS.md`
@@ -41,6 +41,8 @@ npx devground-agents
 8. **Directory READMEs** — README.md in complex directories
 9. **Semantic Tokens** — No hardcoded colors in UI components
 10. **`cn()` Helper** — Mandatory for CSS class merging
+
+Plus a **Working Approach** section — behavioral guidelines to reduce common LLM coding mistakes: think before coding, simplicity first, surgical changes, and goal-driven execution.
 
 ## Prompt universal para cualquier agente
 

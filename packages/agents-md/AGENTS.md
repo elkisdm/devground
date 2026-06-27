@@ -177,6 +177,55 @@ This allows clean overrides from the caller without fragile string concatenation
 
 ---
 
+## Working Approach
+
+Behavioral guidelines to reduce common LLM coding mistakes. They bias toward caution over speed — for trivial tasks, use judgment.
+
+### A. Think Before Coding
+
+Don't assume. Don't hide confusion. Surface tradeoffs.
+
+- State your assumptions explicitly. If uncertain, ask.
+- If multiple interpretations exist, present them — don't pick silently.
+- If a simpler approach exists, say so. Push back when warranted.
+- If something is unclear, stop. Name what's confusing. Ask.
+
+### B. Simplicity First
+
+Minimum code that solves the problem. Nothing speculative.
+
+- No features beyond what was asked.
+- No abstractions for single-use code.
+- No "flexibility" or "configurability" that wasn't requested.
+- No error handling for impossible scenarios.
+- If you write 200 lines and it could be 50, rewrite it.
+
+Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
+
+### C. Surgical Changes
+
+Touch only what you must. Clean up only your own mess.
+
+- Don't "improve" adjacent code, comments, or formatting.
+- Don't refactor things that aren't broken. Match existing style.
+- Remove imports/variables/functions that **your** changes made unused.
+- Don't remove pre-existing dead code unless asked — mention it instead.
+
+The test: every changed line should trace directly to the request.
+
+### D. Goal-Driven Execution
+
+Define success criteria. Loop until verified.
+
+- "Add validation" → write tests for invalid inputs, then make them pass.
+- "Fix the bug" → write a test that reproduces it, then make it pass.
+- "Refactor X" → ensure tests pass before and after.
+- For multi-step tasks, state a brief plan with a verification check per step.
+
+Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
+
+---
+
 ## General Principles
 
 - **Concepts over code** — understand fundamentals before writing implementations.
