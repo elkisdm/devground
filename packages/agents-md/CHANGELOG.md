@@ -1,5 +1,11 @@
 # @devground/agents-md
 
+## 1.2.0
+
+### Minor Changes
+
+- ebeec41: Add a "Working Approach" section to AGENTS.md (and the universal PROMPT.md): behavioral guidelines to reduce common LLM coding mistakes — think before coding, simplicity first, surgical changes, and goal-driven execution.
+
 ## 1.1.0
 
 ### Minor Changes

@@ -1,6 +1,6 @@
 {
   "name": "@devground/devground",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "All devground standards in one package. Install once, get everything.",
   "keywords": [
     "devground",
