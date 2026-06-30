@@ -1,0 +1,104 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://devground.local/model-orchestrator/routing-plan.schema.json",
+  "title": "RoutingPlan",
+  "description": "Plan que el orquestador genera a partir de las tareas de un brief de spec-flow. Se presenta al usuario para aprobación antes de ejecutar.",
+  "type": "object",
+  "required": ["change", "generated", "spec_flow_tier", "tasks", "totals", "pricing_status"],
+  "properties": {
+    "change": { "type": "string", "description": "Nombre kebab del cambio (del brief de spec-flow)." },
+    "generated": { "type": "string", "description": "Timestamp ISO-8601 con tz. Se estampa al guardar; el script no genera fechas por sí mismo." },
+    "spec_flow_tier": { "type": "integer", "minimum": 0, "maximum": 3, "description": "Tier global del cambio según spec-flow." },
+    "pricing_status": {
+      "type": "string",
+      "enum": ["complete", "partial", "unavailable"],
+      "description": "complete = todos los modelos usados tienen tarifa verificada; partial = alguno en null; unavailable = sin pricing.json utilizable. Si no es 'complete', los costos afectados van como null y se reporta 'pendiente'."
+    },
+    "tasks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "kind", "floor", "assigned", "adjustment", "reason", "depends_on"],
+        "properties": {
+          "id": { "type": "integer", "description": "Orden en el brief (1-based)." },
+          "title": { "type": "string" },
+          "kind": {
+            "type": "string",
+            "description": "Tag de naturaleza de la tarea inferido del texto (plan, audit, decision, adr, architecture, design, security-review, implement, feat, fix, refactor, perf, test, docs, chore, spike)."
+          },
+          "signals": {
+            "type": "object",
+            "description": "Señales de spec-flow usadas para el piso.",
+            "properties": {
+              "type": { "type": "string" },
+              "tier": { "type": "integer" },
+              "risk": { "type": "string", "enum": ["low", "med", "high"] },
+              "breaking": { "type": "boolean" }
+            }
+          },
+          "floor": {
+            "type": "object",
+            "description": "Asignación de piso (de policy.json) ANTES del ajuste del router.",
+            "required": ["model", "effort", "rule_id"],
+            "properties": {
+              "model": { "type": "string", "enum": ["opus", "sonnet", "haiku"] },
+              "effort": { "type": "string", "enum": ["low", "medium", "high", "xhigh", "max"] },
+              "rule_id": { "type": "string", "description": "Regla de policy.json que matcheó (o 'default')." },
+              "locked": { "type": "boolean", "default": false }
+            }
+          },
+          "assigned": {
+            "type": "object",
+            "description": "Asignación FINAL tras el ajuste del agente model-router.",
+            "required": ["model", "effort"],
+            "properties": {
+              "model": { "type": "string", "enum": ["opus", "sonnet", "haiku"] },
+              "effort": { "type": "string", "enum": ["low", "medium", "high", "xhigh", "max"] }
+            }
+          },
+          "adjustment": {
+            "type": "integer",
+            "minimum": -1,
+            "maximum": 1,
+            "description": "Niveles de capability que el router movió respecto al piso. -1 desescala (más barato), 0 sin cambio, +1 escala (más capaz)."
+          },
+          "reason": { "type": "string", "description": "Justificación del ajuste (o 'piso sin ajuste')." },
+          "depends_on": {
+            "type": "array",
+            "items": { "type": "integer" },
+            "description": "IDs de tareas que deben completarse antes. [] = independiente, puede ir en paralelo."
+          },
+          "est_tokens": {
+            "type": ["object", "null"],
+            "description": "Estimación gruesa de tokens. null si no se estima.",
+            "properties": {
+              "input": { "type": "number" },
+              "output": { "type": "number" }
+            }
+          },
+          "est_cost_usd": {
+            "type": ["number", "null"],
+            "description": "Costo estimado de la tarea. null cuando el modelo asignado no tiene tarifa verificada (pricing_status != complete)."
+          }
+        }
+      }
+    },
+    "totals": {
+      "type": "object",
+      "required": ["est_cost_usd", "by_model"],
+      "properties": {
+        "est_cost_usd": { "type": ["number", "null"], "description": "Suma de costos estimados; null si alguna tarea quedó en 'pendiente'." },
+        "by_model": {
+          "type": "object",
+          "description": "Conteo de tareas por modelo asignado.",
+          "properties": {
+            "opus": { "type": "integer" },
+            "sonnet": { "type": "integer" },
+            "haiku": { "type": "integer" }
+          }
+        }
+      }
+    }
+  }
+}

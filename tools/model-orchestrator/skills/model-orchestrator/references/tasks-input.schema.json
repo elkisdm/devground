@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://devground.local/model-orchestrator/tasks-input.schema.json",
+  "title": "TasksInput",
+  "description": "Contrato de ENTRADA del orquestador: la versión machine-readable de un brief de spec-flow. spec-flow lo emite (Tier 2-3) y `engine.mjs plan` lo consume. Es un artefacto neutral: spec-flow no necesita conocer el motor, solo respetar este shape.",
+  "type": "object",
+  "required": ["change", "spec_flow_tier", "tasks"],
+  "properties": {
+    "change": { "type": "string", "description": "Nombre kebab del cambio (del brief)." },
+    "spec_flow_tier": { "type": "integer", "minimum": 0, "maximum": 3 },
+    "generated": { "type": ["string", "null"], "description": "ISO-8601 con tz, o null. El motor no genera fechas." },
+    "tasks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "kind", "signals"],
+        "properties": {
+          "id": { "type": "integer", "description": "1-based, orden en el brief." },
+          "title": { "type": "string" },
+          "kind": {
+            "type": "string",
+            "enum": ["plan", "audit", "decision", "adr", "architecture", "design", "security-review",
+                     "implement", "feat", "fix", "refactor", "perf", "test", "docs", "chore", "style", "spike", "rename"],
+            "description": "Naturaleza de la tarea. Determina reglas de piso por kind (juicio→opus, mecánicas→haiku)."
+          },
+          "size": {
+            "type": "string",
+            "enum": ["small", "medium", "large"],
+            "description": "Tamaño aproximado de la tarea, para estimar tokens/costo. Opcional si se pasa est_tokens."
+          },
+          "signals": {
+            "type": "object",
+            "required": ["type", "tier"],
+            "description": "Señales de spec-flow. type/tier/risk/breaking; una tarea hereda las globales del cambio salvo que su naturaleza difiera.",
+            "properties": {
+              "type": { "type": "string", "enum": ["feat", "fix", "refactor", "perf", "docs", "test", "chore", "spike"] },
+              "tier": { "type": "integer", "minimum": 0, "maximum": 3 },
+              "risk": { "type": "string", "enum": ["low", "med", "high"] },
+              "breaking": { "type": "boolean" }
+            }
+          },
+          "depends_on": {
+            "type": "array",
+            "items": { "type": "integer" },
+            "description": "IDs de tareas previas. [] = independiente (paraleliza)."
+          },
+          "est_tokens": {
+            "type": ["object", "null"],
+            "properties": { "input": { "type": "number" }, "output": { "type": "number" } },
+            "description": "Estimación explícita de tokens; alternativa a 'size'."
+          }
+        }
+      }
+    }
+  }
+}

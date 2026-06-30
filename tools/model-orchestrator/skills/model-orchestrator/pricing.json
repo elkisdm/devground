@@ -1,0 +1,44 @@
+{
+  "_meta": {
+    "unit": "USD per 1,000,000 tokens",
+    "updated": "2026-06-30",
+    "policy": "Pre-llenado SOLO con tarifas verificadas. Lo no verificado queda null con un 'estimate' y su origen. El estimador de costos NUNCA usa un 'estimate' como si fuera precio confirmado: si input/output es null, el costo de esa tarea se reporta como 'pendiente', no se inventa.",
+    "how_to_fill": "Reemplaza input/output con el valor real y sube 'confidence' a 'confirmed'. Cuando confirmes Sonnet 5, borra el bloque 'estimate'."
+  },
+  "models": {
+    "opus": {
+      "id": "claude-opus-4-8",
+      "tier": "alto",
+      "input": 5.0,
+      "output": 25.0,
+      "confidence": "verified",
+      "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+      "note": "Opus 4.8 list price (verificado 2026-06-30). Fast Mode aparte: $10/$50."
+    },
+    "sonnet": {
+      "id": "claude-sonnet-5",
+      "tier": "medio",
+      "input": 2.0,
+      "output": 10.0,
+      "confidence": "verified",
+      "source": "https://www.anthropic.com/news/claude-sonnet-5",
+      "price_window": "introductory",
+      "standard_after": { "date": "2026-09-01", "input": 3.0, "output": 15.0 },
+      "note": "Precio INTRODUCTORIO de Sonnet 5, vigente hasta 2026-08-31 ($2/$10). Desde 2026-09-01 sube a estándar $3/$15 → ACTUALIZAR input/output a 3.0/15.0 en esa fecha. OJO: Sonnet 5 usa un tokenizer nuevo que produce ~1.0-1.35x más tokens que modelos previos; la estimación de costo puede quedar baja para texto denso."
+    },
+    "haiku": {
+      "id": "claude-haiku-4-5",
+      "tier": "bajo",
+      "input": 1.0,
+      "output": 5.0,
+      "confidence": "verified",
+      "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+      "note": "Haiku 4.5 list price (verificado 2026-06-30)."
+    }
+  },
+  "modifiers": {
+    "batch_discount": 0.5,
+    "cache_read_multiplier": 0.1,
+    "_note": "batch = 50% más barato; lectura de caché = 10% del input. Aplicar solo si el despacho realmente los usa."
+  }
+}
