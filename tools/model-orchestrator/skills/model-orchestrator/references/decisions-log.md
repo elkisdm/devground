@@ -58,4 +58,13 @@ puente con tu reader dev-metrics: mide si el balance precio/calidad realmente fu
   estimado vs real. NO inventes ninguno a mano.
 - No incluyas contenido de la tarea ni del transcript: solo etiquetas de decisión. El log
   es benigno y versionable.
+- **Retrabajo por modelo (el join con spec-flow).** Este log reconcilia *costo*, no
+  *calidad*: no tiene campo de retrabajo. Esa señal vive en el `events.jsonl` de spec-flow,
+  en su evento `assumption_reversed` (spec-flow v0.3+), que trae un `task_id` opcional. Como
+  ambos logs llavean por `change` y ese `task_id` casa con el `task_id` de aquí, dev-metrics
+  une los dos y atribuye cada reversión al modelo que la tarea tuvo asignado. Así se mide la
+  pregunta que este log solo no puede: *¿desescalar una tarea a un modelo más barato sube su
+  tasa de retrabajo?* — el riesgo que el principio "desescalar puede costar un retrabajo
+  caro" enuncia pero no instrumenta. No dupliques la señal acá; el retrabajo se registra en
+  spec-flow, este log aporta el lado del costo y la decisión de routing.
 - Si append-ear esta línea se siente como fricción, lo estás sobre-pensando: es un `echo`.
