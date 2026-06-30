@@ -1,0 +1,93 @@
+{
+  "_meta": {
+    "purpose": "Piso declarativo de routing: dada una tarea (con señales de spec-flow), elige modelo + esfuerzo. Es el PISO; el agente model-router puede ajustar ±1 nivel de capacidad salvo en reglas 'locked'.",
+    "capability_order": ["haiku", "sonnet", "opus"],
+    "_capability_note": "Índice mayor = modelo más capaz/caro. 'escalar +1' = subir un nivel hacia opus; 'desescalar -1' = bajar hacia haiku.",
+    "effort_order": ["low", "medium", "high", "xhigh", "max"],
+    "match_semantics": "Reglas evaluadas de arriba hacia abajo, PRIMERA que matchea gana. Dentro de una regla, TODAS las condiciones presentes deben cumplirse (AND). Para OR, se usan reglas separadas. Una tarea sin match cae en 'default'."
+  },
+  "_precedence_note": "ORDEN IMPORTA. La naturaleza de CADA tarea (su 'kind') manda sobre el tier global del cambio: dentro de un cambio tier 2, una tarea 'actualizar README' (kind docs) sigue siendo barata. Por eso las reglas por 'kind' (juicio y mecánicas) van ARRIBA de las reglas por 'tier'/'risk', que aplican al código de implementación. Bug que esto evita: el tier global se filtraba a tareas mecánicas y las encarecía.",
+  "rules": [
+    {
+      "id": "judgment-work",
+      "when": { "kind": ["plan", "audit", "decision", "adr", "architecture", "design", "security-review"] },
+      "assign": { "model": "opus", "effort": "max" },
+      "locked": true,
+      "rationale": "Planes, auditorías y decisiones siempre al modelo de mayor capacidad y esfuerzo, sin importar el tier del cambio. El router NO puede bajar este piso."
+    },
+    {
+      "id": "mechanical-docs-chore",
+      "when": { "kind": ["docs", "chore", "style"] },
+      "assign": { "model": "haiku", "effort": "low" },
+      "rationale": "Salida mecánica (README, changelog, rename, bump): Haiku barato, aunque el cambio global sea grande. La naturaleza de la tarea manda sobre el tier."
+    },
+    {
+      "id": "high-risk",
+      "when": { "risk": ["high"] },
+      "assign": { "model": "opus", "effort": "high" },
+      "locked": true,
+      "rationale": "Código de riesgo alto (migración de datos, contratos externos, auth, dinero, concurrencia, irreversible): capacidad máxima, no se desescala."
+    },
+    {
+      "id": "breaking-change",
+      "when": { "breaking": true },
+      "assign": { "model": "opus", "effort": "high" },
+      "rationale": "Romper un contrato público exige el modelo más fuerte."
+    },
+    {
+      "id": "tier3-large-or-unknown",
+      "when": { "tier": [3] },
+      "assign": { "model": "opus", "effort": "high" },
+      "rationale": "Tarea de implementación dentro de un cambio Tier 3 (grande / incierto): vale el modelo top."
+    },
+    {
+      "id": "tests",
+      "when": { "kind": ["test"] },
+      "assign": { "model": "sonnet", "effort": "low" },
+      "rationale": "Escribir tests sobre código existente: Sonnet bajo basta (salvo que sea código high-risk, que ya matcheó arriba)."
+    },
+    {
+      "id": "tier2-perf-refactor",
+      "when": { "tier": [2], "type": ["perf", "refactor"] },
+      "assign": { "model": "sonnet", "effort": "high" },
+      "rationale": "Cambio con impacto observable pero acotado: Sonnet con esfuerzo alto."
+    },
+    {
+      "id": "tier2-standard",
+      "when": { "tier": [2] },
+      "assign": { "model": "sonnet", "effort": "high" },
+      "rationale": "Implementación Standard: Sonnet rinde bien con esfuerzo alto."
+    },
+    {
+      "id": "tier1-feature",
+      "when": { "tier": [1], "type": ["feat", "fix"] },
+      "assign": { "model": "sonnet", "effort": "medium" },
+      "rationale": "Feature/fix chico y conocido: Sonnet medio es el punto dulce precio/calidad."
+    },
+    {
+      "id": "trivial-tier0",
+      "when": { "tier": [0] },
+      "assign": { "model": "haiku", "effort": "low" },
+      "rationale": "Tier 0 (typo, fix trivial): Haiku barato."
+    }
+  ],
+  "default": {
+    "assign": { "model": "sonnet", "effort": "medium" },
+    "rationale": "Sin señal clara: Sonnet medio, el balance precio/calidad por defecto."
+  },
+  "escalation": {
+    "max_levels": 1,
+    "max_effort_levels": 1,
+    "_max_effort_note": "El effort también se acota a ±N niveles de effort_order respecto al effort del piso (igual que el modelo con max_levels). Evita que el agente colapse un piso 'high' a 'low' (salto de 2) o lo dispare a 'max'. Default 1: 'high' solo puede ir a 'medium' o 'xhigh'. Súbelo si quieres más holgura de esfuerzo.",
+    "_note": "El agente model-router puede mover el modelo ±max_levels nivel de capability_order y el esfuerzo ±max_effort_levels, SIEMPRE con razón registrada. Reglas con locked:true no se pueden desescalar (sí escalar). Nunca por debajo de haiku ni por encima de opus.",
+    "deescalation_floor": {
+      "no_new_logic_kinds": ["refactor", "chore", "docs", "style", "rename", "spike"],
+      "min_model_with_new_logic": "sonnet",
+      "_note": "Solo las tareas SIN lógica nueva (rename/move/string/doc/bump) pueden desescalar hasta haiku. Una tarea que agrega o cambia comportamiento (feat/fix/perf), aunque siga un patrón conocido, NO baja de 'sonnet': el patrón reduce el ESFUERZO, no el MODELO. Evita el retrabajo de mandar lógica nueva a un modelo barato."
+    },
+    "escalation_effort": {
+      "raise_effort_with_model": true,
+      "_note": "Si el router escala el MODELO (+1) por complejidad genuina, debe subir el ESFUERZO al menos un nivel también (no dejar opus/medium para algo crítico). Escalar el modelo sin subir el esfuerzo desaprovecha la escalada."
+    }
+  }
+}
