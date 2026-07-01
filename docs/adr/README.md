@@ -28,6 +28,10 @@ siguiente número de la secuencia, rellénalo y añádelo al índice de abajo.
 - [ADR-0011 — Prohibido `any` en fronteras externas (DB/API)](0011-prohibido-any-fronteras-externas.md) (Propuesto)
 - [ADR-0012 — Tests obligatorios en rutas críticas](0012-tests-rutas-criticas.md) (Propuesto)
 - [ADR-0013 — Sistema de agentes de auditoría auto-mejorable (deepcheck)](0013-sistema-de-agentes-de-auditoria.md) (Propuesto)
+- [ADR-0014 — Medición de impacto de spec-flow](0014-medicion-impacto-spec-flow.md) (Propuesto)
+- [ADR-0015 — Costo de orientación (tokens antes del primer edit)](0015-costo-de-orientacion.md) (Propuesto)
+- [ADR-0016 — spec-flow se distribuye como `@devground/sdd`](0016-spec-flow-como-paquete-sdd.md) (Propuesto)
+- [ADR-0017 — Routing de modelos por complejidad (model-orchestrator)](0017-model-orchestrator-routing.md) (Propuesto)
 
 ## Estándares con enforcement automático
 
