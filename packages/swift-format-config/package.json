@@ -1,0 +1,34 @@
+{
+  "name": "@devground/swift-format-config",
+  "version": "0.0.0",
+  "description": "Shared SwiftFormat + SwiftLint configuration for Swift/iOS projects (devground swift-*)",
+  "main": "index.json",
+  "files": [
+    "index.json",
+    "config"
+  ],
+  "keywords": [
+    "swift",
+    "swiftformat",
+    "swiftlint",
+    "ios",
+    "config",
+    "devground"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/elkisdm/devground.git",
+    "directory": "packages/swift-format-config"
+  },
+  "homepage": "https://github.com/elkisdm/devground/tree/main/packages/swift-format-config#readme",
+  "bugs": {
+    "url": "https://github.com/elkisdm/devground/issues"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "artifacts": [
+    { "src": "config/swiftformat", "dest": ".swiftformat" },
+    { "src": "config/swiftlint.yml", "dest": ".swiftlint.yml" }
+  ]
+}

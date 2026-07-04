@@ -1,0 +1,14 @@
+# @devground/swift-format-config — reglas base de SwiftFormat
+# Se copia a la raíz del repo destino como .swiftformat
+--swiftversion 6.2
+--indent 4
+--maxwidth 100
+--wraparguments before-first
+--wrapparameters before-first
+--wrapcollections before-first
+--commas inline
+--trimwhitespace always
+--stripunusedargs closure-only
+--self insert
+--importgrouping testable-bottom
+--emptybraces no-space
