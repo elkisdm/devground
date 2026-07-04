@@ -32,6 +32,10 @@ siguiente número de la secuencia, rellénalo y añádelo al índice de abajo.
 - [ADR-0015 — Costo de orientación (tokens antes del primer edit)](0015-costo-de-orientacion.md) (Propuesto)
 - [ADR-0016 — spec-flow se distribuye como `@devground/sdd`](0016-spec-flow-como-paquete-sdd.md) (Propuesto)
 - [ADR-0017 — Routing de modelos por complejidad (model-orchestrator)](0017-model-orchestrator-routing.md) (Propuesto)
+- [ADR-0018 — devground políglota: workspace TS + Swift](0018-devground-poliglota-ts-swift.md) (Propuesto)
+- [ADR-0019 — Isolation por capa como default de las plantillas Swift](0019-isolation-por-capa-swift.md) (Propuesto)
+- [ADR-0020 — Swift Testing + swift-dependencies como harness estándar](0020-swift-testing-harness-estandar.md) (Propuesto)
+- [ADR-0021 — Detección de stack en `@devground/cli`](0021-deteccion-stack-cli.md) (Propuesto)
 
 ## Estándares con enforcement automático
 

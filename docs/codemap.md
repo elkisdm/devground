@@ -14,6 +14,10 @@ el código y los ADRs), sino de *dónde*.
 | **sdd (spec-flow)** | `packages/sdd/` | Skill de intake SDD instalable (classify→tier→brief→telemetría); `skill/` = copia versionada de `~/.claude/skills/spec-flow/` | bin `setup.js` (`devground-sdd`, instala a `.claude/skills/spec-flow/`, `--global` a `~`) | 0016 |
 | **agregador** | `packages/devground/` | Bundle de los 7 presets de config + `devground-setup` | bin de setup | — |
 | **model-orchestrator** | `tools/model-orchestrator/` | Routing de modelos por complejidad tras `spec-flow`: asigna modelo+effort por tarea (Opus/Sonnet/Haiku), estima costo y despacha sub-agentes. Copia versionada; fuente activa en `~/.claude/skills/model-orchestrator/` | motor `skills/model-orchestrator/engine.mjs` (Node puro, invariantes en código, `selftest` 30/30); piso `policy.json`; tarifas `pricing.json`; juez `agents/model-router.md` (Haiku, ±1 nivel); patch `patches/spec-flow-step-3.5.md` | 0017 |
+| **swift-foundation** (Swift) | `swift-foundation/` | Monorepo SPM fundacional ("librería de librerías") para apps iPhone en Swift — Fase 1. Grafo de módulos por capa, isolation por capa, core Swift puro portable. Consumidor, no paquete npm de devground | `Package.swift` (tools 6.2, `swiftLanguageModes: [.v6]`); `Sources/{FoundationUtils,Domain,Networking,Persistence,DesignSystem,FeatureInterfaces,AppFeature}/`; `Tests/DomainTests/`; ADRs de dominio en `swift-foundation/docs/adr/`. Verificar: `swift build`; tests con toolchain Xcode (`DEVELOPER_DIR=…Xcode… xcrun swift test`) | 0018–0021 |
 
+> Investigación fundacional iOS/Swift + devground políglota: `research/ios-swift-engineering/`
+> (`informe-fundacion.md`, `DECISIONS.md`).
+>
 > Skills destiladas por deepcheck viven en `.claude/skills/audit-<flujo>/` del
 > proyecto auditado (ej: `.claude/skills/audit-devground-init/`).
