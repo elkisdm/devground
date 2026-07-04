@@ -1,0 +1,47 @@
+// swift-tools-version: 6.2
+import PackageDescription
+
+// Monorepo fundacional ("librería de librerías") — Fase 1.
+// Grafo de módulos por capa, dependencias solo hacia abajo, sin ciclos.
+// Isolation por capa (ADR-0019 de devground): MainActor por defecto en las capas
+// de UI/composición; nonisolated + Sendable en las capas base portables.
+// Modo de lenguaje Swift 6 + Approachable Concurrency (toolchain local: 6.2.3).
+let package = Package(
+    name: "SwiftFoundation",
+    platforms: [.iOS(.v17), .macOS(.v14)],
+    products: [
+        .library(name: "FoundationUtils", targets: ["FoundationUtils"]),
+        .library(name: "Domain", targets: ["Domain"]),
+        .library(name: "Networking", targets: ["Networking"]),
+        .library(name: "Persistence", targets: ["Persistence"]),
+        .library(name: "DesignSystem", targets: ["DesignSystem"]),
+        .library(name: "FeatureInterfaces", targets: ["FeatureInterfaces"]),
+        .library(name: "AppFeature", targets: ["AppFeature"]),
+    ],
+    targets: [
+        // --- Capas base: nonisolated + Sendable (core Swift puro, portable) ---
+        .target(name: "FoundationUtils"),
+        .target(name: "Domain", dependencies: ["FoundationUtils"]),
+        .target(name: "Networking", dependencies: ["Domain", "FoundationUtils"]),
+        .target(name: "Persistence", dependencies: ["Domain", "FoundationUtils"]),
+        .target(name: "FeatureInterfaces", dependencies: ["Domain"]),
+
+        // --- Capa de diseño: MainActor por defecto ---
+        .target(
+            name: "DesignSystem",
+            dependencies: ["FoundationUtils"],
+            swiftSettings: [.defaultIsolation(MainActor.self)]
+        ),
+
+        // --- Raíz de composición: MainActor por defecto, cablea la DI ---
+        .target(
+            name: "AppFeature",
+            dependencies: ["Domain", "Networking", "Persistence", "DesignSystem", "FeatureInterfaces"],
+            swiftSettings: [.defaultIsolation(MainActor.self)]
+        ),
+
+        // --- Prueba de humo del harness (Swift Testing): Domain testeable aislado ---
+        .testTarget(name: "DomainTests", dependencies: ["Domain"]),
+    ],
+    swiftLanguageModes: [.v6]
+)
