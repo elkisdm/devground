@@ -1,0 +1,35 @@
+{
+  "name": "@devground/swift-ci",
+  "version": "0.0.0",
+  "description": "CI/CD templates for Swift/iOS: GitHub Actions build+test and Fastlane Match signing (devground swift-*)",
+  "main": "index.json",
+  "files": [
+    "index.json",
+    "templates"
+  ],
+  "keywords": [
+    "swift",
+    "ios",
+    "ci",
+    "github-actions",
+    "fastlane",
+    "match",
+    "devground"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/elkisdm/devground.git",
+    "directory": "packages/swift-ci"
+  },
+  "homepage": "https://github.com/elkisdm/devground/tree/main/packages/swift-ci#readme",
+  "bugs": {
+    "url": "https://github.com/elkisdm/devground/issues"
+  }
+}

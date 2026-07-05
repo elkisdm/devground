@@ -1,0 +1,17 @@
+# @devground/swift-ci — Fastlane para firma (Match) y distribución a TestFlight.
+# Requiere un app shell iOS con scheme (llega cuando el proyecto añade .xcodeproj).
+default_platform(:ios)
+
+platform :ios do
+  desc "Sincroniza certificados y perfiles vía Match (read-only)"
+  lane :certificates do
+    match(type: "appstore", readonly: true)
+  end
+
+  desc "Build y subida a TestFlight"
+  lane :beta do
+    match(type: "appstore", readonly: is_ci)
+    build_app(scheme: ENV["SCHEME"] || "App")
+    upload_to_testflight(skip_waiting_for_build_processing: true)
+  end
+end
