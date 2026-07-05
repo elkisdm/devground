@@ -1,0 +1,5 @@
+# @devground/swift-ci — Match cifra certificados/perfiles en un repo git privado,
+# eliminando la firma manual con .p12 sueltos.
+git_url(ENV["MATCH_GIT_URL"])
+storage_mode("git")
+type("appstore")

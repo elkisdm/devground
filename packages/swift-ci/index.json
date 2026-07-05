@@ -1,0 +1,8 @@
+{
+  "artifacts": [
+    { "src": "templates/ci.yml", "dest": ".github/workflows/ci.yml" },
+    { "src": "templates/Fastfile", "dest": "fastlane/Fastfile" },
+    { "src": "templates/Matchfile", "dest": "fastlane/Matchfile" }
+  ],
+  "notes": "GitHub Actions corre swift build + test en un runner macOS. Fastlane Match gestiona firma sin certificados sueltos. Xcode Cloud es la alternativa de menor fricción, pero se configura en App Store Connect (UI), no como plantilla de repo."
+}

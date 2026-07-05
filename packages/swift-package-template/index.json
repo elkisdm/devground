@@ -1,0 +1,6 @@
+{
+  "artifacts": [
+    { "src": "templates/Package.swift", "dest": "Package.swift" }
+  ],
+  "notes": "Plantilla de monorepo por capa. Renombra 'SwiftFoundation' por el nombre de tu paquete y ajusta las capas/feature-kits a tu dominio."
+}

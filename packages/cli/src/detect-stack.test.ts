@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, rmSync, writeFileSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { detectStack } from './detect-stack.js';
@@ -91,5 +91,43 @@ describe('detectStack — package manager detection', () => {
     writeFileSync(join(tmpDir, 'yarn.lock'), '');
 
     expect(detectStack(tmpDir).packageManager).toBe('pnpm');
+  });
+});
+
+describe('detectStack — Swift detection (ADR-0021)', () => {
+  it('detects Swift from a Package.swift', () => {
+    writePackageJson({});
+    writeFileSync(join(tmpDir, 'Package.swift'), '// swift-tools-version: 6.2');
+
+    expect(detectStack(tmpDir).hasSwift).toBe(true);
+  });
+
+  it('detects Swift from an .xcodeproj bundle', () => {
+    writePackageJson({});
+    mkdirSync(join(tmpDir, 'MyApp.xcodeproj'));
+
+    expect(detectStack(tmpDir).hasSwift).toBe(true);
+  });
+
+  it('detects Swift from an .xcworkspace bundle', () => {
+    writePackageJson({});
+    mkdirSync(join(tmpDir, 'MyApp.xcworkspace'));
+
+    expect(detectStack(tmpDir).hasSwift).toBe(true);
+  });
+
+  it('reports no Swift for a plain Node project', () => {
+    writePackageJson({ dependencies: { next: '^16.0.0' } });
+
+    expect(detectStack(tmpDir).hasSwift).toBe(false);
+  });
+
+  it('classifies a Swift-only repo with no package.json without throwing', () => {
+    writeFileSync(join(tmpDir, 'Package.swift'), '// swift-tools-version: 6.2');
+
+    const stack = detectStack(tmpDir);
+    expect(stack.hasSwift).toBe(true);
+    expect(stack.framework).toBe('unknown');
+    expect(stack.hasTypeScript).toBe(false);
   });
 });

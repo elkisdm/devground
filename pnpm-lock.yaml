@@ -169,6 +169,16 @@ importers:
 
   packages/prettier-config: {}
 
+  packages/sdd: {}
+
+  packages/swift-ci: {}
+
+  packages/swift-design-tokens: {}
+
+  packages/swift-format-config: {}
+
+  packages/swift-package-template: {}
+
   packages/tsconfig: {}
 
   packages/vitest-config:

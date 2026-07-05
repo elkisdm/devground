@@ -1,0 +1,35 @@
+{
+  "name": "@devground/swift-design-tokens",
+  "version": "0.0.0",
+  "description": "Semantic design tokens (color roles, spacing, Dynamic Type) + Liquid Glass helpers for SwiftUI (devground swift-*)",
+  "main": "index.json",
+  "files": [
+    "index.json",
+    "templates"
+  ],
+  "keywords": [
+    "swift",
+    "swiftui",
+    "design-system",
+    "design-tokens",
+    "liquid-glass",
+    "ios",
+    "devground"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/elkisdm/devground.git",
+    "directory": "packages/swift-design-tokens"
+  },
+  "homepage": "https://github.com/elkisdm/devground/tree/main/packages/swift-design-tokens#readme",
+  "bugs": {
+    "url": "https://github.com/elkisdm/devground/issues"
+  }
+}

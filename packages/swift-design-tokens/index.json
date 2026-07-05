@@ -1,0 +1,9 @@
+{
+  "artifacts": [
+    { "src": "templates/DesignTokens.swift", "dest": "Sources/DesignSystem/DesignTokens.swift" },
+    { "src": "templates/Typography.swift", "dest": "Sources/DesignSystem/Typography.swift" },
+    { "src": "templates/Theme.swift", "dest": "Sources/DesignSystem/Theme.swift" },
+    { "src": "templates/LiquidGlass.swift", "dest": "Sources/DesignSystem/LiquidGlass.swift" }
+  ],
+  "notes": "Se copian en la capa DesignSystem (MainActor por defecto). SemanticColors es nonisolated por diseño (cruza fronteras como default de un EnvironmentKey)."
+}

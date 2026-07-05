@@ -79,12 +79,14 @@ const NODE_STACK: DetectedStack = {
   framework: 'node',
   hasTypeScript: true,
   packageManager: 'pnpm',
+  hasSwift: false,
 };
 
 const NEXT_STACK: DetectedStack = {
   framework: 'nextjs',
   hasTypeScript: true,
   packageManager: 'npm',
+  hasSwift: false,
 };
 
 function optionsFor(stack: DetectedStack, ops: InstallerOps): InstallerOptions {
