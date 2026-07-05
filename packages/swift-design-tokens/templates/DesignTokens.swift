@@ -1,8 +1,6 @@
 import SwiftUI
 
-// Capa de diseño: MainActor por defecto (ver Package.swift).
-// Tokens semánticos como fuente única de verdad (ADR-0012 de dominio):
-// nada de hex crudos dispersos; los colores se nombran por rol.
+// Tokens semánticos como fuente única de verdad (ADR-0012). Nada de hex crudos.
 
 public enum DesignTokens {
     /// Escala de espaciado base (4/8pt).
@@ -11,8 +9,7 @@ public enum DesignTokens {
 }
 
 /// Colores por rol, resueltos light/dark en una sola definición. `Sendable` y
-/// `nonisolated`: es un value type que cruza fronteras de aislamiento (p. ej. el
-/// valor por defecto de un `EnvironmentKey` nonisolated).
+/// `nonisolated`: cruza fronteras de aislamiento (default de un EnvironmentKey nonisolated).
 public struct SemanticColors: Sendable {
     public var textPrimary: Color
     public var textSecondary: Color
