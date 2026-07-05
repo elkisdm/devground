@@ -1,6 +1,6 @@
 {
   "name": "@devground/swift-design-tokens",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Semantic design tokens (color roles, spacing, Dynamic Type) + Liquid Glass helpers for SwiftUI (devground swift-*)",
   "main": "index.json",
   "files": [

@@ -1,5 +1,11 @@
 # devground-init
 
+## 1.1.0
+
+### Minor Changes
+
+- 01762b2: Fase 5 de la iniciativa iOS/Swift: añade `@devground/swift-ci` (plantillas GitHub Actions + Fastlane Match) y detección de stack Swift en `devground-init` — `detectStack` ahora marca `hasSwift` cuando encuentra `Package.swift`/`.xcodeproj`/`.xcworkspace` y tolera repos Swift sin `package.json` sin fallar (ADR-0021).
+
 ## 1.0.4
 
 ### Patch Changes
@@ -40,6 +46,7 @@
 - ff712ba: Initial public release of the devground toolkit.
 
   Publishes the 9 packages to the npm registry for the first time:
+
   - `@devground/devground` — all-in-one meta-package
   - `@devground/prettier-config` — shared Prettier configuration
   - `@devground/eslint-config` — ESLint flat config (base + Next.js)

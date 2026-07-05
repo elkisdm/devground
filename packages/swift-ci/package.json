@@ -1,6 +1,6 @@
 {
   "name": "@devground/swift-ci",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "CI/CD templates for Swift/iOS: GitHub Actions build+test and Fastlane Match signing (devground swift-*)",
   "main": "index.json",
   "files": [
