@@ -30,6 +30,26 @@ describe('isTestFile', () => {
     }
   });
 
+  it('matches Swift test conventions (SwiftPM Tests/ dir and *Tests.swift)', () => {
+    for (const p of [
+      'swift-foundation/Tests/DomainTests/FetchUserUseCaseTests.swift',
+      'Sources/App/AuthModelTests.swift',
+      'MyLib/Tests/HelperTest.swift',
+    ]) {
+      expect(isTestFile(p), p).toBe(true);
+    }
+  });
+
+  it('does NOT match Swift source files (incl. lowercase "test" substrings)', () => {
+    for (const p of [
+      'swift-foundation/Sources/Domain/User.swift',
+      'Sources/Networking/StubUserRepository.swift',
+      'Sources/Util/Latest.swift',
+    ]) {
+      expect(isTestFile(p), p).toBe(false);
+    }
+  });
+
   // The regression: the exact bug that produced a false 85% test-coupling rate.
   it('does NOT match a feature file literally named test.ts', () => {
     expect(isTestFile('apps/api/src/routes/test.ts')).toBe(false);

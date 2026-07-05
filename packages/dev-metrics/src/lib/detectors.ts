@@ -17,14 +17,17 @@
  *  - `*.spec.ts|tsx|js|jsx`            e.g. `foo.spec.ts`
  *  - anything under a `__tests__/` dir e.g. `web/__tests__/unit/x.test.tsx`
  *  - anything under a `test/` or `tests/` dir
+ *  - anything under a `Tests/` dir      SwiftPM / xUnit convention (capital T)
  *  - `test_*.py`                       pytest convention
  *  - `*_test.<ext>`                    go / python convention
+ *  - `*Test.swift` / `*Tests.swift`    Swift (XCTest / Swift Testing) convention
  *
  * Deliberately does NOT match a file literally named `test.ts` outside a test
- * dir — that is the exact false positive we are killing.
+ * dir, nor a Swift source like `Latest.swift` (the `Test` marker is
+ * case-sensitive, so lowercase "test" substrings never match).
  */
 const TEST_FILE_RE =
-  /(\.test\.[tj]sx?$|\.spec\.[tj]sx?$|(^|\/)__tests__\/|(^|\/)tests?\/|(^|\/)test_[^/]+\.py$|_test\.[A-Za-z]+$)/;
+  /(\.test\.[tj]sx?$|\.spec\.[tj]sx?$|(^|\/)__tests__\/|(^|\/)tests?\/|(^|\/)Tests\/|(^|\/)test_[^/]+\.py$|_test\.[A-Za-z]+$|Tests?\.swift$)/;
 
 /**
  * A decision record or spec document. Requires the file to live in a dedicated
