@@ -207,8 +207,9 @@ const DIMENSIONS = [
   { role: 'Auditoria', key: 'aud-security', ask: 'SEGURIDAD (ADR 0007-0009): inyección de comandos (ej: execSync con strings construidos), path traversal, manejo de secretos, validación de entrada externa. Este es el punto más crítico.' },
   { role: 'Auditoria', key: 'aud-perf', ask: 'PERFORMANCE: I/O bloqueante innecesario, trabajo redundante, complejidad algorítmica. Sé proporcional: en un CLI de scaffolding el I/O sync suele ser aceptable — solo reporta lo que de verdad importa.' },
   { role: 'Auditoria', key: 'aud-limits', ask: 'LÍMITES (ADR 0010): tamaño de módulo/función, complejidad ciclomática excesiva, funciones que hacen demasiado.' },
-  { role: 'Auditoria', key: 'aud-types', ask: 'TIPOS EN FRONTERAS (ADR 0011): uso de `any` o tipos laxos en límites externos (entrada de usuario, parsing, retornos públicos).' },
-  { role: 'Auditoria', key: 'aud-tests', ask: 'COBERTURA DE TESTS EN RUTAS CRÍTICAS (ADR 0012): ¿qué comportamiento crítico NO está cubierto por tests? Lee los .test.ts existentes y contrasta contra la lógica crítica.' },
+  { role: 'Auditoria', key: 'aud-types', ask: 'TIPOS EN FRONTERAS (ADR 0011): uso de `any` o tipos laxos en límites externos (entrada de usuario, parsing, retornos públicos). En Swift: force-unwrap (`!`)/`try!` en fronteras y errores no tipados donde un `enum` acotado corresponde (typed throws).' },
+  { role: 'Auditoria', key: 'aud-tests', ask: 'COBERTURA DE TESTS EN RUTAS CRÍTICAS (ADR 0012): ¿qué comportamiento crítico NO está cubierto por tests? Lee los tests existentes (`.test.ts` o `*Tests.swift`) y contrasta contra la lógica crítica.' },
+  { role: 'Auditoria', key: 'aud-concurrency', ask: 'CONCURRENCIA (SOLO flujos Swift — si el flujo no es Swift, NO reportes nada aquí): `@unchecked Sendable` sin justificación escrita, tipos no-`Sendable` cruzando fronteras de aislamiento, `.defaultIsolation(MainActor.self)` aplicado a capas base portables (antipatrón: hops de actor, rompe Sendable), y `Domain`/capas base que importan UIKit/SwiftUI (rompe la frontera de portabilidad). Rúbrica: ADRs de dominio Swift (isolation por capa, core puro).' },
 ]
 
 // ---------------------------------------------------------------------------

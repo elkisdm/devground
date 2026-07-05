@@ -39,8 +39,13 @@ Usa los **ADRs de devground** como rúbrica de cumplimiento.
 | `aud-security` | Inyección de comandos, path traversal, manejo de secretos, validación de entrada. | 0007–0009 |
 | `aud-perf` | I/O bloqueante innecesario, trabajo redundante, complejidad algorítmica. | — |
 | `aud-limits` | Tamaño de módulo/función; complejidad excesiva. | 0010 |
-| `aud-types` | `any` en fronteras externas; tipos laxos en límites. | 0011 |
-| `aud-tests` | Cobertura de tests en rutas críticas. | 0012 |
+| `aud-types` | `any` en fronteras externas; tipos laxos. Swift: force-unwrap/`try!` en fronteras, errores no tipados. | 0011 |
+| `aud-tests` | Cobertura de tests en rutas críticas (`.test.ts` o `*Tests.swift`). | 0012 |
+| `aud-concurrency` | **(Solo flujos Swift)** `@unchecked Sendable` sin justificar; no-`Sendable` cruzando aislamiento; `MainActor` por defecto en capas base; `Domain` que importa UIKit/SwiftUI. | ADRs Swift (isolation por capa, core puro) |
+
+> Para un flujo Swift, la Auditoría usa los **ADRs de dominio Swift** del proyecto
+> (`swift-foundation/docs/adr/`) además de los de devground. `aud-concurrency` no
+> aplica a flujos no-Swift: en ese caso el agente no reporta nada.
 
 ---
 
