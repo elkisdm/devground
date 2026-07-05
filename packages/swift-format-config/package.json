@@ -1,6 +1,6 @@
 {
   "name": "@devground/swift-format-config",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Shared SwiftFormat + SwiftLint configuration for Swift/iOS projects (devground swift-*)",
   "main": "index.json",
   "files": [
