@@ -18,10 +18,10 @@ public final class InMemoryKeyValueStore: KeyValueStore, @unchecked Sendable {
     public init() {}
 
     public func string(forKey key: String) -> String? {
-        lock.withLock { storage[key] }
+        self.lock.withLock { self.storage[key] }
     }
 
     public func set(_ value: String?, forKey key: String) {
-        lock.withLock { storage[key] = value }
+        self.lock.withLock { self.storage[key] = value }
     }
 }

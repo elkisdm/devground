@@ -11,5 +11,7 @@ public struct NonEmptyString: Sendable, Equatable, CustomStringConvertible {
         self.value = trimmed
     }
 
-    public var description: String { value }
+    public var description: String {
+        self.value
+    }
 }

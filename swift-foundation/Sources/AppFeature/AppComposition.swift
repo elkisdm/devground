@@ -1,10 +1,10 @@
+import BiometricAuth
+import DesignSystem
 import Domain
+import FeatureAuth
+import FeatureInterfaces
 import Networking
 import Persistence
-import DesignSystem
-import FeatureInterfaces
-import BiometricAuth
-import FeatureAuth
 
 // Raíz de composición (única): cablea la DI conectando las capas.
 // MainActor por defecto (ver Package.swift). Cruza con seguridad hacia las capas

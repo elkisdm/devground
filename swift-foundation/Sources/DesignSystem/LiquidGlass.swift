@@ -8,7 +8,7 @@ public extension View {
     /// Aplica Liquid Glass a una superficie de navegación. En OS < 26 cae a un
     /// material del sistema, preservando profundidad legible.
     @ViewBuilder
-    func navigationGlass<S: Shape>(in shape: S = Capsule()) -> some View {
+    func navigationGlass(in shape: some Shape = Capsule()) -> some View {
         if #available(iOS 26.0, macOS 26.0, *) {
             glassEffect(.regular, in: shape)
         } else {

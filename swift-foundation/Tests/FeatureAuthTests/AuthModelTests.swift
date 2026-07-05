@@ -1,5 +1,5 @@
-import Testing
 import Domain
+import Testing
 @testable import FeatureAuth
 
 // El modelo de presentación transiciona de estado correctamente según el resultado
@@ -7,7 +7,9 @@ import Domain
 
 private struct StubAuthenticator: BiometricAuthenticating {
     let result: Bool
-    func authenticate(reason: String) async throws -> Bool { result }
+    func authenticate(reason: String) async throws -> Bool {
+        self.result
+    }
 }
 
 private struct StubRepo: AuthRepository {
@@ -17,7 +19,7 @@ private struct StubRepo: AuthRepository {
 }
 
 @MainActor
-@Test func modelReachesAuthenticatedOnSuccess() async {
+@Test func `model reaches authenticated on success`() async {
     let model = AuthModel(
         signIn: SignInWithBiometricsUseCase(
             authenticator: StubAuthenticator(result: true),
@@ -29,7 +31,7 @@ private struct StubRepo: AuthRepository {
 }
 
 @MainActor
-@Test func modelReachesFailedOnBiometricRejection() async {
+@Test func `model reaches failed on biometric rejection`() async {
     let model = AuthModel(
         signIn: SignInWithBiometricsUseCase(
             authenticator: StubAuthenticator(result: false),

@@ -1,11 +1,11 @@
 // swift-tools-version: 6.2
 import PackageDescription
 
-// Monorepo fundacional ("librería de librerías") — Fase 1.
-// Grafo de módulos por capa, dependencias solo hacia abajo, sin ciclos.
-// Isolation por capa (ADR-0019 de devground): MainActor por defecto en las capas
-// de UI/composición; nonisolated + Sendable en las capas base portables.
-// Modo de lenguaje Swift 6 + Approachable Concurrency (toolchain local: 6.2.3).
+/// Monorepo fundacional ("librería de librerías") — Fase 1.
+/// Grafo de módulos por capa, dependencias solo hacia abajo, sin ciclos.
+/// Isolation por capa (ADR-0019 de devground): MainActor por defecto en las capas
+/// de UI/composición; nonisolated + Sendable en las capas base portables.
+/// Modo de lenguaje Swift 6 + Approachable Concurrency (toolchain local: 6.2.3).
 let package = Package(
     name: "SwiftFoundation",
     platforms: [.iOS(.v17), .macOS(.v14)],
@@ -18,7 +18,7 @@ let package = Package(
         .library(name: "FeatureInterfaces", targets: ["FeatureInterfaces"]),
         .library(name: "BiometricAuth", targets: ["BiometricAuth"]),
         .library(name: "FeatureAuth", targets: ["FeatureAuth"]),
-        .library(name: "AppFeature", targets: ["AppFeature"]),
+        .library(name: "AppFeature", targets: ["AppFeature"])
     ],
     targets: [
         // --- Capas base: nonisolated + Sendable (core Swift puro, portable) ---
@@ -49,14 +49,14 @@ let package = Package(
             name: "AppFeature",
             dependencies: [
                 "Domain", "Networking", "Persistence", "DesignSystem",
-                "FeatureInterfaces", "BiometricAuth", "FeatureAuth",
+                "FeatureInterfaces", "BiometricAuth", "FeatureAuth"
             ],
             swiftSettings: [.defaultIsolation(MainActor.self)]
         ),
 
         // --- Tests (Swift Testing): dominio y presentación testeables aislados ---
         .testTarget(name: "DomainTests", dependencies: ["Domain"]),
-        .testTarget(name: "FeatureAuthTests", dependencies: ["FeatureAuth"]),
+        .testTarget(name: "FeatureAuthTests", dependencies: ["FeatureAuth"])
     ],
     swiftLanguageModes: [.v6]
 )

@@ -5,7 +5,9 @@ import Testing
 
 private struct StubAuthenticator: BiometricAuthenticating {
     let result: Bool
-    func authenticate(reason: String) async throws -> Bool { result }
+    func authenticate(reason: String) async throws -> Bool {
+        self.result
+    }
 }
 
 private struct StubRepo: AuthRepository {
@@ -14,7 +16,7 @@ private struct StubRepo: AuthRepository {
     }
 }
 
-@Test func signInReturnsSessionWhenBiometricSucceeds() async throws {
+@Test func `sign in returns session when biometric succeeds`() async throws {
     let useCase = SignInWithBiometricsUseCase(
         authenticator: StubAuthenticator(result: true),
         repository: StubRepo()
@@ -23,7 +25,7 @@ private struct StubRepo: AuthRepository {
     #expect(session.userID == "u_1")
 }
 
-@Test func signInThrowsWhenBiometricFails() async {
+@Test func `sign in throws when biometric fails`() async {
     let useCase = SignInWithBiometricsUseCase(
         authenticator: StubAuthenticator(result: false),
         repository: StubRepo()

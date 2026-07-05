@@ -7,7 +7,9 @@ import SwiftUI
 public enum DesignTokens {
     /// Escala de espaciado base (4/8pt).
     public static let spacingUnit: CGFloat = 8
-    public static func spacing(_ multiplier: CGFloat) -> CGFloat { spacingUnit * multiplier }
+    public static func spacing(_ multiplier: CGFloat) -> CGFloat {
+        self.spacingUnit * multiplier
+    }
 }
 
 /// Colores por rol, resueltos light/dark en una sola definición. `Sendable` y

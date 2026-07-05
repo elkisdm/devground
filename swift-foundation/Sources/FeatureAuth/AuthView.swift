@@ -1,9 +1,9 @@
-import SwiftUI
-import Domain
 import DesignSystem
+import Domain
+import SwiftUI
 
-// Vista de autenticación. Tokens semánticos (colores por Environment, tipografía
-// Dynamic Type), sin hex crudos. El vidrio se reserva a la superficie de navegación.
+/// Vista de autenticación. Tokens semánticos (colores por Environment, tipografía
+/// Dynamic Type), sin hex crudos. El vidrio se reserva a la superficie de navegación.
 public struct AuthView: View {
     @Environment(\.semanticColors) private var colors
     @State private var model: AuthModel
@@ -16,19 +16,19 @@ public struct AuthView: View {
         VStack(spacing: DesignTokens.spacing(2)) {
             Text("Bienvenido")
                 .font(Typography.title)
-                .foregroundStyle(colors.textPrimary)
+                .foregroundStyle(self.colors.textPrimary)
 
-            switch model.state {
+            switch self.model.state {
             case .idle, .failed:
                 Button("Iniciar sesión con Face ID") {
-                    Task { await model.authenticate() }
+                    Task { await self.model.authenticate() }
                 }
                 .padding(DesignTokens.spacing(2))
                 .navigationGlass(in: .capsule)
             case .authenticating:
                 ProgressView()
             case .authenticated:
-                Text("Sesión iniciada").foregroundStyle(colors.textSecondary)
+                Text("Sesión iniciada").foregroundStyle(self.colors.textSecondary)
             }
 
             if case let .failed(message) = model.state {
@@ -42,23 +42,27 @@ public struct AuthView: View {
 }
 
 #if DEBUG
-private struct PreviewAuthenticator: BiometricAuthenticating {
-    func authenticate(reason: String) async throws -> Bool { true }
-}
+    private struct PreviewAuthenticator: BiometricAuthenticating {
+        func authenticate(reason: String) async throws -> Bool {
+            true
+        }
+    }
 
-private struct PreviewRepo: AuthRepository {
-    func currentSession() async throws -> AuthSession { AuthSession(userID: "u_1", token: "t") }
-}
+    private struct PreviewRepo: AuthRepository {
+        func currentSession() async throws -> AuthSession {
+            AuthSession(userID: "u_1", token: "t")
+        }
+    }
 
-#Preview {
-    AuthView(
-        model: AuthModel(
-            signIn: SignInWithBiometricsUseCase(
-                authenticator: PreviewAuthenticator(),
-                repository: PreviewRepo()
+    #Preview {
+        AuthView(
+            model: AuthModel(
+                signIn: SignInWithBiometricsUseCase(
+                    authenticator: PreviewAuthenticator(),
+                    repository: PreviewRepo()
+                )
             )
         )
-    )
-    .semanticColors(SemanticColors())
-}
+        .semanticColors(SemanticColors())
+    }
 #endif

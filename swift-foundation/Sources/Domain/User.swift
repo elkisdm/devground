@@ -29,6 +29,6 @@ public struct FetchUserUseCase: Sendable {
     }
 
     public func callAsFunction(id: String) async throws -> User {
-        try await repository.fetchUser(id: id)
+        try await self.repository.fetchUser(id: id)
     }
 }

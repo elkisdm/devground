@@ -10,7 +10,7 @@ private struct StubRepo: UserRepository {
     }
 }
 
-@Test func fetchUserUseCaseReturnsUserFromRepository() async throws {
+@Test func `fetch user use case returns user from repository`() async throws {
     let useCase = FetchUserUseCase(repository: StubRepo())
     let user = try await useCase(id: "42")
     #expect(user.id == "42")

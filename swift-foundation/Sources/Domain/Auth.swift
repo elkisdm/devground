@@ -54,6 +54,6 @@ public struct SignInWithBiometricsUseCase: Sendable {
     public func callAsFunction() async throws -> AuthSession {
         let verified = try await authenticator.authenticate(reason: "Inicia sesión")
         guard verified else { throw AuthError.biometricFailed }
-        return try await repository.currentSession()
+        return try await self.repository.currentSession()
     }
 }

@@ -1,7 +1,7 @@
 import SwiftUI
 
-// Tipografía ligada a los text styles del sistema → Dynamic Type automático
-// (ADR-0012 de dominio). No se hardcodean tamaños en puntos.
+/// Tipografía ligada a los text styles del sistema → Dynamic Type automático
+/// (ADR-0012 de dominio). No se hardcodean tamaños en puntos.
 public enum Typography {
     public static let largeTitle = Font.largeTitle
     public static let title = Font.title

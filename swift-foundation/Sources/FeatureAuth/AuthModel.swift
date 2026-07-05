@@ -1,5 +1,5 @@
-import Observation
 import Domain
+import Observation
 
 // Feature Auth — capa de presentación. MainActor por defecto (ver Package.swift).
 // Estado con @Observable (tracking por propiedad, ADR-0003 de dominio); flujo
@@ -23,14 +23,14 @@ public final class AuthModel {
     }
 
     public func authenticate() async {
-        state = .authenticating
+        self.state = .authenticating
         do {
             let session = try await signIn()
-            state = .authenticated(session)
+            self.state = .authenticated(session)
         } catch let error as AuthError {
             state = .failed(error.message)
         } catch {
-            state = .failed("Error inesperado.")
+            self.state = .failed("Error inesperado.")
         }
     }
 }

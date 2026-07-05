@@ -1,14 +1,16 @@
-import Foundation
 import Domain
+import Foundation
 
 // Capa de datos: nonisolated + Sendable. Transforma DTO → modelo de dominio.
 // El DTO nunca cruza hacia presentación.
 
-struct UserDTO: Decodable, Sendable {
+struct UserDTO: Decodable {
     let id: String
     let fullName: String
 
-    func toDomain() -> User { User(id: id, name: fullName) }
+    func toDomain() -> User {
+        User(id: self.id, name: self.fullName)
+    }
 }
 
 /// Implementación stub del repositorio (Fase 1). El cliente HTTP real llega en Fase 3.
