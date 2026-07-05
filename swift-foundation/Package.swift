@@ -16,6 +16,8 @@ let package = Package(
         .library(name: "Persistence", targets: ["Persistence"]),
         .library(name: "DesignSystem", targets: ["DesignSystem"]),
         .library(name: "FeatureInterfaces", targets: ["FeatureInterfaces"]),
+        .library(name: "BiometricAuth", targets: ["BiometricAuth"]),
+        .library(name: "FeatureAuth", targets: ["FeatureAuth"]),
         .library(name: "AppFeature", targets: ["AppFeature"]),
     ],
     targets: [
@@ -25,6 +27,8 @@ let package = Package(
         .target(name: "Networking", dependencies: ["Domain", "FoundationUtils"]),
         .target(name: "Persistence", dependencies: ["Domain", "FoundationUtils"]),
         .target(name: "FeatureInterfaces", dependencies: ["Domain"]),
+        // Adaptador de infraestructura (LocalAuthentication): nonisolated + Sendable.
+        .target(name: "BiometricAuth", dependencies: ["Domain"]),
 
         // --- Capa de diseño: MainActor por defecto ---
         .target(
@@ -33,15 +37,26 @@ let package = Package(
             swiftSettings: [.defaultIsolation(MainActor.self)]
         ),
 
-        // --- Raíz de composición: MainActor por defecto, cablea la DI ---
+        // --- Feature kit Auth: presentación MainActor por defecto ---
         .target(
-            name: "AppFeature",
-            dependencies: ["Domain", "Networking", "Persistence", "DesignSystem", "FeatureInterfaces"],
+            name: "FeatureAuth",
+            dependencies: ["Domain", "DesignSystem"],
             swiftSettings: [.defaultIsolation(MainActor.self)]
         ),
 
-        // --- Prueba de humo del harness (Swift Testing): Domain testeable aislado ---
+        // --- Raíz de composición: MainActor por defecto, cablea la DI ---
+        .target(
+            name: "AppFeature",
+            dependencies: [
+                "Domain", "Networking", "Persistence", "DesignSystem",
+                "FeatureInterfaces", "BiometricAuth", "FeatureAuth",
+            ],
+            swiftSettings: [.defaultIsolation(MainActor.self)]
+        ),
+
+        // --- Tests (Swift Testing): dominio y presentación testeables aislados ---
         .testTarget(name: "DomainTests", dependencies: ["Domain"]),
+        .testTarget(name: "FeatureAuthTests", dependencies: ["FeatureAuth"]),
     ],
     swiftLanguageModes: [.v6]
 )

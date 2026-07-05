@@ -3,6 +3,8 @@ import Networking
 import Persistence
 import DesignSystem
 import FeatureInterfaces
+import BiometricAuth
+import FeatureAuth
 
 // Raíz de composición (única): cablea la DI conectando las capas.
 // MainActor por defecto (ver Package.swift). Cruza con seguridad hacia las capas
@@ -22,5 +24,15 @@ public struct AppComposition {
 
     public func makeColors() -> SemanticColors {
         SemanticColors()
+    }
+
+    /// Vertical de autenticación: biometría real (LocalAuthentication) + repo de sesión.
+    public func makeAuthModel() -> AuthModel {
+        AuthModel(
+            signIn: SignInWithBiometricsUseCase(
+                authenticator: LABiometricAuthenticator(),
+                repository: StubAuthRepository()
+            )
+        )
     }
 }
