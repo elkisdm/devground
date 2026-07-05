@@ -20,6 +20,10 @@ let package = Package(
         .library(name: "FeatureAuth", targets: ["FeatureAuth"]),
         .library(name: "AppFeature", targets: ["AppFeature"])
     ],
+    dependencies: [
+        // DocC: habilita `swift package generate-documentation` (ADR-0008, Fase 7).
+        .package(url: "https://github.com/swiftlang/swift-docc-plugin", from: "1.4.0")
+    ],
     targets: [
         // --- Capas base: nonisolated + Sendable (core Swift puro, portable) ---
         .target(name: "FoundationUtils"),

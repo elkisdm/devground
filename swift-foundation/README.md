@@ -45,7 +45,27 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcrun swift test
 #   swift test
 ```
 
+## Documentación (DocC)
+
+El módulo `Domain` tiene un catálogo DocC (`Sources/Domain/Domain.docc/`). Con
+`swift-docc-plugin` como dependencia:
+
+```bash
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
+  xcrun swift package generate-documentation --target Domain
+# → .build/plugins/Swift-DocC/outputs/Domain.doccarchive
+```
+
+## Versionado y API
+
+- **SemVer estricto**: MAJOR solo para cambios source-breaking de la API pública.
+- **Deprecación en 2 pasos**: MINOR con `@available(*, deprecated, message:)` apuntando
+  al reemplazo → MAJOR que elimina.
+- **API-diff en CI** (pendiente): comparar la superficie pública contra la versión
+  anterior antes de taggear (p. ej. `swift-api-digester`). Aún no implementado.
+
 ## Estado
 
-Fase 1 = esqueleto de librerías. El app shell iOS (.xcodeproj, UI Liquid Glass, navegación)
-y el harness completo (`swift-dependencies`, `swift-clocks`, snapshots) llegan en Fases 2-3.
+Fases 1-7 implementadas: esqueleto por capa, vertical Auth, design system + Liquid Glass,
+CI/CD, y DocC. Pendiente: app shell iOS (.xcodeproj, requiere nombre/bundle id) y el
+API-diff automatizado.
