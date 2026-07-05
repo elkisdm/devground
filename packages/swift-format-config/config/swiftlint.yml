@@ -5,6 +5,9 @@
 
 disabled_rules:
   - todo
+  # SwiftFormat es dueño del formato: mantiene comas finales multilínea (idiomático,
+  # mejor para diffs). Se desactiva aquí para no chocar con SwiftFormat.
+  - trailing_comma
 
 opt_in_rules:
   - empty_count
