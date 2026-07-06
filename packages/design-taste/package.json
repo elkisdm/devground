@@ -1,0 +1,40 @@
+{
+  "name": "@devground/design-taste",
+  "version": "0.0.0",
+  "description": "Anti-slop UI/UX design skills for Claude Code — layout, typography, motion and spacing taste, installable into any project",
+  "bin": {
+    "devground-design-taste": "./setup.js"
+  },
+  "files": [
+    "setup.js",
+    "skills/"
+  ],
+  "scripts": {},
+  "keywords": [
+    "design",
+    "ui",
+    "ux",
+    "frontend",
+    "anti-slop",
+    "claude-code",
+    "skill",
+    "taste",
+    "devground"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/elkisdm/devground.git",
+    "directory": "packages/design-taste"
+  },
+  "homepage": "https://github.com/elkisdm/devground/tree/main/packages/design-taste#readme",
+  "bugs": {
+    "url": "https://github.com/elkisdm/devground/issues"
+  }
+}
