@@ -175,6 +175,13 @@ Con el plan aprobado, despacha cada tarea con su `{model, effort}` usando la her
   dependencia y `parallel` para los lotes independientes.
 - Cada `agent()` recibe el `model` y el `effort` de la asignación final de su tarea, más el
   contexto de la tarea (título, descripción, archivos a tocar del brief).
+- **Inyecta guía de calidad por `kind`**: al construir `buildTaskPrompt(t)`, busca `t.kind`
+  en `references/kind-playbooks.md`. Si tiene un checklist, adjúntalo al prompt del
+  subagente bajo `## Guía de calidad para esta tarea` — es guía mecánica destilada de los
+  playbooks (`docs/*-playbook.md`), en el punto de trabajo, sin reemplazar el contexto de
+  la tarea. Si el kind no está mapeado (`chore`/`style`/`rename`/`spike`/`test`), no
+  inyectes nada. Anota en `decisions.jsonl` qué checklist inyectaste (`playbook_injected`)
+  para poder medir después si baja la tasa de reversión.
 - Las tareas `plan`/`audit`/`decision` corren primero si otras dependen de su resultado.
 
 Esquema de despacho (pseudocódigo de Workflow):

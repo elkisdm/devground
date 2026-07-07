@@ -26,6 +26,7 @@ no hay proyecto. Una línea por tarea ejecutada. Append-only: nunca reescribas, 
   "reason": "delicado pero no amerita opus; subo esfuerzo, no modelo",
   "est_cost_usd": 0.13,                  // null si el modelo no tiene tarifa verificada
   "pricing_confidence": "verified",       // verified | unconfirmed | unavailable
+  "playbook_injected": "DISEÑO",          // id del checklist de kind-playbooks.md inyectado al prompt, o null
 
   // ── reconciliación (se añade DESPUÉS de ejecutar, no antes) ──
   "actual_tokens": { "input": 18000, "output": 12000 }, // tokens reales del sub-agente
@@ -56,6 +57,11 @@ puente con tu reader dev-metrics: mide si el balance precio/calidad realmente fu
 - `est_cost_usd` es la estimación previa; `actual_cost_usd` el real post-ejecución. Ambos
   los calcula `engine.mjs` con la misma fórmula (tokens × tarifa) — la diferencia es solo
   estimado vs real. NO inventes ninguno a mano.
+- `playbook_injected` registra el id del checklist de `references/kind-playbooks.md` que se
+  adjuntó al prompt del subagente (por `task_kind`), o `null` si el kind no está mapeado. Es
+  el enganche de medición: cruzando `change`+`task_id` con los eventos `assumption_reversed`
+  de spec-flow (`.spec-flow/events.jsonl`), `dev-metrics` puede responder si las tareas con
+  guía inyectada revierten menos que las sin ella — la prueba de que la inyección "se nota".
 - No incluyas contenido de la tarea ni del transcript: solo etiquetas de decisión. El log
   es benigno y versionable.
 - Si append-ear esta línea se siente como fricción, lo estás sobre-pensando: es un `echo`.
