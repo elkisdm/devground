@@ -7,7 +7,7 @@ el código y los ADRs), sino de *dónde*.
 | Subsistema | Paths | Responsabilidad | Entrypoints | ADRs |
 |------------|-------|-----------------|-------------|------|
 | **CLI (devground-init)** | `packages/cli/src/` | Scaffolding interactivo de los estándares devground en un proyecto | `src/index.ts` (bin `devground-init`); `src/select.ts` (routing de presets, puro/testeable); `src/detect-stack.ts` (detecta framework/PM y `hasSwift` por `Package.swift`/`.xcodeproj`, tolera repos sin package.json — ADR-0021); `src/installers/*.ts` (un installer por herramienta); `src/installers/write-guard.ts` (no-sobreescribe); `src/utils/exec.ts` (`run` vía execSync), `utils/package-json.ts` | 0001, 0010–0012, 0021 |
-| **deepcheck** | `packages/deepcheck/` | Verificación profunda multi-agente (QA+Validación+Auditoría) con confirmación adversarial y destilación de skills por flujo | skill `skills/deepcheck/SKILL.md`; ejecutable `workflows/deepcheck.workflow.js` (corre vía la herramienta Workflow); bin `setup.js` (`devground-deepcheck`); ledgers en `audits/<flujo>/` | 0013 |
+| **deepcheck** | `packages/deepcheck/` | Verificación profunda multi-agente (QA+Validación+Auditoría) con confirmación adversarial y destilación de skills por flujo. 12 dimensiones, incl. `aud-premortem` (generador de composición/supuestos rotos, eje ortogonal a las per-componente — destilado del red-team de `docs/reasoning-craft-playbook-vol2.md`) | skill `skills/deepcheck/SKILL.md`; ejecutable `workflows/deepcheck.workflow.js` (corre vía la herramienta Workflow); dimensiones en `DIMENSIONS[]` sincronizadas con `references/roles.md`; bin `setup.js` (`devground-deepcheck`); ledgers en `audits/<flujo>/` | 0013 |
 | **Config presets** | `packages/{prettier,eslint,tsconfig,commitlint,lint-staged,husky}-config/` | Configuración compartida instalable | archivos estáticos publicables | 0003–0005 |
 | **architecture-guide** | `packages/architecture-guide/` | Knowledge base + ADR templates instalables en cualquier proyecto | bin `setup.js`, `adr-new.js` | — |
 | **dev-metrics** | `packages/dev-metrics/` | Serie temporal de métricas de codificar-con-agentes (git + transcripts) + impacto spec-flow | bin `dist/index.js` (`dev-metrics`); subcomando `spec-flow-impact` (`commands/spec-flow-impact.ts`); motor `lib/spec-flow-segment.ts` (segmentación per-commit, control recency-matched); `lib/spec-flow-events.ts` (parser JSONL); `lib/detectors.ts` (test/ADR estrictos, anti-substring; reconoce tests Swift: `Tests/` y `*Tests.swift`); `lib/spec-flow-report.ts`; subcomando `orientation` (`commands/orientation.ts`, motor `lib/orientation.ts` = tokens antes del 1er edit + payoff codemap) | 0006, 0014, 0015 |
@@ -22,3 +22,8 @@ el código y los ADRs), sino de *dónde*.
 >
 > Skills destiladas por deepcheck viven en `.claude/skills/audit-<flujo>/` del
 > proyecto auditado (ej: `.claude/skills/audit-devground-init/`).
+>
+> Skill `escritura-tecnica` (`.claude/skills/escritura-tecnica/`): checklists de
+> narrativa/síntesis/enseñanza para redactar ADR/README/PR/guías, destilados de
+> `docs/reasoning-craft-playbook*.md`. Cubre la escritura de docs NO orquestada
+> (la orquestada ya la cubre el checklist DOCS de `kind-playbooks.md`).
