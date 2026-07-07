@@ -28,13 +28,14 @@ npx @devground/dreaming --global
 ```
 
 Existing files are never overwritten — re-run after an upgrade to add new files while
-keeping your local edits. The gather harness needs **Python 3** on your PATH.
+keeping your local edits. `npx @devground/dreaming` (no args) runs the `install` command;
+`devground-dreaming gather` runs the harness (see below). Node ≥ 20, no Python needed.
 
 ## How it works
 
 Three actors, deliberately separated:
 
-1. **The harness** (`scripts/dream-gather.py`) does the cheap, deterministic, token-free
+1. **The harness** (`devground-dreaming gather`) does the cheap, deterministic, token-free
    part: pick the transcripts in the window (since the last dream, else `--days`),
    distill each to its conversational spine + tool-error signals (stripping command
    noise, thinking, and bulky tool output), and snapshot the current memory store. It
@@ -47,9 +48,13 @@ Three actors, deliberately separated:
 
 ```bash
 # run the harness directly (the skill does this for you):
-python3 ~/.claude/skills/dreaming/scripts/dream-gather.py --project=-Users-you --days 30
+devground-dreaming gather --project=-Users-you --days 30
 # -> writes <memory>/.dream/bundle-latest.md + prints a JSON summary
 ```
+
+The harness is a compiled TypeScript CLI that **reuses `@devground/dev-metrics`'s
+transcript reader** (`parseTranscriptLine`, `extractToolUses`) and memory helpers
+(`defaultMemoryRoot`, `parseCreatedFrontmatter`) — no duplicated JSONL parsing.
 
 Then, in Claude Code, run `/dreaming` (or say *"consolida la memoria"*) and review the
 proposed diff.
@@ -65,6 +70,6 @@ proposed diff.
 
 ## Status
 
-Incubation — private pilot, unpublished. Ships the working skill + Python harness; a
-TypeScript port of the harness (reusing `@devground/dev-metrics`' transcript reader) is a
-planned fast-follow.
+Incubation — private pilot, unpublished. Ships the skill + a compiled TypeScript harness
+(reusing `@devground/dev-metrics`' transcript reader) with vitest coverage of the pure
+functions (distill, frontmatter, window).

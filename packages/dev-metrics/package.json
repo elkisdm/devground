@@ -5,6 +5,20 @@
   "bin": {
     "dev-metrics": "./dist/index.js"
   },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./transcript": {
+      "types": "./dist/lib/transcript.d.ts",
+      "default": "./dist/lib/transcript.js"
+    },
+    "./memory": {
+      "types": "./dist/lib/memory.d.ts",
+      "default": "./dist/lib/memory.js"
+    }
+  },
   "files": [
     "dist/"
   ],

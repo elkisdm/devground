@@ -3,13 +3,20 @@
   "version": "0.0.0",
   "description": "dreaming: out-of-band memory consolidation for Claude Code — reviews recent session transcripts against a project's memory store and proposes a reviewed diff (dedupe, de-stale, fill gaps, fix the index). Nothing is written without approval; nothing is hard-deleted.",
   "bin": {
-    "devground-dreaming": "./setup.js"
+    "devground-dreaming": "./dist/index.js"
   },
   "files": [
-    "setup.js",
+    "dist/",
     "skill/"
   ],
-  "scripts": {},
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "tsc"
+  },
   "keywords": [
     "memory",
     "memory-consolidation",
@@ -35,5 +42,16 @@
   "homepage": "https://github.com/elkisdm/devground/tree/main/packages/dreaming#readme",
   "bugs": {
     "url": "https://github.com/elkisdm/devground/issues"
+  },
+  "dependencies": {
+    "@devground/dev-metrics": "workspace:*",
+    "@devground/logger": "workspace:*",
+    "commander": "^15.0.0"
+  },
+  "devDependencies": {
+    "@devground/vitest-config": "workspace:*",
+    "@types/node": "^25",
+    "typescript": "^5.0.0",
+    "vitest": "^2.1.0"
   }
 }

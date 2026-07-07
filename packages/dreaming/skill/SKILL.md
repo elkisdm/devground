@@ -24,7 +24,7 @@ store better over time: dedupe, de-stale, fill gaps, tidy the index.
 
 The division of labor is deliberate and must be respected:
 
-- **The harness (`scripts/dream-gather.py`)** does the mechanical, deterministic,
+- **The harness (`devground-dreaming gather`)** does the mechanical, deterministic,
   token-free part: window selection, transcript distillation, memory snapshot.
 - **You (the agent)** do the reasoning: read the bundle, find patterns, propose
   changes with evidence.
@@ -54,14 +54,14 @@ The division of labor is deliberate and must be respected:
 ### Step 1 — Gather (deterministic, no tokens)
 
 Resolve the project scope (default `-Users-macbookpro`, i.e. home-global). The gather
-script sits next to this SKILL.md at `scripts/dream-gather.py`. Resolve its path from
-the skill directory — it is installed either project-level or globally:
+harness is the `@devground/dreaming` CLI (a compiled TypeScript command that reuses
+`@devground/dev-metrics`' transcript reader):
 
 ```bash
-# global install:
-python3 ~/.claude/skills/dreaming/scripts/dream-gather.py --project <ENCODED_DIR>
-# project install:
-python3 ./.claude/skills/dreaming/scripts/dream-gather.py --project <ENCODED_DIR>
+# if the package is installed (globally or in the project):
+devground-dreaming gather --project=<ENCODED_DIR>
+# from the devground monorepo without a global install:
+node ~/Documents/devground/packages/dreaming/dist/index.js gather --project=<ENCODED_DIR>
 ```
 
 Useful flags: `--since last` (default; since the last dream) · `--days 14`
