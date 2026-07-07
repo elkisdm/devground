@@ -129,6 +129,7 @@ Capacidades en incubacion dentro del repo. **Aun no se publican a npm** — esta
 | | Que es | Estado |
 |---|--------|--------|
 | 🔬 [`@devground/deepcheck`](packages/deepcheck#readme) | Verificacion profunda **multi-agente** (QA · Validacion · Auditoria) que audita un flujo en paralelo por dimensiones, confirma cada hallazgo de forma **adversarial** (refutadores con lentes distintas) y **destila una skill de auditoria** que se vuelve mas afilada en cada corrida. No es un linter: razona sobre el flujo y acumula conocimiento para no re-descubrir lo mismo. | Piloto privado |
+| 🌙 [`@devground/dreaming`](packages/dreaming#readme) | Consolidacion de memoria **out-of-band** para Claude Code: revisa los transcripts recientes de un proyecto contra su memory store y propone un **diff revisado** (fusionar duplicados, deprecar memorias obsoletas/contradichas, sumar patrones y feedback no capturados, arreglar la deriva del indice). Harness Python determinista para el gather (sin tokens) + skill que razona y propone con evidencia por cambio. **Nada se escribe sin aprobacion; nunca borra en duro.** | Piloto privado |
 | 🧭 [skill `cimientos`](.claude/skills/cimientos/SKILL.md) | Flujo **guiado** de decisiones de arquitectura para proyectos nuevos: entrevista fase por fase, razona con la knowledge base (ADRs 0001–0011) y escribe las decisiones como ADRs (status Propuesto) + un `DECISIONS.md`. Garantiza bases solidas sin sobre-ingenieria. | Skill del repo (Claude Code) |
 | ⚖️ [`model-orchestrator`](tools/model-orchestrator#readme) | Harness de **routing de modelos por complejidad**: tras `spec-flow`, asigna a cada tarea el modelo y esfuerzo optimos (Opus / Sonnet / Haiku) para balancear **precio/calidad**, presenta un plan con costo estimado y despacha sub-agentes. Reglas de piso declarativas + un juez barato que ajusta ±1 nivel; las **invariantes se imponen en codigo** (`engine.mjs`, 30/30 tests), nunca en el juicio del modelo barato. Reconcilia costo real vs estimado. | Tool del repo (Claude Code) |
 
@@ -162,7 +163,7 @@ devground/
 ├── docs/                   # Documentacion del README: usage, faq, glossary, conceptos
 │   └── adr/                # ADRs propios del proyecto devground
 ├── demo/                   # Tape VHS + GIF de demostracion del CLI
-├── packages/               # 14 paquetes (13 publicados + deepcheck en incubacion)
+├── packages/               # 15 paquetes (13 publicados + deepcheck y dreaming en incubacion)
 ├── package.json            # pnpm workspaces
 └── pnpm-workspace.yaml
 ```
