@@ -5,9 +5,10 @@
 > paralelo por dimensiones, confirma cada hallazgo adversarialmente, y destila una
 > skill de auditoría específica del flujo que se vuelve más afilada en cada corrida.
 
-> ⚠️ **Estado: piloto.** Se está validando el concepto sobre un flujo real del
-> propio devground (`devground-init`) antes de publicar. La forma de entrega
-> (bin `setup.js`) y la destilación de skills son fases posteriores.
+> ⚠️ **Estado: piloto privado.** Se valida el concepto sobre un flujo real del propio
+> devground (`devground-init`) antes de publicar a npm. El bin `setup.js`
+> (`devground-deepcheck`) y la destilación de skills (`distill: true`) **ya operan**; lo
+> pendiente es estabilizar y decidir la forma de entrega pública.
 
 ## Por qué no es un linter
 
