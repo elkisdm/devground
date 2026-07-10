@@ -1,6 +1,6 @@
 # ADR-0021: Detección de stack en @devground/cli
 
-- **Estado**: Propuesto
+- **Estado**: Aceptado
 - **Fecha**: 2026-07-04
 - **Decisor**: edaza
 - **Aplica a**: `packages/cli` (`devground-init`)

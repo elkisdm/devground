@@ -1,6 +1,6 @@
 # ADR-0020: Swift Testing + swift-dependencies como harness estándar
 
-- **Estado**: Propuesto
+- **Estado**: Aceptado
 - **Fecha**: 2026-07-04
 - **Decisor**: edaza
 - **Aplica a**: `@devground/swift-test-harness` y todo repo Swift scaffoldeado por devground
