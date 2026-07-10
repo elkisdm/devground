@@ -110,4 +110,4 @@ Reglas:
 - Punto ciego de origen: auditoría de 6 proyectos — rutas sin validación de payload + webhook con `GET` sin firma.
 - Zod: https://zod.dev
 - Node `crypto.timingSafeEqual`: https://nodejs.org/api/crypto.html
-- Relacionado: [ADR-0007 — rate-limiting distribuido](0007-rate-limiting-distribuido.md), [ADR-0011 — tests en rutas críticas](0011-tests-rutas-criticas.md).
+- Relacionado: [ADR-0007 — rate-limiting distribuido](0007-rate-limiting-distribuido.md), [ADR-0012 — tests en rutas críticas](0012-tests-rutas-criticas.md).

@@ -9,7 +9,9 @@
     "setup.js",
     "skill/"
   ],
-  "scripts": {},
+  "scripts": {
+    "sync": "node scripts/sync-spec-flow.mjs"
+  },
   "keywords": [
     "spec-driven-development",
     "sdd",

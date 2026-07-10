@@ -41,7 +41,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # pnpm -r recorre los 11 packages del workspace; salta los que no
+      # pnpm -r recorre los 20 packages del workspace (packages/*); salta los que no
       # definan el script (no falla por ausencia).
       - name: Typecheck
         run: pnpm -r typecheck

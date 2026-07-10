@@ -45,7 +45,7 @@ Se eligen como **`warn`**, no `error`, deliberadamente: el tamaño es una *seña
 
 **Positivas**
 - Señal automática y temprana de archivos/funciones que crecieron demasiado.
-- Empuja la lógica imperativa fuera del render → componentes testeables (habilita [ADR-0011](0011-tests-rutas-criticas.md)).
+- Empuja la lógica imperativa fuera del render → componentes testeables (habilita [ADR-0012](0012-tests-rutas-criticas.md)).
 - Container-presentational mejora reuso y aísla el estado.
 - `warn` mantiene DX: informa sin frenar.
 

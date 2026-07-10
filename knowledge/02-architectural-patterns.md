@@ -1,6 +1,6 @@
 # 02 — Patrones de Arquitectura
 
-Síntesis estructurada de [patron arq.md](../patron%20arq.md).
+Síntesis estructurada de [patron arq.md](sources/patron%20arq.md).
 
 ## Tesis central
 
@@ -105,4 +105,4 @@ Modelo de despliegue, **no** una arquitectura. Delega gestión de servidores al 
 
 ## Referencia
 
-Fuente original: [patron arq.md](../patron%20arq.md). Lectura complementaria: *"Building Microservices"* (Sam Newman), *"Monolith to Microservices"* (Sam Newman).
+Fuente original: [patron arq.md](sources/patron%20arq.md). Lectura complementaria: *"Building Microservices"* (Sam Newman), *"Monolith to Microservices"* (Sam Newman).

@@ -24,6 +24,13 @@ Cada paquete tiene su propio README con instalacion, configuracion y reglas comp
 | [`@devground/logger`](../packages/logger#readme) | Logger minimalista compartido (sin dependencias) |
 | [`@devground/vitest-config`](../packages/vitest-config#readme) | Config Vitest compartida (entorno node, cobertura v8) |
 
+> **Skills y paquetes Swift**: además de los presets y standalone de arriba, el monorepo
+> incluye skills instalables (`@devground/sdd` spec-flow, `@devground/design-taste`, y
+> `@devground/deepcheck` en piloto privado) y la familia Swift/iOS (`@devground/swift-ci`,
+> `swift-design-tokens`, `swift-format-config`, `swift-package-template`). El inventario vivo
+> de qué vive dónde está en [docs/codemap.md](codemap.md) y en la tabla de
+> [Paquetes del README](../README.md#paquetes).
+
 ---
 
 ## CLI `devground-init`

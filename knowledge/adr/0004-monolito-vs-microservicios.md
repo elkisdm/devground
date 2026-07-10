@@ -2,7 +2,7 @@
 
 - **Estado**: Template (derivado de transcripción)
 - **Fecha**: 2026-05-13
-- **Fuente**: [patron arq.md](../../patron%20arq.md), [02-architectural-patterns.md](../02-architectural-patterns.md)
+- **Fuente**: [patron arq.md](../sources/patron%20arq.md), [02-architectural-patterns.md](../02-architectural-patterns.md)
 
 ## Contexto
 
@@ -51,6 +51,6 @@ El monolito carga estigma injustificado. Lo que llamamos "monolito malo" suele s
 
 ## Cita de respaldo
 
-> **Martin Fowler**: *"Nunca deberías empezar con arquitectura de microservicios, sino que primero deberías empezar con un monolito, hacerlo modular y luego separarlo en microservicios cuando sea realmente un problema."* — [patron arq.md](../../patron%20arq.md)
+> **Martin Fowler**: *"Nunca deberías empezar con arquitectura de microservicios, sino que primero deberías empezar con un monolito, hacerlo modular y luego separarlo en microservicios cuando sea realmente un problema."* — [patron arq.md](../sources/patron%20arq.md)
 
-> **Sam Newman**: *"Implementar microservicios en un equipo pequeño es un riesgo muy alto. Los beneficios no compensan todo el coste técnico."* — [patron arq.md](../../patron%20arq.md)
+> **Sam Newman**: *"Implementar microservicios en un equipo pequeño es un riesgo muy alto. Los beneficios no compensan todo el coste técnico."* — [patron arq.md](../sources/patron%20arq.md)

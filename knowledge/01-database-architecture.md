@@ -1,6 +1,6 @@
 # 01 — Arquitectura de Bases de Datos
 
-Síntesis estructurada de [bd.md](../bd.md).
+Síntesis estructurada de [bd.md](sources/bd.md).
 
 ## Tesis central
 
@@ -74,4 +74,4 @@ Solo puedes garantizar **dos** de tres en un sistema distribuido:
 
 ## Referencia
 
-Fuente original: [bd.md](../bd.md). Lectura recomendada complementaria: *"Designing Data-Intensive Applications"* (Martin Kleppmann).
+Fuente original: [bd.md](sources/bd.md). Lectura recomendada complementaria: *"Designing Data-Intensive Applications"* (Martin Kleppmann).

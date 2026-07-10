@@ -2,7 +2,7 @@
 
 - **Estado**: Template (derivado de transcripción)
 - **Fecha**: 2026-05-13
-- **Fuente**: [bd.md](../../bd.md), [01-database-architecture.md](../01-database-architecture.md)
+- **Fuente**: [bd.md](../sources/bd.md), [01-database-architecture.md](../01-database-architecture.md)
 
 ## Contexto
 
@@ -54,4 +54,4 @@ Dos errores comunes y opuestos:
 
 ## Cita de respaldo
 
-> *"El diseño es mucho más importante que la propia tecnología."* — [bd.md](../../bd.md)
+> *"El diseño es mucho más importante que la propia tecnología."* — [bd.md](../sources/bd.md)

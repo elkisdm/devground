@@ -1,6 +1,6 @@
 # 03 — Diseño de Sistemas Escalables
 
-Síntesis estructurada de [sistemas.md](../sistemas.md).
+Síntesis estructurada de [sistemas.md](sources/sistemas.md).
 
 ## Tesis central
 
@@ -74,4 +74,4 @@ Antes de elegir herramienta, define el **patrón de acceso**. Sistemas reales ti
 
 ## Referencia
 
-Fuente original: [sistemas.md](../sistemas.md). Lectura complementaria: *"Designing Data-Intensive Applications"* (Kleppmann), *"Release It!"* (Michael Nygard) para circuit breakers y patrones de resiliencia.
+Fuente original: [sistemas.md](sources/sistemas.md). Lectura complementaria: *"Designing Data-Intensive Applications"* (Kleppmann), *"Release It!"* (Michael Nygard) para circuit breakers y patrones de resiliencia.

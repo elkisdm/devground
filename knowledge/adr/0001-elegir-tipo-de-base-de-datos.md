@@ -2,7 +2,7 @@
 
 - **Estado**: Template (derivado de transcripción)
 - **Fecha**: 2026-05-13
-- **Fuente**: [bd.md](../../bd.md), [01-database-architecture.md](../01-database-architecture.md)
+- **Fuente**: [bd.md](../sources/bd.md), [01-database-architecture.md](../01-database-architecture.md)
 
 ## Contexto
 
@@ -48,4 +48,4 @@ Permitir **múltiples BDs en el mismo proyecto** cuando los dominios lo justific
 
 ## Cita de respaldo
 
-> *"Elegir el tipo correcto de base de datos para tu caso de uso es una decisión crítica que si tomas de forma errónea te puede complicar todo el desarrollo desde ahora hasta el futuro."* — [bd.md](../../bd.md)
+> *"Elegir el tipo correcto de base de datos para tu caso de uso es una decisión crítica que si tomas de forma errónea te puede complicar todo el desarrollo desde ahora hasta el futuro."* — [bd.md](../sources/bd.md)

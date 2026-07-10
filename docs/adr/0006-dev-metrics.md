@@ -1,6 +1,6 @@
 # ADR-0006: dev-metrics — serie temporal de "codificar con agentes"
 
-- **Estado**: Propuesto
+- **Estado**: Aceptado
 - **Fecha**: 2026-06-02 (v1) · 2026-06-02 (v2: atribución real por repo, cohortes, memoria) · 2026-06-02 (v3: config + auto-detección, N-identidad, `created` frontmatter, `extends` de tsconfig)
 - **Decisor**: edaza
 - **Aplica a**: `@devground/dev-metrics`
