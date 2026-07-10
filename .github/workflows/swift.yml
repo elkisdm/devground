@@ -27,7 +27,7 @@ jobs:
       run:
         working-directory: swift-foundation
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # Package.swift declara tools-version 6.2 (Swift 6.2 => Xcode 26).
       - name: Seleccionar Xcode 26
