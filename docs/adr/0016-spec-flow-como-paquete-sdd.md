@@ -1,6 +1,6 @@
 # ADR-0016: spec-flow se distribuye como `@devground/sdd`
 
-- **Estado**: Propuesto
+- **Estado**: Aceptado
 - **Fecha**: 2026-06-17
 - **Decisor**: edaza
 - **Aplica a**: `packages/sdd/`
@@ -24,7 +24,7 @@ Se crea `@devground/sdd`: un paquete **solo-skill** con un instalador `devground
 - La mejora del Step 0 (leer el codemap es obligatorio) viaja con el paquete.
 
 **Negativas / límites**
-- Dos artefactos a mantener sincronizados: la copia en `packages/sdd/skill/` y la skill viva en `~/.claude/skills/spec-flow/`. Por ahora la sincronización es manual (copiar al actualizar); si diverge seguido, automatizar con un `prepublishOnly` que copie desde la fuente canónica.
+- Dos artefactos a mantener sincronizados: la copia en `packages/sdd/skill/` y la skill viva en `~/.claude/skills/spec-flow/`. Mitigado con el script `packages/sdd/scripts/sync-spec-flow.mjs` (`pnpm --filter @devground/sdd sync`), que regenera `skill/` desde la fuente canónica copiando `SKILL.md` + `references/`. NO se ata a `prepublishOnly` a propósito: la fuente vive fuera del repo (`~/.claude`), así que el mirror commiteado es lo que se publica y la sincronización es un acto deliberado, no un paso de release.
 - Instalar a nivel proyecto duplica la skill por repo. Es el costo de que cada proyecto declare explícitamente su tooling; `--global` queda para quien prefiera una sola copia.
 
 ## Alternativas consideradas

@@ -46,6 +46,19 @@ code survival, orientation cost, friction — is measured by
 `dev-metrics orientation`), which reads the `.spec-flow/events.jsonl` telemetry plus git
 and transcript history.
 
+## Fuente canónica y sincronización
+
+La skill viva se desarrolla en `~/.claude/skills/spec-flow/` (validada en uso real). El
+directorio `skill/` de este paquete es una **copia versionada** de esa fuente. Tras un
+cambio en la skill canónica, resincroniza el mirror:
+
+    node scripts/sync-spec-flow.mjs   # o: pnpm --filter @devground/sdd sync
+
+El script copia `SKILL.md` + `references/` desde `~/.claude/skills/spec-flow/`; **no** copia
+`evals/` (vive solo en la fuente canónica). No se corre en `prepublishOnly` a propósito: la
+fuente está fuera del repo, así que el mirror commiteado es lo que se publica y sincronizar
+es un acto deliberado del desarrollador, no un paso de release.
+
 ## License
 
 MIT
