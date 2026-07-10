@@ -2,7 +2,7 @@
 
 - **Estado**: Template (derivado de transcripción)
 - **Fecha**: 2026-05-13
-- **Fuente**: [patron arq.md](../../patron%20arq.md), [02-architectural-patterns.md](../02-architectural-patterns.md)
+- **Fuente**: [patron arq.md](../sources/patron%20arq.md), [02-architectural-patterns.md](../02-architectural-patterns.md)
 
 ## Contexto
 
@@ -49,4 +49,4 @@ El costo es alto: dos modelos a mantener, sincronización eventual entre ellos, 
 
 ## Cita de respaldo
 
-> *"CQRS añade complejidad innecesaria si el tráfico es bajo o síncrono."* — síntesis de [patron arq.md](../../patron%20arq.md)
+> *"CQRS añade complejidad innecesaria si el tráfico es bajo o síncrono."* — síntesis de [patron arq.md](../sources/patron%20arq.md)

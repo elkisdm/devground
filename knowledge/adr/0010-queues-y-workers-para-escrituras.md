@@ -2,7 +2,7 @@
 
 - **Estado**: Template (derivado de transcripción)
 - **Fecha**: 2026-05-13
-- **Fuente**: [sistemas.md](../../sistemas.md), [03-systems-design.md](../03-systems-design.md)
+- **Fuente**: [sistemas.md](../sources/sistemas.md), [03-systems-design.md](../03-systems-design.md)
 
 ## Contexto
 
@@ -71,4 +71,4 @@ La solución es desacoplar productor de consumidor mediante una **cola de mensaj
 
 ## Cita de respaldo
 
-> *"Message Queues: encolan peticiones de escritura. Caso: IA image generators controlan velocidad de consumo, evitan colapso."* — [sistemas.md](../../sistemas.md)
+> *"Message Queues: encolan peticiones de escritura. Caso: IA image generators controlan velocidad de consumo, evitan colapso."* — [sistemas.md](../sources/sistemas.md)

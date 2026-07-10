@@ -2,7 +2,7 @@
 
 - **Estado**: Template (derivado de transcripción)
 - **Fecha**: 2026-05-13
-- **Fuente**: [sistemas.md](../../sistemas.md), [03-systems-design.md](../03-systems-design.md)
+- **Fuente**: [sistemas.md](../sources/sistemas.md), [03-systems-design.md](../03-systems-design.md)
 
 ## Contexto
 
@@ -60,4 +60,4 @@ El error frecuente: añadir Redis "porque sí" delante de una BD que ya es rápi
 
 ## Cita de respaldo
 
-> *"Las cachés invalidan en escritura, haciendo contraproducentes con alta ingesta de datos."* — [sistemas.md](../../sistemas.md)
+> *"Las cachés invalidan en escritura, haciendo contraproducentes con alta ingesta de datos."* — [sistemas.md](../sources/sistemas.md)

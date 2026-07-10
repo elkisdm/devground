@@ -6,11 +6,11 @@ Conocimiento estructurado extraído de 3 transcripciones de YouTube. Diseñado p
 
 ## Origen
 
-Las fuentes primarias están en la raíz del repo:
+Las fuentes primarias están en `sources/`:
 
-- [bd.md](../bd.md) — Arquitectura de bases de datos
-- [patron arq.md](../patron%20arq.md) — Patrones de arquitectura de software
-- [sistemas.md](../sistemas.md) — Diseño de sistemas escalables
+- [bd.md](sources/bd.md) — Arquitectura de bases de datos
+- [patron arq.md](sources/patron%20arq.md) — Patrones de arquitectura de software
+- [sistemas.md](sources/sistemas.md) — Diseño de sistemas escalables
 
 **No modificar las transcripciones**. Son la fuente verificable.
 
@@ -41,6 +41,7 @@ knowledge/
 ├── 03-systems-design.md            síntesis de sistemas.md
 ├── BEST-PRACTICES.md               síntesis cruzada + checklist
 ├── CASE-STUDY-devground.md         la guía aplicada al propio repo
+├── sources/                        transcripciones originales (bd, patrones, sistemas)
 └── adr/
     ├── README.md                   qué es un ADR
     ├── 0001-elegir-tipo-de-base-de-datos.md

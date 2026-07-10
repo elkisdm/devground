@@ -2,7 +2,7 @@
 
 - **Estado**: Template (derivado de transcripción)
 - **Fecha**: 2026-05-13
-- **Fuente**: [bd.md](../../bd.md), [01-database-architecture.md](../01-database-architecture.md)
+- **Fuente**: [bd.md](../sources/bd.md), [01-database-architecture.md](../01-database-architecture.md)
 
 ## Contexto
 
@@ -45,4 +45,4 @@ El error común es aplicar la misma estrategia en ambos paradigmas:
 
 ## Cita de respaldo
 
-> *"Siempre ten en cuenta qué queries o qué peticiones quieres hacer para diseñar la información."* — [bd.md](../../bd.md)
+> *"Siempre ten en cuenta qué queries o qué peticiones quieres hacer para diseñar la información."* — [bd.md](../sources/bd.md)
