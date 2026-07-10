@@ -22,7 +22,7 @@ concurrency:
 jobs:
   build-test:
     name: Swift Build & Test
-    runs-on: macos-15
+    runs-on: macos-26
     defaults:
       run:
         working-directory: swift-foundation
@@ -31,7 +31,9 @@ jobs:
 
       # Package.swift declara tools-version 6.2 (Swift 6.2 => Xcode 26).
       - name: Seleccionar Xcode 26
-        run: sudo xcode-select -s /Applications/Xcode_26.app
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)
+          if [ -n "$XCODE" ]; then sudo xcode-select -s "$XCODE"; fi
 
       - name: Versión de Swift
         run: swift --version
