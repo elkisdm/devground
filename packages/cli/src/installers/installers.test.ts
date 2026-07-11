@@ -8,6 +8,7 @@ import * as husky from './husky.js';
 import * as vitest from './vitest.js';
 import * as agentsMd from './agents-md.js';
 import * as architectureGuide from './architecture-guide.js';
+import * as uiConventions from './ui-conventions.js';
 import type {
   DetectedStack,
   InstallerOps,
@@ -87,6 +88,13 @@ const NEXT_STACK: DetectedStack = {
   framework: 'nextjs',
   hasTypeScript: true,
   packageManager: 'npm',
+  hasSwift: false,
+};
+
+const REACT_STACK: DetectedStack = {
+  framework: 'react',
+  hasTypeScript: true,
+  packageManager: 'pnpm',
   hasSwift: false,
 };
 
@@ -309,6 +317,31 @@ describe('architecture-guide installer', () => {
     expect(devDeps[0]?.packages).toEqual(['@devground/architecture-guide']);
     expect(runs[0]?.cmd).toBe('npx devground-architecture');
     expect(runs[0]?.cwd).toBe('/proj');
+  });
+});
+
+describe('ui-conventions installer', () => {
+  it('installs for a Next project: adds dep and runs the bin', () => {
+    const { ops, devDeps, runs } = makeRecordingOps();
+    const result = uiConventions.install(optionsFor(NEXT_STACK, ops));
+    expect(result).toBe('installed');
+    expect(devDeps[0]?.packages).toEqual(['@devground/ui-conventions']);
+    expect(runs[0]?.cmd).toBe('npx devground-ui-conventions');
+    expect(runs[0]?.cwd).toBe('/proj');
+  });
+  it('installs for a React project', () => {
+    const { ops, devDeps, runs } = makeRecordingOps();
+    const result = uiConventions.install(optionsFor(REACT_STACK, ops));
+    expect(result).toBe('installed');
+    expect(devDeps).toHaveLength(1);
+    expect(runs).toHaveLength(1);
+  });
+  it('skips for a non-frontend (Node) project: no dep, no run', () => {
+    const { ops, devDeps, runs } = makeRecordingOps();
+    const result = uiConventions.install(optionsFor(NODE_STACK, ops));
+    expect(result).toBe('skipped');
+    expect(devDeps).toHaveLength(0);
+    expect(runs).toHaveLength(0);
   });
 });
 

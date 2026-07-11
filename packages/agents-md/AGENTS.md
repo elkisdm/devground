@@ -127,6 +127,11 @@ This facilitates onboarding and prevents "where is X?" questions.
 
 ## 9. Semantic Tokens in UI
 
+> Before generating or editing any frontend UI, read `docs/ui-conventions.md` at the repo root
+> if it exists: it defines this project's own components, input formatting, accessibility and
+> focus conventions (and es-CL rules like RUT/phone/currency), and takes precedence over the
+> generic rules below.
+
 Projects with dark/light mode must use semantic design tokens. **Never hardcode colors** in components.
 
 **Canonical mapping:**

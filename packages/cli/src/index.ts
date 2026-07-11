@@ -16,6 +16,7 @@ import * as husky from './installers/husky.js';
 import * as vitest from './installers/vitest.js';
 import * as agentsMd from './installers/agents-md.js';
 import * as architectureGuide from './installers/architecture-guide.js';
+import * as uiConventions from './installers/ui-conventions.js';
 import { formatTally, type InstallTally } from './tally.js';
 import type { InstallerOptions, InstallResult } from './types.js';
 
@@ -35,6 +36,7 @@ const ALL_INSTALLERS: Installer[] = [
   { name: 'Vitest + coverage ratchet', value: 'vitest', install: vitest.install },
   { name: 'AGENTS.md + symlinks', value: 'agents-md', install: agentsMd.install },
   { name: 'Architecture guide + ADR templates', value: 'architecture-guide', install: architectureGuide.install },
+  { name: 'UI conventions skill (React/Next)', value: 'ui-conventions', install: uiConventions.install },
 ];
 
 // Single source of truth for the version: the package manifest, not a literal.

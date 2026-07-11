@@ -43,10 +43,12 @@ Usa los **ADRs de devground** como rúbrica de cumplimiento.
 | `aud-tests` | Cobertura de tests en rutas críticas (`.test.ts` o `*Tests.swift`). | 0012 |
 | `aud-concurrency` | **(Solo flujos Swift)** `@unchecked Sendable` sin justificar; no-`Sendable` cruzando aislamiento; `MainActor` por defecto en capas base; `Domain` que importa UIKit/SwiftUI. | ADRs Swift (isolation por capa, core puro) |
 | `aud-premortem` | **Composición y supuestos rotos** — el modo de falla que no vive en un archivo: pre-mortem (autopsia), inversión de supuestos implícitos, costuras A↔B (qué asume A sobre B que B no garantiza), priorizado por plausibilidad×daño. Eje ortogonal: la INTERACCIÓN, no el componente aislado. | — (generador, no rúbrica) |
+| `aud-ui-conventions` | **(Solo flujos con UI frontend)** Convenciones de UI generada vs la base de `@devground/ui-conventions` (base.md §1-6) + overlay del proyecto (`docs/ui-conventions.md`, gana): componente propio vs primitiva, semántica de input, a11y/foco, error/carga, microinteracciones, región es-CL. Incluye regla de promoción overlay↔base en el hallazgo. | `packages/ui-conventions/.../base.md` + ADR-0023/0024 |
 
 > Para un flujo Swift, la Auditoría usa los **ADRs de dominio Swift** del proyecto
 > (`swift-foundation/docs/adr/`) además de los de devground. `aud-concurrency` no
-> aplica a flujos no-Swift: en ese caso el agente no reporta nada.
+> aplica a flujos no-Swift: en ese caso el agente no reporta nada. `aud-ui-conventions`
+> no aplica a flujos sin UI: el agente no reporta nada.
 
 ---
 

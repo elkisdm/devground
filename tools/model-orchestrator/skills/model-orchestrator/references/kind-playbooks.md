@@ -12,6 +12,14 @@ no está mapeado (`chore`, `style`, `rename`, `spike`, `test`), no inyectes nada
 mecánicos y la guía sería ruido. Registra en `decisions.jsonl` qué checklist inyectaste
 (campo `playbook_injected`) para poder medir después si baja la tasa de reversión.
 
+**Inyección aditiva por superficie (UI):** además del checklist por `kind`, si la tarea toca
+frontend —su título/descripción menciona formulario, input, modal, botón, página, componente,
+React/Next/Tailwind, o sus archivos son `.tsx`/`.jsx`/`components/`/`app/`/`pages/`/`.css`—
+adjunta TAMBIÉN el checklist **UI / FRONTEND** de abajo, bajo el mismo encabezado `## Guía de
+calidad para esta tarea`. NO es un `kind` nuevo: una tarea `feat`/`fix`/`refactor` de UI recibe
+su checklist de `kind` (DISEÑO) Y el de UI. El ruteo de modelo/costo no cambia (sigue por `kind`).
+Registra `playbook_injected: ["diseño","ui"]` en `decisions.jsonl` cuando inyectes ambos.
+
 ## Tabla de ruteo `kind → checklist`
 
 | `kind` | Checklist |
@@ -69,3 +77,14 @@ mecánicos y la guía sería ruido. Registra en `decisions.jsonl` qué checklist
 - **Si enseña:** elige el ejemplo ancla CENTRAL (no el raro/vistoso); una idea verificable por capa; cierra con un test de predicción sobre un caso NUEVO que no mostraste (no un resumen).
 - **Si destila:** protege umbrales/excepciones/contraejemplos primero (son lo menos derivable). Test de negación: si negar la frase es absurdo ("debe ser confiable"), no informa — reescríbela con un sustantivo verificable o bórrala.
 - **Forma según contenido:** ítems intercambiables → lista; estructura paralela de ≥3 → tabla; cadena causal → prosa. Cero adjetivos sin medición.
+
+## UI / FRONTEND
+*Fuente: `packages/ui-conventions/skills/ui-conventions/references/base.md` (§1-6).*
+
+- **Carga el overlay del repo objetivo primero:** si existe `docs/ui-conventions.md`, léelo y respétalo — sus tokens, componentes propios y helpers concretos GANAN sobre la regla genérica. Si no existe, aplica la base universal.
+- **Componente propio, no primitiva nativa:** usa el botón/input/modal del sistema del proyecto, no `<button>`/`<input>` con clases sueltas; combina clases con el helper (`cn`/`twMerge`), nunca template strings. No agregues librería nueva (toaster/motion/date-picker) sin decisión explícita.
+- **Semántica de input:** `type`/`inputMode`/`autoComplete` correctos (email/tel/numeric, sin `type="number"` para montos); en campos con máscara (RUT, teléfono, monto) formatea en `onChange` pero persiste el valor limpio/normalizado; valida en el boundary con schema, no inline.
+- **Accesibilidad no opcional:** `aria-label` en todo control icon-only; `label` con `htmlFor`+`id` estable (`useId`); error con `aria-invalid`+`aria-describedby`+`role="alert"`; foco con `focus-visible` y token del proyecto; SVG decorativo `aria-hidden`; color por token semántico, nunca clase cruda (`gray-*`) ni hex.
+- **Estados de error/carga completos:** skeleton fiel al layout (no spinner full-page); botón de submit `disabled`+spinner+label en gerundio; error inline junto al campo + foco al primero tras submit fallido; nunca tragues un error de red (mapéalo y loguéalo); empty y success como componentes dedicados; error boundary con reintento en rutas que fetchean.
+- **Microinteracciones con respeto:** hover/active en la primitiva, no duplicados; respeta `prefers-reduced-motion` siempre; `onClose` real al terminar la animación de salida; portapapeles en `try/catch` con label de confirmación temporal.
+- **Región Chile (es-CL) si aplica:** un único helper de RUT (formateo puntos+guion, validación módulo 11, persiste limpio, error menciona el DV), teléfono `+56 9 XXXX XXXX` normalizado antes de persistir, moneda/UF/fechas vía `Intl.*("es-CL")` centralizado. Prefiere `@devground/chile-formats` a reimplementar a mano.

@@ -12,7 +12,7 @@ description: >
   y recién entonces ejecuta. NO lo uses para escribir la spec (eso es spec-flow) ni para
   tareas sueltas sin brief.
 metadata:
-  version: 1.1.0
+  version: 1.2.0
 ---
 
 # Model Orchestrator
@@ -181,7 +181,10 @@ Con el plan aprobado, despacha cada tarea con su `{model, effort}` usando la her
   playbooks (`docs/*-playbook.md`), en el punto de trabajo, sin reemplazar el contexto de
   la tarea. Si el kind no está mapeado (`chore`/`style`/`rename`/`spike`/`test`), no
   inyectes nada. Anota en `decisions.jsonl` qué checklist inyectaste (`playbook_injected`)
-  para poder medir después si baja la tasa de reversión.
+  para poder medir después si baja la tasa de reversión. Además, si la tarea toca frontend
+  (título/archivos de UI: formularios, inputs, modales, componentes React/Next/Tailwind,
+  `.tsx`/`.jsx`), adjunta TAMBIÉN el checklist **UI / FRONTEND** de `kind-playbooks.md` — es
+  aditivo al checklist del kind, no lo reemplaza, y no altera el ruteo de modelo/costo.
 - Las tareas `plan`/`audit`/`decision` corren primero si otras dependen de su resultado.
 
 Esquema de despacho (pseudocódigo de Workflow):

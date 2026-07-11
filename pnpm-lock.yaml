@@ -25,6 +25,21 @@ importers:
 
   packages/architecture-guide: {}
 
+  packages/chile-formats:
+    devDependencies:
+      '@devground/vitest-config':
+        specifier: workspace:*
+        version: link:../vitest-config
+      '@types/node':
+        specifier: ^25
+        version: 25.9.3
+      typescript:
+        specifier: ^5.0.0
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@25.9.3)
+
   packages/cli:
     dependencies:
       '@devground/logger':
@@ -46,6 +61,9 @@ importers:
       '@types/prompts':
         specifier: ^2.4.9
         version: 2.4.9
+      '@vitest/coverage-v8':
+        specifier: ^2.1.0
+        version: 2.1.9(vitest@2.1.9(@types/node@25.9.3))
       typescript:
         specifier: ^5.0.0
         version: 5.9.3
@@ -176,6 +194,10 @@ importers:
       eslint-config-next:
         specifier: '>=14.0.0'
         version: 16.2.6(@typescript-eslint/parser@8.59.3(eslint@10.2.0(jiti@2.6.1))(typescript@5.9.3))(eslint@10.2.0(jiti@2.6.1))(typescript@5.9.3)
+    devDependencies:
+      eslint-plugin-jsx-a11y:
+        specifier: ^6.10.2
+        version: 6.10.2(eslint@10.2.0(jiti@2.6.1))
 
   packages/husky-config:
     dependencies:
@@ -207,6 +229,8 @@ importers:
   packages/swift-package-template: {}
 
   packages/tsconfig: {}
+
+  packages/ui-conventions: {}
 
   packages/vitest-config:
     devDependencies:
