@@ -1,6 +1,6 @@
 {
   "name": "@devground/design-taste",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Anti-slop UI/UX design skills for Claude Code — layout, typography, motion and spacing taste, installable into any project",
   "bin": {
     "devground-design-taste": "./setup.js"

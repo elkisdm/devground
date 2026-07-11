@@ -1,6 +1,6 @@
 {
   "name": "@devground/eslint-config",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Shared ESLint flat config presets (base + Next.js)",
   "type": "module",
   "exports": {

@@ -1,5 +1,16 @@
 # @devground/devground
 
+## 1.0.5
+
+### Patch Changes
+
+- Updated dependencies [bab646a]
+- Updated dependencies [01f15a9]
+- Updated dependencies [bab646a]
+  - @devground/agents-md@1.2.1
+  - @devground/husky-config@1.2.0
+  - @devground/eslint-config@1.2.0
+
 ## 1.0.4
 
 ### Patch Changes

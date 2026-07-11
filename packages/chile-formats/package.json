@@ -1,6 +1,6 @@
 {
   "name": "@devground/chile-formats",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Zero-dependency es-CL formatting/validation helpers: RUT (module 11), phone (+56 9), and CLP/UF/number via Intl.NumberFormat('es-CL')",
   "type": "module",
   "exports": {
