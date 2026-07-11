@@ -7,16 +7,16 @@
   },
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
     },
     "./transcript": {
-      "types": "./dist/lib/transcript.d.ts",
-      "default": "./dist/lib/transcript.js"
+      "types": "./src/lib/transcript.ts",
+      "default": "./src/lib/transcript.ts"
     },
     "./memory": {
-      "types": "./dist/lib/memory.d.ts",
-      "default": "./dist/lib/memory.js"
+      "types": "./src/lib/memory.ts",
+      "default": "./src/lib/memory.ts"
     }
   },
   "files": [
@@ -46,7 +46,21 @@
     "node": ">=20"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "./transcript": {
+        "types": "./dist/lib/transcript.d.ts",
+        "default": "./dist/lib/transcript.js"
+      },
+      "./memory": {
+        "types": "./dist/lib/memory.d.ts",
+        "default": "./dist/lib/memory.js"
+      }
+    }
   },
   "repository": {
     "type": "git",
