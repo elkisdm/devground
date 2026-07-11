@@ -13,6 +13,7 @@ import * as tsconfig from './installers/tsconfig.js';
 import * as commitlint from './installers/commitlint.js';
 import * as lintStaged from './installers/lint-staged.js';
 import * as husky from './installers/husky.js';
+import * as vitest from './installers/vitest.js';
 import * as agentsMd from './installers/agents-md.js';
 import * as architectureGuide from './installers/architecture-guide.js';
 import { formatTally, type InstallTally } from './tally.js';
@@ -31,6 +32,7 @@ const ALL_INSTALLERS: Installer[] = [
   { name: 'Commitlint config', value: 'commitlint', install: commitlint.install },
   { name: 'lint-staged config', value: 'lint-staged', install: lintStaged.install },
   { name: 'Husky pre-commit hooks', value: 'husky', install: husky.install },
+  { name: 'Vitest + coverage ratchet', value: 'vitest', install: vitest.install },
   { name: 'AGENTS.md + symlinks', value: 'agents-md', install: agentsMd.install },
   { name: 'Architecture guide + ADR templates', value: 'architecture-guide', install: architectureGuide.install },
 ];

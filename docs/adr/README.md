@@ -36,6 +36,7 @@ siguiente número de la secuencia, rellénalo y añádelo al índice de abajo.
 - [ADR-0019 — Isolation por capa como default de las plantillas Swift](0019-isolation-por-capa-swift.md) (Propuesto)
 - [ADR-0020 — Swift Testing + swift-dependencies como harness estándar](0020-swift-testing-harness-estandar.md) (Propuesto)
 - [ADR-0021 — Detección de stack en `@devground/cli`](0021-deteccion-stack-cli.md) (Propuesto)
+- [ADR-0022 — Ratchet de cobertura global + gate en CI](0022-coverage-ratchet.md) (Propuesto)
 
 ## Estándares con enforcement automático
 

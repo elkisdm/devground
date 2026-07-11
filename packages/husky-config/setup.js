@@ -32,6 +32,7 @@ try {
 const HOOKS = [
   ['pre-commit.sh', 'pre-commit'],
   ['commit-msg.sh', 'commit-msg'],
+  ['pre-push.sh', 'pre-push'],
 ];
 for (const [source, dest] of HOOKS) {
   const hookSource = path.join(__dirname, 'hooks', source);
@@ -53,5 +54,5 @@ if (fs.existsSync(pkgPath)) {
 }
 
 console.log(
-  '\n  Husky configured. pre-commit runs lint-staged; commit-msg runs commitlint.\n'
+  '\n  Husky configured. pre-commit runs lint-staged; commit-msg runs commitlint; pre-push avisa cobertura (suave).\n'
 );
