@@ -1,6 +1,6 @@
 {
   "name": "@devground/dreaming",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "dreaming: out-of-band memory consolidation for Claude Code — reviews recent session transcripts against a project's memory store and proposes a reviewed diff (dedupe, de-stale, fill gaps, fix the index). Nothing is written without approval; nothing is hard-deleted.",
   "bin": {
     "devground-dreaming": "./dist/index.js"

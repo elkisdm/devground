@@ -1,5 +1,12 @@
 # @devground/agents-md
 
+## 1.2.1
+
+### Patch Changes
+
+- bab646a: Add a pointer to `docs/ui-conventions.md` at the top of §9 (Semantic Tokens in UI), so
+  projects with their own UI conventions overlay take precedence over the generic rules.
+
 ## 1.2.0
 
 ### Minor Changes

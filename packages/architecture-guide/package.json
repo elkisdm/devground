@@ -1,6 +1,6 @@
 {
   "name": "@devground/architecture-guide",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Architecture knowledge base + ADR templates (databases, patterns, systems) installable into any project",
   "bin": {
     "devground-architecture": "./setup.js",

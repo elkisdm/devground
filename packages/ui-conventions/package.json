@@ -1,6 +1,6 @@
 {
   "name": "@devground/ui-conventions",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "UI convention skill for Claude Code — loads a project's frontend conventions (own components vs browser primitives, es-CL input formatting for RUT/phone/currency, accessibility and focus, error/loading states, microinteractions) as context BEFORE generating or editing UI, with an optional per-project overlay.",
   "bin": {
     "devground-ui-conventions": "./setup.js"

@@ -1,5 +1,16 @@
 # @devground/dev-metrics
 
+## 0.4.0
+
+### Minor Changes
+
+- 2fbbcef: Expose `transcript` and `memory` library subpaths (`@devground/dev-metrics/transcript`,
+  `@devground/dev-metrics/memory`) via the package `exports` map, so other packages can
+  reuse the transcript reader (`parseTranscriptLine`, `TranscriptRecord`, `extractToolUses`,
+  `dedupByUuid`) and memory enumeration (`defaultMemoryRoot`, `listMemoryNotes`,
+  `parseCreatedFrontmatter`) without deep-importing from `dist/`. Additive — no behavior
+  change to the CLI.
+
 ## 0.3.0
 
 ### Minor Changes
@@ -22,6 +33,7 @@
   history and Claude Code transcripts.
 
   Commands:
+
   - `collect` — write a self-describing metrics snapshot (git churn, conventional
     commit type distribution, rework ratio, file re-touch; transcript tokens by
     model, tool_use counts, Edit/Write ratio, per-file iteration; derived

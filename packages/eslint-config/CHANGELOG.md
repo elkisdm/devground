@@ -1,5 +1,13 @@
 # @devground/eslint-config
 
+## 1.2.0
+
+### Minor Changes
+
+- bab646a: Add an opt-in `./ui` preset: `jsx-a11y` accessibility rules plus parametrizable warn-level
+  restrictions for native primitives (`ownComponents`) and icon imports (`iconLayer` +
+  `restrictedIconPackages`).
+
 ## 1.0.2
 
 ### Patch Changes
