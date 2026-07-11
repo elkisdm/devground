@@ -41,7 +41,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # pnpm -r recorre los 11 packages del workspace; salta los que no
+      # pnpm -r recorre los 20 packages del workspace (packages/*); salta los que no
       # definan el script (no falla por ausencia).
       - name: Typecheck
         run: pnpm -r typecheck
@@ -52,7 +52,7 @@ jobs:
       - name: Test
         run: pnpm -r test
 
-      # Gate de cobertura (ADR-0012 + ADR-0022): corre coverage donde el paquete
+      # Gate de cobertura (ADR-0012 + ADR-0025): corre coverage donde el paquete
       # define el script y FALLA bajo umbral. Los umbrales de rutas críticas
       # (dinero/leads/auth) viven en @devground/vitest-config; el piso global con
       # ratchet lo pone el vitest.config de cada consumidor. `pnpm -r` salta los

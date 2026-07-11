@@ -2,7 +2,7 @@
 
 - **Estado**: Template (derivado de transcripción)
 - **Fecha**: 2026-05-13
-- **Fuente**: [patron arq.md](../../patron%20arq.md), [02-architectural-patterns.md](../02-architectural-patterns.md)
+- **Fuente**: [patron arq.md](../sources/patron%20arq.md), [02-architectural-patterns.md](../02-architectural-patterns.md)
 
 ## Contexto
 
@@ -50,4 +50,4 @@ Costo real: requiere **definir interfaces correctas desde el inicio**, lo cual e
 
 ## Cita de respaldo
 
-> *"No se trata de tener la arquitectura más pura, sino de tener la arquitectura que realmente tu equipo pueda mantener."* — [patron arq.md](../../patron%20arq.md)
+> *"No se trata de tener la arquitectura más pura, sino de tener la arquitectura que realmente tu equipo pueda mantener."* — [patron arq.md](../sources/patron%20arq.md)

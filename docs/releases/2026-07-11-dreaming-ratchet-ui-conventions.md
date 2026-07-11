@@ -8,7 +8,7 @@
 | Pieza | Qué es | ADR |
 | --- | --- | --- |
 | `@devground/dreaming` | Consolidación de memoria fuera de banda para Claude Code | — (sin ADR propio, ya en `main..HEAD` antes de esta tanda) |
-| Coverage ratchet | Installer `vitest` en `devground-init` + hook `pre-push` + umbrales críticos | ADR-0022 |
+| Coverage ratchet | Installer `vitest` en `devground-init` + hook `pre-push` + umbrales críticos | ADR-0025 |
 | `@devground/ui-conventions` | Skill de convenciones de UI como contexto previo a generar código | ADR-0023 |
 | Integración de ecosistema | 5 conexiones que enchufan ui-conventions al resto de devground | ADR-0024 |
 
@@ -27,7 +27,7 @@ Tres actores separados deliberadamente:
 
 Instalación: `npx @devground/dreaming` (proyecto) o `npx @devground/dreaming --global`. Estado según su propio README: "Incubación — piloto privado, sin publicar" (`version: 0.0.0` en `package.json`, aunque el paquete no está marcado `private` y ya tiene un changeset `minor` pendiente).
 
-## 3. Coverage ratchet (ADR-0022)
+## 3. Coverage ratchet (ADR-0025)
 
 **El problema**: ADR-0012 fijó tests obligatorios en rutas críticas (dinero/leads/auth), pero dejó el gate de CI como "recomendado, no implementado" y el umbral crítico sin cablear en ningún preset. La telemetría de desarrollo confirmó el punto ciego: los commits de test dedicados rondan ~2% y no crecen mes a mes.
 
@@ -93,7 +93,7 @@ Changesets pendientes que trae este deploy:
 ## 8. Versión corta para compartir
 
 - `@devground/dreaming`: consolidación de memoria fuera de banda para Claude Code — propone un diff revisado de tu memoria, nunca escribe sin tu aprobación.
-- Coverage ratchet (ADR-0022): nuevo installer `vitest` que scaffoldea un piso de cobertura que solo puede subir (nunca baja), más gate duro en CI y aviso suave en `pre-push`.
+- Coverage ratchet (ADR-0025): nuevo installer `vitest` que scaffoldea un piso de cobertura que solo puede subir (nunca baja), más gate duro en CI y aviso suave en `pre-push`.
 - `@devground/ui-conventions` (ADR-0023): las convenciones de UI ahora se cargan como contexto *antes* de generar código, no como corrección posterior — base universal + overlay por proyecto.
 - Integración de ecosistema (ADR-0024): las convenciones de UI ahora llegan a sesiones orquestadas, se auditan con `aud-ui-conventions` en deepcheck (con ciclo de promoción overlay↔base), y lo mecánico (a11y, primitivas, iconos) se valida con un preset de eslint en vez de gastar tokens del LLM.
 - Nuevo paquete `@devground/chile-formats`: RUT, teléfono y moneda es-CL sin dependencias.

@@ -18,7 +18,7 @@ description: >
 license: MIT
 metadata:
   author: edaza
-  version: "0.1"
+  version: "0.3"
 ---
 
 ## What this is
@@ -64,6 +64,26 @@ A good rule of thumb: **most changes should reach a proposed plan with zero ques
 If you're asking on a Tier 0 or Tier 1 change (see below), you're almost certainly
 over-interrogating.
 
+### The opposite failure: confident wrong inference
+
+Inferring aggressively guards against over-interrogation — but it opens a second failure
+mode this skill must guard against just as hard: **inferring confidently on a high-stakes
+unknown, being wrong, and building the wrong thing.** Over-interrogation wastes the user's
+patience; a wrong high-impact inference wastes real work and can do damage. They are
+symmetric costs — not one villain and one virtue.
+
+So `questions_asked = 0` is **not** the goal. The goal is **the right question count for
+the stakes**: zero on inferable or cosmetic unknowns, and exactly the batched must-ask
+round when all three bar conditions hold. A run that asked zero questions and built on a
+wrong high-risk assumption is a FAILURE, even though its friction gauge looks perfect — and
+the telemetry in Step 6 is built to expose exactly that, by recording whether the
+inferences held up alongside how little you asked.
+
+Practical test before you skip a question on a Tier 2-3 change: *"If this assumption is
+wrong, is it cheap to reverse?"* Cheap → infer and proceed. Expensive or irreversible →
+that's the must-ask bar; confirm it in the batched round. Don't let the anti-friction
+culture push you past a genuine one-way door.
+
 ## Step 0 — Orient via the index, then verify against code
 
 Before classifying, get your bearings cheaply. The whole reason this step exists is to
@@ -75,10 +95,14 @@ There are three sources of standing knowledge. Read whichever exist:
 1. **The code map** — `docs/codemap.md` (the project's living index of *where things
    live*: subsystem → paths → responsibility → key routes/entrypoints → related ADRs).
    This is your primary tool for "which files does this touch?" **If `docs/codemap.md`
-   exists, reading it before your first Edit is MANDATORY, not optional** — it is the one
-   move that makes orientation cheap, and skipping it is the failure this step exists to
-   prevent. Only set `codemap_used:true` in the Step 6 event when you actually read it;
-   that flag is how we measure whether the map pays off, so never fake it.
+   exists, read it before your first Edit** — when it's fresh it's the cheapest path from
+   request to the handful of files in play. Treat it as a strong default, NOT a hard
+   mandate: early telemetry shows the map is actually read in only a small fraction of
+   sessions, so its payoff is still unproven. So use it as the fast path when it exists and
+   looks current, and fall back to a targeted scan without ceremony when it doesn't —
+   reading it is never a ritual you owe the process. Only set `codemap_used:true` in the
+   Step 6 event when you actually read it; that flag is how we measure whether the map pays
+   off, so never fake it.
 2. **Decision records** — ADRs (`docs/adr/`, `knowledge/adr/`) for *why* things are the
    way they are, and `AGENTS.md`/`CLAUDE.md` for project conventions.
 3. **Memory** — durable cross-session facts already in context.
@@ -215,6 +239,42 @@ do ask, batch it into one round, then go.
 This is the whole point: the user experiences **forward motion with visible reasoning**,
 not an interview.
 
+## Step 3.5 — (opcional, Tier 2–3) Emitir `tasks.json` para orquestación
+
+Si el cambio se va a **orquestar por modelo** (repartir las tareas a Opus/Sonnet/Haiku
+según complejidad vía la skill `model-orchestrator`), emite además del brief una versión
+machine-readable de la sección `### Tasks`, para que el orquestador no tenga que parsear
+prosa. Es **aditivo y opcional**: no cambia el brief ni el flujo; solo escribe un archivo
+extra cuando hay descomposición en tareas (Tier 2–3).
+
+Escríbelo junto al brief: `docs/specs/<change>.tasks.json` (o en el scratchpad si el brief
+es inline), conforme al contrato
+`~/.claude/skills/model-orchestrator/references/tasks-input.schema.json`:
+
+```json
+{
+  "change": "<kebab>", "spec_flow_tier": 2,
+  "tasks": [
+    { "id": 1, "title": "<tarea>", "kind": "decision|feat|fix|refactor|perf|test|docs|chore|spike|...",
+      "size": "small|medium|large",
+      "signals": { "type": "feat", "tier": 2, "risk": "med", "breaking": false },
+      "depends_on": [] }
+  ]
+}
+```
+
+Reglas para llenarlo (lo infieres del brief que ya escribiste, sin preguntar):
+- **`kind`** por tarea = su naturaleza (una "decisión de arquitectura" es `decision`,
+  "implementar endpoint" es `feat`, "actualizar README" es `docs`). El orquestador rutea
+  por `kind`, así que es el campo que más importa.
+- **`signals`** = las señales globales del brief (`type`/`tier`/`risk`/`breaking` de la
+  línea Classification); una tarea las hereda salvo que su naturaleza difiera.
+- **`size`** = tamaño aproximado de esa tarea (no del cambio global).
+- **`depends_on`** = el orden natural de tu sección Tasks (tarea 2 suele depender de la 1).
+
+No dispares el orquestador tú: solo dejas el `tasks.json` listo. El usuario decide
+orquestar. Si no se pide orquestación, omite este paso.
+
 ## Step 4 — Implement and verify
 
 Hand the work to the project's normal development flow. Honor whatever standards the
@@ -248,41 +308,77 @@ enough; it doesn't have to be exhaustive on day one. Don't seed for Tier 0 trivi
 This step is cheap (a few lines) and the payoff compounds: every future request starts
 from a better index. Skipping it is borrowing against your future self.
 
-## Step 6 — Emit telemetry (v0, all tiers)
+## Step 6 — Emit telemetry (Tier 1+, two-sided)
 
 This is what lets us MEASURE whether spec-flow actually helps (see
-`references/measurement-design.md`). Every run — every tier, including Tier 0 — appends
-ONE line to `<repo-root>/.spec-flow/events.jsonl`. It's append-only JSONL, so there's no
-read-modify-write and no race; just add a line.
+`references/measurement-design.md`). It measures **both** failure modes — friction AND
+wrong inference — not just one.
 
-Emit it once the classification and the files are settled (after the brief; for Tier 0,
-after you've decided it's Tier 0 and know the file). The line is **versioned and gets
-committed alongside the change** — that's deliberate: it gives the metrics tool a *direct*
-event↔commit link (the same commit touches `events.jsonl` and the code), instead of
-guessing by timestamp.
+**Tier 0 emits nothing.** A trivial typo is too small to carry signal, and forcing an event
+would break Tier 0's "no artifacts" promise (its whole point is zero ceremony). Telemetry
+runs **from Tier 1 up.** Each qualifying run appends ONE line to
+`<repo-root>/.spec-flow/events.jsonl`. It's append-only JSONL — no read-modify-write, no
+race; just add a line.
 
-Schema (one object per line, compact):
+Emit it once the classification and the files are settled (after the brief). The line is
+**versioned and gets committed alongside the change** — deliberate: it gives the metrics
+tool a *direct* event↔commit link (the same commit touches `events.jsonl` and the code),
+instead of guessing by timestamp.
+
+### The spec event (one per run, Tier 1+)
 
 ```jsonc
-{"ts":"<ISO-8601 with tz>","date":"<YYYY-MM-DD>","change":"<kebab-name>",
- "tier":0,"type":"feat|fix|refactor|perf|docs|test|chore|spike","size":"trivial|small|medium|large",
+{"event":"spec","ts":"<ISO-8601 with tz>","date":"<YYYY-MM-DD>","change":"<kebab-name>",
+ "tier":1,"type":"feat|fix|refactor|perf|docs|test|chore|spike","size":"trivial|small|medium|large",
  "risk":"low|med|high","uncertainty":"known|unknown","files":["path",...],
- "questions_asked":0,"brief":"inline|docs/specs/<name>.md","codemap_used":true,
- "spec_flow_version":"0.2"}
+ "assumptions":2,"questions_asked":0,"brief":"inline|docs/specs/<name>.md","codemap_used":true,
+ "spec_flow_version":"0.3"}
 ```
 
-`questions_asked` is the friction gauge — it should almost always be 0 (the Prime
-Directive). `codemap_used` records whether Step 0 found and read an existing map, so we
-can later measure the map's payoff. Don't invent token counts or timings here — those are
-derived later from git + transcripts by dev-metrics; this event only carries the *labels*
-dev-metrics can't otherwise know.
+Read `questions_asked` and `assumptions` **together** — never `questions_asked` alone.
+Zero questions on a change that made ten high-risk assumptions is not a triumph; it's
+exposure waiting to be confirmed (or refuted) by the reversal events below. `assumptions`
+counts the inferred-and-stated lines in the brief. `codemap_used` records whether Step 0
+read an existing map.
 
-Setup: if `.spec-flow/` doesn't exist, create it and add `.spec-flow/events.jsonl` is
-fine to version (it's benign labels — change name, tier, paths — NOT transcript content).
-Do NOT gitignore it; its value is in being committed with the change.
+### The reversal event (the quality counter-signal)
 
-Keep this dead simple. One line, then move on. If appending the event ever feels like
-friction, it's being over-thought — it's a single `echo`-equivalent.
+The friction gauge is one-sided: on its own it rewards not-asking, which would push you to
+infer recklessly (classic Goodhart — the metric becomes the target). The reversal event is
+the structural counterweight. **When an inferred assumption later turns out wrong** — the
+user corrects it, or rework proves it — append a second line tied to the same `change`:
+
+```jsonc
+{"event":"assumption_reversed","ts":"<ISO-8601 with tz>","date":"<YYYY-MM-DD>",
+ "change":"<same kebab-name as the spec event>","task_id":2,
+ "assumption":"<the inferred thing that was wrong>",
+ "cost":"trivial|rework|redesign","spec_flow_version":"0.3"}
+```
+
+This is what makes "asked 0 questions, built the wrong thing" register as the failure it is,
+instead of scoring identical to a clean run. A run is genuinely good only when BOTH gauges
+are healthy: low friction AND few/no reversals. Emit the reversal honestly even when it was
+your own inference that missed — a counter-metric that only records other people's mistakes
+is worthless.
+
+`task_id` is **optional** and only applies when the change went through `model-orchestrator`
+(Tier 2-3 with a `tasks.json`). It's the id of the task whose inference was reversed. Set it
+so the reversal can be joined to that task's routing decision in the orchestrator's
+`decisions.jsonl` (both logs key on `change`; `task_id` pins the exact task). That join is
+what lets dev-metrics answer "does downscaling a task to a cheaper model raise its reversal
+rate?" — the orchestrator's core risk, otherwise unmeasured. Omit `task_id` when there was
+no orchestration or the reversal isn't tied to a single task.
+
+### Backward compatibility & setup
+
+Older events have no `event` field; readers (dev-metrics) treat a missing `event` as
+`"spec"`. If `.spec-flow/` doesn't exist, create it — `events.jsonl` is fine to version
+(benign labels: name, tier, paths — NOT transcript content). Do NOT gitignore it; its value
+is in being committed with the change.
+
+Don't invent token counts or timings here — those are derived later from git + transcripts
+by dev-metrics; these events carry only the *labels* dev-metrics can't otherwise know. Keep
+it dead simple: one line per event, then move on.
 
 ## Persistence (keep it light)
 
@@ -306,6 +402,9 @@ is a perfectly good spec for small work.
 
 - ❌ Asking the user a question you could answer by reading one file.
 - ❌ Drip-feeding questions across multiple turns.
+- ❌ The mirror image: inferring confidently past the must-ask bar on a high-risk,
+  irreversible unknown — "asked zero questions" is not a win if you built the wrong thing.
+  Optimizing `questions_asked` toward 0 at the expense of acertar is Goodhart, not skill.
 - ❌ Running Tier 3 ceremony on a Tier 0 typo.
 - ❌ A wall of process before any code appears.
 - ❌ Treating the 5 axes as one dropdown ("is this a feature OR a refactor?") — they're

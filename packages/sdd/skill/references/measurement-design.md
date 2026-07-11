@@ -1,6 +1,8 @@
 # Diseño de medición — Impacto de spec-flow + codemap
 
 > Estado: **Propuesto** · Tipo: diseño de medición (ADR-style) · Fecha: 2026-06-03
+> Revisión 2026-06-30 (spec-flow v0.3): medición **bidireccional** — se agrega el evento
+> `assumption_reversed` como contrapeso al Goodhart de `questions_asked`. Ver §4, §5, §8.
 > Cuando spec-flow se empaquete como `@devground/sdd`, este doc se promueve a un ADR
 > formal en devground.
 
@@ -45,16 +47,45 @@ spec-flow. spec-flow **emite un evento** por corrida:
 
 ```jsonc
 {
+  "event": "spec",              // discriminador; ausente en eventos viejos ⇒ "spec"
   "ts": "2026-06-03T14:22:00-04:00",
   "change": "agregar-login-email",
-  "tier": 1,                    // 0..3
+  "tier": 1,                    // 1..3 (Tier 0 NO emite: rompería su "no artifacts")
   "type": "feat",               // feat|fix|refactor|perf|...
   "size": "small", "risk": "low",
   "files": ["src/app/login/page.tsx", "src/auth/session.ts"],
-  "questions_asked": 0,         // mide la fricción directamente
+  "assumptions": 2,             // # de supuestos inferidos y declarados en el brief
+  "questions_asked": 0,         // fricción — SIEMPRE leído contra assumptions y reversiones
   "brief": "inline"             // inline | docs/specs/<change>.md
 }
 ```
+
+**Evento de reversión (el contrapeso de calidad).** `questions_asked` mide fricción, pero
+por sí solo premia no-preguntar → Goodhart: inferir a lo loco puntúa perfecto. El segundo
+evento cierra el loop. Cuando un supuesto inferido resulta **equivocado** (el usuario lo
+corrige, o el rework lo prueba), se anexa otra línea al mismo `change`:
+
+```jsonc
+{
+  "event": "assumption_reversed",
+  "ts": "2026-06-30T10:00:00-04:00",
+  "change": "agregar-login-email",      // mismo change que el evento spec
+  "task_id": 2,                          // opcional: id de la tarea (si pasó por model-orchestrator)
+  "assumption": "<el supuesto inferido que falló>",
+  "cost": "trivial|rework|redesign"     // qué tan caro salió equivocarse
+}
+```
+
+Así, "preguntó 0 y construyó lo incorrecto" deja de puntuar igual que una corrida limpia.
+Una corrida es buena solo si AMBOS lados están sanos: poca fricción Y pocas reversiones.
+
+**Puente con model-orchestrator (calidad de routing).** Cuando el cambio se orquestó por
+modelo, `task_id` liga la reversión a la tarea concreta del `decisions.jsonl` del
+orquestador (ambos logs llavean por `change`; `task_id` fija la tarea). El orquestador
+reconcilia **costo** real vs estimado pero NO mide retrabajo; este evento es esa pieza
+faltante. Con el join, dev-metrics responde lo que ninguno de los dos mide solo: *¿bajar una
+tarea a un modelo más barato sube su tasa de reversión?* — el riesgo central del orquestador
+("desescalar puede costar un retrabajo caro"), hoy sin instrumentar.
 
 Destino: **`<repo>/.spec-flow/events.jsonl`** (JSONL append-only, versionado). **Decisión
 v0:** el evento se commitea JUNTO al cambio → el enlace evento↔commit es **directo** (el
@@ -81,10 +112,13 @@ dev-metrics, que sí son PII y quedan locales).
 | **Eficiencia** | output tokens del transcript atribuibles al cambio ÷ líneas sobrevivientes | **ambigua** (suma spec, resta rework) | efecto neto |
 | **Costo de orientación** | tokens/tiempo entre el inicio del cambio y el **primer Edit** (lecturas/greps previos en el transcript) | ↓ conforme el codemap madura | **codemap (la más limpia)** |
 | **Velocidad** | cambios o commits por unidad de tiempo | plana o ↑ | anti-fricción |
-| **Fricción** | `questions_asked` por cambio (del evento) | →0 | Prime Directive |
+| **Fricción** | `questions_asked` por cambio, leído junto a `assumptions` | bajo *para el riesgo* (no →0 ciego) | Prime Directive |
+| **Calidad de inferencia** | `assumption_reversed` ÷ `assumptions` totales (tasa de reversión) | ↓ pocas reversiones | contrapeso al Goodhart de fricción |
 
-La fila *orientación* es la joya: es la señal más directamente atribuible al codemap, con
-menos confounds que las métricas de calidad agregadas.
+La fila *orientación* es la joya para el codemap (señal limpia, pocos confounds). La fila
+*calidad de inferencia* es la joya para el Prime Directive: es la única que castiga el
+fallo opuesto a la fricción —inferir con confianza y equivocarse— y sin ella el sistema se
+optimiza a no preguntar aunque deba.
 
 ## 6. Comparaciones que produce el reporte
 
@@ -113,7 +147,10 @@ muestra, tasa de matching evento→commit). Nunca un número desnudo.
   umbrales de tier, probablemente bajando cosas a Tier 0/1.
 - Supervivencia y one-shot **suben** en spec-flow, mismo período → evidencia a favor.
 - Costo de orientación **baja** con codemap maduro → evidencia del codemap.
-- `questions_asked` se aleja de 0 → el Prime Directive se está violando; endurecer el skill.
+- `questions_asked` se aleja de 0 **en cambios inferibles (Tier 0-1)** → se está
+  sobre-interrogando; endurecer. PERO `questions_asked`=0 con tasa de `assumption_reversed`
+  alta → el fallo opuesto: se infiere y se equivoca. Ahí el skill debe preguntar MÁS en el
+  must-ask bar, no menos. Leer siempre los dos juntos; ninguno solo decide.
 
 ## 9. Alternativas consideradas
 
@@ -129,7 +166,10 @@ muestra, tasa de matching evento→commit). Nunca un número desnudo.
 - **Etiquetado impreciso** (evento↔commit) → reportar la tasa de matching como confianza.
 - **N pequeño / baja potencia** al inicio → no concluir nada en las primeras semanas;
   declarar el N en cada reporte.
-- **Goodhart** (optimizar para la métrica) → mirar las 5 juntas, nunca una sola.
+- **Goodhart** (optimizar para la métrica) → mirar las métricas juntas, nunca una sola; en
+  particular leer `questions_asked` SIEMPRE contra `assumption_reversed`. El evento de
+  reversión es el contrapeso estructural: castiga inferir-y-equivocarse, que la fricción
+  por sí sola premiaría. Es la mitigación de diseño, no solo "mirar varias a la vez".
 - **Privacidad:** dev-metrics consume transcripts = PII (ADR-0008 de devground). Todo
   local, nunca publicar snapshots. (Relacionado: el footgun de `dev-metrics/snapshots/`
   sin gitignorear que está pendiente de arreglar.)

@@ -1,6 +1,6 @@
 # ADR-0018: devground políglota — workspace TS + Swift
 
-- **Estado**: Propuesto
+- **Estado**: Aceptado
 - **Fecha**: 2026-07-04
 - **Decisor**: edaza
 - **Aplica a**: el monorepo (`packages/`, `packages/cli`)

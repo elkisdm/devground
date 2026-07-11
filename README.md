@@ -24,7 +24,7 @@
 
 </div>
 
-> **13 paquetes npm. Un solo comando.**
+> **23 paquetes npm. Un solo comando.**
 > devground empaqueta los estandares de desarrollo (TDD, linting, formateo, commits convencionales, git hooks, reglas para agentes de IA, knowledge base de arquitectura y metricas) en paquetes npm reutilizables.
 > **Para quien:** equipos que arrancan proyectos Node / TypeScript / Next.js y no quieren reconfigurar las mismas herramientas en cada repo.
 
@@ -99,7 +99,7 @@ Cada paquete es independiente: instala solo lo que necesitas. Detalle de uso en 
 
 ## Paquetes
 
-El monorepo contiene **13 paquetes** independientes. Cada uno se instala por separado o todos juntos via el CLI. (Las versiones publicadas se ven en los badges de npm de cada paquete — no se listan aqui para evitar que queden desactualizadas.)
+El monorepo contiene **23 paquetes** independientes. La lista viva y autoritativa de dónde vive cada cosa está en [docs/codemap.md](docs/codemap.md). Cada uno se instala por separado o todos juntos via el CLI. (Las versiones publicadas se ven en los badges de npm de cada paquete — no se listan aqui para evitar que queden desactualizadas.)
 
 | | Paquete | Descripcion |
 |---|---------|-------------|
@@ -117,6 +117,11 @@ El monorepo contiene **13 paquetes** independientes. Cada uno se instala por sep
 | 🪵 | [`@devground/logger`](packages/logger#readme) | Logger minimalista compartido (sin dependencias) |
 | 🧪 | [`@devground/vitest-config`](packages/vitest-config#readme) | Config Vitest compartida (entorno node, cobertura v8) |
 | ⚡ | [`devground-init`](packages/cli#readme) | CLI para scaffolding completo |
+| 🎨 | [`@devground/design-taste`](packages/design-taste#readme) | Skills de diseño UI/UX anti-slop (layout, tipografía, motion, spacing) instalables — 10 skills vendorizadas de Leonxlnx/taste-skill (MIT) |
+| 🍎 | [`@devground/swift-ci`](packages/swift-ci#readme) | Plantillas CI/CD para Swift/iOS: GitHub Actions build+test y firma con Fastlane Match |
+| 🎨 | [`@devground/swift-design-tokens`](packages/swift-design-tokens#readme) | Tokens de diseño semánticos (roles de color, spacing, Dynamic Type) + helpers Liquid Glass para SwiftUI |
+| 🧹 | [`@devground/swift-format-config`](packages/swift-format-config#readme) | Configuración compartida de SwiftFormat + SwiftLint |
+| 📦 | [`@devground/swift-package-template`](packages/swift-package-template#readme) | Plantillas de `Package.swift` con isolation por capa para monorepos Swift modulares |
 
 > **Alcance del agregador:** `@devground/devground` **solo** agrupa los 7 presets de config (prettier, eslint, tsconfig, commitlint, lint-staged, husky, agents-md). Los paquetes `@devground/architecture-guide`, `@devground/dev-metrics`, `@devground/logger` y `@devground/vitest-config` son **standalone**: no forman parte del bundle y se instalan por separado segun se necesiten. Esto es intencional — la documentacion, las metricas y las utilidades no son configuracion que un proyecto deba heredar automaticamente.
 
@@ -147,6 +152,7 @@ Capacidades en incubacion dentro del repo. **Aun no se publican a npm** — esta
 | **Glosario** (para no-developers) | [docs/glossary.md](docs/glossary.md) |
 | **Preguntas frecuentes** + cuando NO usar devground | [docs/faq.md](docs/faq.md) |
 | **ADRs del proyecto devground** | [docs/adr/](docs/adr/) |
+| **Mapa de código** (dónde vive cada cosa — fuente viva) | [docs/codemap.md](docs/codemap.md) |
 
 Cada paquete tiene su README con instalacion, configuracion y reglas completas — empieza por la tabla de [Paquetes](#paquetes) o por [docs/usage.md](docs/usage.md).
 
@@ -157,13 +163,17 @@ Cada paquete tiene su README con instalacion, configuracion y reglas completas �
 ```
 devground/
 ├── .changeset/             # Versionado independiente por paquete
-├── .github/workflows/      # CI (PRs) + Release automatico (merge a main)
+├── .github/workflows/      # CI (Node + Swift) + Release automatico (merge a main)
 ├── knowledge/              # Knowledge base de arquitectura (fuente)
+│   ├── sources/            # Transcripciones originales (bd, patrones, sistemas)
 │   └── adr/                # 11 ADRs derivados
-├── docs/                   # Documentacion del README: usage, faq, glossary, conceptos
+├── docs/                   # Documentacion del README: usage, faq, glossary, conceptos, codemap
 │   └── adr/                # ADRs propios del proyecto devground
 ├── demo/                   # Tape VHS + GIF de demostracion del CLI
-├── packages/               # 15 paquetes (13 publicados + deepcheck y dreaming en incubacion)
+├── packages/               # 23 paquetes (incluye deepcheck y dreaming en incubacion + los swift-*)
+├── swift-foundation/       # Monorepo SPM (Swift) — consumidor, no paquete npm
+├── tools/                  # model-orchestrator (harness Claude Code)
+├── research/               # Investigacion (iOS/Swift engineering)
 ├── package.json            # pnpm workspaces
 └── pnpm-workspace.yaml
 ```

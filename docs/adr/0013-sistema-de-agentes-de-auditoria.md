@@ -1,6 +1,6 @@
 # ADR-0013: Adoptar un sistema de agentes de auditoría auto-mejorable (deepcheck)
 
-- **Estado**: Propuesto <!-- Propuesto | Aceptado | Rechazado | Reemplazado por ADR-XXXX | Obsoleto -->
+- **Estado**: Aceptado <!-- Propuesto | Aceptado | Rechazado | Reemplazado por ADR-XXXX | Obsoleto -->
 - **Fecha**: 2026-06-03
 - **Decisor**: @elkisdm
 - **Aplica a**: el paquete `@devground/deepcheck` y, a futuro, cualquier proyecto que lo instale para auditar sus flujos.

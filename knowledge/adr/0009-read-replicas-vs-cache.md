@@ -2,7 +2,7 @@
 
 - **Estado**: Template (derivado de transcripción)
 - **Fecha**: 2026-05-13
-- **Fuente**: [sistemas.md](../../sistemas.md), [03-systems-design.md](../03-systems-design.md)
+- **Fuente**: [sistemas.md](../sources/sistemas.md), [03-systems-design.md](../03-systems-design.md)
 
 ## Contexto
 
@@ -60,4 +60,4 @@ Son **complementarias, no excluyentes**. La pregunta correcta no es "¿caché o 
 
 ## Cita de respaldo
 
-> *"Read Replicas: aligera principal, retraso de segundos es generalmente aceptable."* — [sistemas.md](../../sistemas.md)
+> *"Read Replicas: aligera principal, retraso de segundos es generalmente aceptable."* — [sistemas.md](../sources/sistemas.md)

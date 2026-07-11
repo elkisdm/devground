@@ -1,6 +1,6 @@
 # ADR-0019: Isolation por capa como default de las plantillas Swift
 
-- **Estado**: Propuesto
+- **Estado**: Aceptado
 - **Fecha**: 2026-07-04
 - **Decisor**: edaza
 - **Aplica a**: `@devground/swift-package-template` y todo repo Swift scaffoldeado por devground

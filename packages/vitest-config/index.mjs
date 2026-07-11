@@ -45,7 +45,7 @@ export default defineConfig({
       // (`--coverage` / `test:coverage`), NO en un `vitest run` normal → añadir
       // esto no rompe el `pnpm -r test` existente. El piso GLOBAL con ratchet
       // (autoUpdate) lo pone el config del consumidor que escribe el CLI, para
-      // que se committee y suba EN SU repo (ver ADR-0022); aquí solo van las
+      // que se committee y suba EN SU repo (ver ADR-0025); aquí solo van las
       // rutas críticas fijas, que son estándar y no deben ratchetear.
       thresholds: {
         ...CRITICAL_THRESHOLDS,

@@ -1,4 +1,4 @@
-# ADR-0022: Ratchet de cobertura global + gate en CI
+# ADR-0025: Ratchet de cobertura global + gate en CI
 
 - **Estado**: Propuesto
 - **Fecha**: 2026-07-07
@@ -23,7 +23,7 @@ Adoptar un **ratchet de cobertura**: un piso global que solo puede subir, más e
 
    **Por qué `defineConfig` + spread y NO `mergeConfig`:** verificado en dogfooding — `autoUpdate` hace una transformación *estática* del archivo de config y falla con `"configuration file is too complex"` cuando el config está envuelto en `mergeConfig(base, …)`. El spread mantiene el config plano (los literales numéricos son reescribibles) y a la vez hereda reporters/include/exclude + rutas críticas del preset. Es la diferencia entre que el ratchet ratchetee o quede muerto.
 
-3. **Enforcement** — gate **duro en CI** (`pnpm -r test:coverage`, bloqueante; salta paquetes sin el script). Hook **suave** `pre-push` (ADR-0022, en `@devground/husky-config`): corre coverage y avisa si no alcanza, pero **nunca bloquea** (`SKIP_COVERAGE=1` para omitir). El patrón de degradación es el mismo que gitleaks en pre-commit ([ADR-0008](0008-higiene-de-secretos.md)): la garantía dura la da CI, el local solo avisa.
+3. **Enforcement** — gate **duro en CI** (`pnpm -r test:coverage`, bloqueante; salta paquetes sin el script). Hook **suave** `pre-push` (ADR-0025, en `@devground/husky-config`): corre coverage y avisa si no alcanza, pero **nunca bloquea** (`SKIP_COVERAGE=1` para omitir). El patrón de degradación es el mismo que gitleaks en pre-commit ([ADR-0008](0008-higiene-de-secretos.md)): la garantía dura la da CI, el local solo avisa.
 
 Los umbrales solo se exigen bajo `--coverage`; un `vitest run` normal (`pnpm -r test`) no cambia. Añadir el estándar no rompe la suite existente.
 

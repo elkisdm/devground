@@ -1,6 +1,6 @@
 # ADR-0017: Routing de modelos por complejidad (model-orchestrator)
 
-- **Estado**: Propuesto
+- **Estado**: Aceptado
 - **Fecha**: 2026-06-30
 - **Decisor**: edaza
 - **Aplica a**: `tools/model-orchestrator/`

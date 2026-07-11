@@ -5,7 +5,7 @@ import { writeFileGuarded } from './write-guard.js';
 import type { InstallerOptions, InstallResult } from '../types.js';
 
 /**
- * Vitest + cobertura como estándar devground (ADR-0012, ADR-0022).
+ * Vitest + cobertura como estándar devground (ADR-0012, ADR-0025).
  *
  * Escribe un `vitest.config.mjs` que fusiona el preset compartido
  * (`@devground/vitest-config`, que aporta reporters, include/exclude y los
@@ -51,7 +51,7 @@ import base, { CRITICAL_THRESHOLDS } from '@devground/vitest-config';
 // Umbrales de cobertura VIVOS en este repo (committeados). CRITICAL_THRESHOLDS
 // (rutas dinero/leads/auth, ADR-0012) se hereda del preset; el piso GLOBAL con
 // ratchet lo lleva este archivo: autoUpdate sube estos números a la cobertura
-// real y nunca los baja (ADR-0022). Arrancan en 0 → el primer test:coverage
+// real y nunca los baja (ADR-0025). Arrancan en 0 → el primer test:coverage
 // los siembra con la cobertura actual del proyecto.
 export default defineConfig({
   ...base,

@@ -2,7 +2,7 @@
 
 - **Estado**: Template (derivado de transcripción)
 - **Fecha**: 2026-05-13
-- **Fuente**: [sistemas.md](../../sistemas.md), [03-systems-design.md](../03-systems-design.md)
+- **Fuente**: [sistemas.md](../sources/sistemas.md), [03-systems-design.md](../03-systems-design.md)
 
 ## Contexto
 
@@ -79,6 +79,6 @@ Estados:
 
 ## Cita de respaldo
 
-> *"Timeouts: evita cascada de fallos si un servicio está caído. Circuit Breakers: permite recuperación natural sin sobrecarga de reintentos."* — [sistemas.md](../../sistemas.md)
+> *"Timeouts: evita cascada de fallos si un servicio está caído. Circuit Breakers: permite recuperación natural sin sobrecarga de reintentos."* — [sistemas.md](../sources/sistemas.md)
 
-> *"Servicios resilientes, productos que aunque intentes machacarlos a muerte de tráfico, acaben sobreviviendo."* — [sistemas.md](../../sistemas.md)
+> *"Servicios resilientes, productos que aunque intentes machacarlos a muerte de tráfico, acaben sobreviviendo."* — [sistemas.md](../sources/sistemas.md)

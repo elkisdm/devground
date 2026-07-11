@@ -2,7 +2,7 @@
 
 - **Estado**: Template (derivado de transcripción)
 - **Fecha**: 2026-05-13
-- **Fuente**: [patron arq.md](../../patron%20arq.md), [02-architectural-patterns.md](../02-architectural-patterns.md)
+- **Fuente**: [patron arq.md](../sources/patron%20arq.md), [02-architectural-patterns.md](../02-architectural-patterns.md)
 
 ## Contexto
 
@@ -71,4 +71,4 @@ Caso de referencia: **Amazon Prime Video migró componentes de Lambda a EC2 dedi
 
 ## Cita de respaldo
 
-> *"Amazon Prime Video migró de serverless a servidor dedicado por costo. No porque las Lambdas sean malas, sino porque ese problema no se adaptaba bien."* — síntesis de [patron arq.md](../../patron%20arq.md)
+> *"Amazon Prime Video migró de serverless a servidor dedicado por costo. No porque las Lambdas sean malas, sino porque ese problema no se adaptaba bien."* — síntesis de [patron arq.md](../sources/patron%20arq.md)
