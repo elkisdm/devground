@@ -1,11 +1,12 @@
 {
   "name": "@devground/eslint-config",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "Shared ESLint flat config presets (base + Next.js)",
   "type": "module",
   "exports": {
     ".": "./index.mjs",
-    "./next": "./next.mjs"
+    "./next": "./next.mjs",
+    "./ui": "./ui.mjs"
   },
   "files": [
     "*.mjs"
@@ -28,7 +29,8 @@
   "peerDependencies": {
     "@typescript-eslint/parser": ">=8.0.0",
     "eslint": ">=9.0.0",
-    "eslint-config-next": ">=14.0.0"
+    "eslint-config-next": ">=14.0.0",
+    "eslint-plugin-jsx-a11y": ">=6.10.0"
   },
   "peerDependenciesMeta": {
     "@typescript-eslint/parser": {
@@ -36,7 +38,13 @@
     },
     "eslint-config-next": {
       "optional": true
+    },
+    "eslint-plugin-jsx-a11y": {
+      "optional": true
     }
+  },
+  "devDependencies": {
+    "eslint-plugin-jsx-a11y": "^6.10.2"
   },
   "repository": {
     "type": "git",

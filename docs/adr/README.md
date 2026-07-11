@@ -37,6 +37,9 @@ siguiente número de la secuencia, rellénalo y añádelo al índice de abajo.
 - [ADR-0020 — Swift Testing + swift-dependencies como harness estándar](0020-swift-testing-harness-estandar.md) (Aceptado)
 - [ADR-0021 — Detección de stack en `@devground/cli`](0021-deteccion-stack-cli.md) (Aceptado)
 - [ADR-0022 — Jerarquía de orquestación de agentes en sesiones interactivas](0022-jerarquia-de-orquestacion.md) (Aceptado)
+- [ADR-0023 — ui-conventions: convenciones de UI como contexto antes de generar](0023-ui-conventions-contexto-antes.md) (Propuesto)
+- [ADR-0024 — Integración del ecosistema ui-conventions](0024-integracion-ecosistema-ui-conventions.md) (Propuesto)
+- [ADR-0025 — Ratchet de cobertura global + gate en CI](0025-coverage-ratchet.md) (Propuesto)
 
 ## Estándares con enforcement automático
 
@@ -47,3 +50,4 @@ Estos ADRs no son solo documentación: tienen control automático en el repo.
 | 0008 | Hook pre-commit con gitleaks + política de `.gitignore` | `.husky/pre-commit`, `packages/husky-config/hooks/pre-commit.sh`, `.gitignore` |
 | 0010 | Reglas `max-lines` (400) y `max-lines-per-function` (80) como `warn` | `packages/eslint-config/index.mjs`, `next.mjs` |
 | 0011 | `@typescript-eslint/no-explicit-any` (`warn`) + `no-restricted-syntax` para `any` en base | `packages/eslint-config/next.mjs`, `index.mjs` |
+| 0024 | Preset opt-in `./ui`: `jsx-a11y` (`error`) + `no-restricted-syntax`/`no-restricted-imports` parametrizables (`warn`) | `packages/eslint-config/ui.mjs` |

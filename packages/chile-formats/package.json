@@ -1,0 +1,66 @@
+{
+  "name": "@devground/chile-formats",
+  "version": "0.0.0",
+  "description": "Zero-dependency es-CL formatting/validation helpers: RUT (module 11), phone (+56 9), and CLP/UF/number via Intl.NumberFormat('es-CL')",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "files": [
+    "dist/"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "tsc"
+  },
+  "keywords": [
+    "chile",
+    "es-cl",
+    "rut",
+    "phone",
+    "clp",
+    "uf",
+    "intl",
+    "formatting",
+    "devground"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public",
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    }
+  },
+  "devDependencies": {
+    "@devground/vitest-config": "workspace:*",
+    "@types/node": "^25",
+    "typescript": "^5.0.0",
+    "vitest": "^2.1.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/elkisdm/devground.git",
+    "directory": "packages/chile-formats"
+  },
+  "homepage": "https://github.com/elkisdm/devground/tree/main/packages/chile-formats#readme",
+  "bugs": {
+    "url": "https://github.com/elkisdm/devground/issues"
+  }
+}

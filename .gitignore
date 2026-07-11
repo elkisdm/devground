@@ -50,3 +50,7 @@ coverage/
 packages/dev-metrics/snapshots/
 # spec-flow telemetría: labels benignos, SÍ se versiona (ver measurement-design)
 !.spec-flow/
+
+# Python
+__pycache__/
+*.pyc

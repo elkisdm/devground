@@ -52,6 +52,15 @@ jobs:
       - name: Test
         run: pnpm -r test
 
+      # Gate de cobertura (ADR-0012 + ADR-0025): corre coverage donde el paquete
+      # define el script y FALLA bajo umbral. Los umbrales de rutas críticas
+      # (dinero/leads/auth) viven en @devground/vitest-config; el piso global con
+      # ratchet lo pone el vitest.config de cada consumidor. `pnpm -r` salta los
+      # paquetes sin script `test:coverage` (no falla por ausencia), así que este
+      # gate se activa por-paquete a medida que adoptan el estándar.
+      - name: Coverage gate
+        run: pnpm -r test:coverage
+
       # Lint de repo completo: hoy es un no-op documentado (el lint real vive
       # en pre-commit vía lint-staged, ADR-0005). Cuando exista un eslint.config
       # root, el script `lint` correrá eslint sobre todo el repo aquí.

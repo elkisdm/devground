@@ -5,8 +5,10 @@ import * as tsconfig from './tsconfig.js';
 import * as commitlint from './commitlint.js';
 import * as lintStaged from './lint-staged.js';
 import * as husky from './husky.js';
+import * as vitest from './vitest.js';
 import * as agentsMd from './agents-md.js';
 import * as architectureGuide from './architecture-guide.js';
+import * as uiConventions from './ui-conventions.js';
 import type {
   DetectedStack,
   InstallerOps,
@@ -89,6 +91,13 @@ const NEXT_STACK: DetectedStack = {
   hasSwift: false,
 };
 
+const REACT_STACK: DetectedStack = {
+  framework: 'react',
+  hasTypeScript: true,
+  packageManager: 'pnpm',
+  hasSwift: false,
+};
+
 function optionsFor(stack: DetectedStack, ops: InstallerOps): InstallerOptions {
   return { targetDir: '/proj', stack, ops };
 }
@@ -160,6 +169,63 @@ describe('eslint installer', () => {
     ]);
     expect(writes[0]?.content).toContain("import nextConfig from '@devground/eslint-config/next'");
     expect(writes[0]?.content).toContain('export default nextConfig();');
+  });
+});
+
+describe('vitest installer', () => {
+  it('adds deps, writes a merged config with the autoUpdate ratchet, and sets test scripts', () => {
+    const { ops, devDeps, writes, pkg } = makeRecordingOps({ name: 'app' });
+
+    const result = vitest.install(optionsFor(NODE_STACK, ops));
+
+    expect(result).toBe('installed');
+    expect(devDeps[0]?.packages).toEqual([
+      '@devground/vitest-config',
+      'vitest',
+      '@vitest/coverage-v8',
+    ]);
+    expect(writes).toHaveLength(1);
+    expect(writes[0]?.path).toBe('/proj/vitest.config.mjs');
+    // defineConfig + spread (NOT mergeConfig) so Vitest's autoUpdate can rewrite it,
+    // while still inheriting the preset's critical-path thresholds.
+    expect(writes[0]?.content).toContain("import base, { CRITICAL_THRESHOLDS } from '@devground/vitest-config'");
+    expect(writes[0]?.content).toContain('defineConfig({');
+    expect(writes[0]?.content).not.toContain('mergeConfig');
+    expect(writes[0]?.content).toContain('...CRITICAL_THRESHOLDS');
+    expect(writes[0]?.content).toContain('autoUpdate: true');
+    // ratchet seeds at 0 so it never spuriously breaks a low-coverage repo
+    expect(writes[0]?.content).toContain('lines: 0');
+    const scripts = pkg().scripts as Record<string, string>;
+    expect(scripts.test).toBe('vitest run');
+    expect(scripts['test:coverage']).toBe('vitest run --coverage');
+  });
+
+  it('never overwrites an existing test script but still fills in test:coverage', () => {
+    const { ops, writes, pkg } = makeRecordingOps({
+      name: 'app',
+      scripts: { test: 'jest' },
+    });
+
+    const result = vitest.install(optionsFor(NODE_STACK, ops));
+
+    expect(result).toBe('installed');
+    const scripts = pkg().scripts as Record<string, string>;
+    expect(scripts.test).toBe('jest'); // left untouched
+    expect(scripts['test:coverage']).toBe('vitest run --coverage'); // added
+    expect(writes[0]?.path).toBe('/proj/vitest.config.mjs');
+  });
+
+  it('skips entirely when config and both scripts already exist', () => {
+    const { ops, writes, devDeps } = makeRecordingOps(
+      { name: 'app', scripts: { test: 'vitest run', 'test:coverage': 'vitest run --coverage' } },
+      ['/proj/vitest.config.mjs'],
+    );
+
+    const result = vitest.install(optionsFor(NODE_STACK, ops));
+
+    expect(result).toBe('skipped');
+    expect(writes).toHaveLength(0);
+    expect(devDeps).toHaveLength(0); // no deps when config pre-exists
   });
 });
 
@@ -251,6 +317,31 @@ describe('architecture-guide installer', () => {
     expect(devDeps[0]?.packages).toEqual(['@devground/architecture-guide']);
     expect(runs[0]?.cmd).toBe('npx devground-architecture');
     expect(runs[0]?.cwd).toBe('/proj');
+  });
+});
+
+describe('ui-conventions installer', () => {
+  it('installs for a Next project: adds dep and runs the bin', () => {
+    const { ops, devDeps, runs } = makeRecordingOps();
+    const result = uiConventions.install(optionsFor(NEXT_STACK, ops));
+    expect(result).toBe('installed');
+    expect(devDeps[0]?.packages).toEqual(['@devground/ui-conventions']);
+    expect(runs[0]?.cmd).toBe('npx devground-ui-conventions');
+    expect(runs[0]?.cwd).toBe('/proj');
+  });
+  it('installs for a React project', () => {
+    const { ops, devDeps, runs } = makeRecordingOps();
+    const result = uiConventions.install(optionsFor(REACT_STACK, ops));
+    expect(result).toBe('installed');
+    expect(devDeps).toHaveLength(1);
+    expect(runs).toHaveLength(1);
+  });
+  it('skips for a non-frontend (Node) project: no dep, no run', () => {
+    const { ops, devDeps, runs } = makeRecordingOps();
+    const result = uiConventions.install(optionsFor(NODE_STACK, ops));
+    expect(result).toBe('skipped');
+    expect(devDeps).toHaveLength(0);
+    expect(runs).toHaveLength(0);
   });
 });
 
