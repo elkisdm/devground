@@ -8,8 +8,8 @@ Cada paquete tiene su propio README con instalacion, configuracion y reglas comp
 |---------|--------------------------|
 | [`@devground/devground`](../packages/devground#readme) | Meta-paquete agregador: `devground-setup`, que configura automaticamente, alcance del bundle |
 | [`@devground/prettier-config`](../packages/prettier-config#readme) | Instalacion + reglas de formateo (semicolons, single quotes, print width 100, etc.) |
-| [`@devground/eslint-config`](../packages/eslint-config#readme) | Presets base y Next.js, ESLint Flat Config v9, ignores personalizados, `max-lines` y `no-explicit-any` |
-| [`@devground/tsconfig`](../packages/tsconfig#readme) | Presets `base`, `next`, `next-typecheck`, `node` con su matriz de `strict`/`incremental` y ejemplos |
+| [`@devground/eslint-config`](../packages/eslint-config#readme) | Presets base, Next.js y Astro, ESLint Flat Config v9, ignores personalizados, `max-lines` y `no-explicit-any` |
+| [`@devground/tsconfig`](../packages/tsconfig#readme) | Presets `base`, `next`, `next-typecheck`, `astro`, `astro-typecheck`, `node` con su matriz de `strict`/`incremental` y ejemplos |
 | [`@devground/commitlint-config`](../packages/commitlint-config#readme) | Commits convencionales: tipos permitidos y reglas de header |
 | [`@devground/lint-staged-config`](../packages/lint-staged-config#readme) | Patrones de archivos staged y acciones (`eslint --fix`, `prettier --write`) |
 | [`@devground/husky-config`](../packages/husky-config#readme) | Git hooks: pre-commit con gitleaks + commit-msg, `devground-husky` |
@@ -53,11 +53,11 @@ npx devground-init [opciones]
 
 | Detecta | Como |
 |---------|------|
-| Framework | `next` en deps → Next.js, `react` sin `next` → React, otro → Node.js |
+| Framework | `next` en deps → Next.js, `astro` sin `next` → Astro, `react` sin `next`/`astro` → React, otro → Node.js |
 | TypeScript | `typescript` en devDependencies |
 | Package manager | `pnpm-lock.yaml` / `yarn.lock` / `package-lock.json` |
 
-La deteccion determina que preset de ESLint y TSConfig usar automaticamente. README completo del CLI: [`packages/cli`](../packages/cli#readme).
+La deteccion determina que preset de ESLint y TSConfig usar automaticamente. Astro tiene prioridad sobre React porque cualquier componente React dentro de un proyecto Astro se ejecuta como isla — el preset Astro es el paraguas correcto en ese caso. README completo del CLI: [`packages/cli`](../packages/cli#readme).
 
 ---
 

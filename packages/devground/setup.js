@@ -26,11 +26,20 @@ if (!fs.existsSync(pkgPath)) {
 
 heading('devground setup');
 
-// Detect framework
+// Detect framework — same precedence as devground-init CLI:
+// next > astro > react > node. Astro beats React because React inside an
+// Astro project always runs as an island, so the Astro preset is the umbrella.
 const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
 const deps = { ...pkg.dependencies, ...pkg.devDependencies };
 const isNextjs = 'next' in (deps || {});
-const framework = isNextjs ? 'Next.js' : 'react' in (deps || {}) ? 'React' : 'Node.js';
+const isAstro = !isNextjs && 'astro' in (deps || {});
+const framework = isNextjs
+  ? 'Next.js'
+  : isAstro
+    ? 'Astro'
+    : 'react' in (deps || {})
+      ? 'React'
+      : 'Node.js';
 log(`Stack detectado: ${framework}`);
 
 // 1. Prettier
@@ -62,11 +71,20 @@ fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
 // 4. ESLint config
 const eslintPath = path.join(targetDir, 'eslint.config.mjs');
 if (!fs.existsSync(eslintPath)) {
-  const eslintContent = isNextjs
-    ? `import nextConfig from '@devground/eslint-config/next';\n\nexport default nextConfig();\n`
-    : `import baseConfig from '@devground/eslint-config';\n\nexport default baseConfig();\n`;
+  let eslintContent;
+  let eslintLabel;
+  if (isNextjs) {
+    eslintContent = `import nextConfig from '@devground/eslint-config/next';\n\nexport default nextConfig();\n`;
+    eslintLabel = 'Next.js';
+  } else if (isAstro) {
+    eslintContent = `import astroConfig from '@devground/eslint-config/astro';\n\nexport default astroConfig();\n`;
+    eslintLabel = 'Astro';
+  } else {
+    eslintContent = `import baseConfig from '@devground/eslint-config';\n\nexport default baseConfig();\n`;
+    eslintLabel = 'base';
+  }
   fs.writeFileSync(eslintPath, eslintContent);
-  log(`eslint.config.mjs creado (${isNextjs ? 'Next.js' : 'base'})`);
+  log(`eslint.config.mjs creado (${eslintLabel})`);
 } else {
   warn('eslint.config.mjs ya existe — no se sobreescribe');
 }
@@ -74,30 +92,59 @@ if (!fs.existsSync(eslintPath)) {
 // 5. TSConfig
 const tsconfigPath = path.join(targetDir, 'tsconfig.json');
 if (!fs.existsSync(tsconfigPath)) {
-  const preset = isNextjs ? '@devground/tsconfig/next.json' : '@devground/tsconfig/base.json';
-  const includes = isNextjs
-    ? ['next-env.d.ts', '**/*.ts', '**/*.tsx']
-    : ['src/**/*.ts'];
-  const tsconfig = {
-    extends: preset,
-    compilerOptions: { paths: { '@/*': ['./*'] } },
-    include: includes,
-    exclude: ['node_modules'],
-  };
+  let preset;
+  let includes;
+  let tsconfig;
+
+  if (isNextjs) {
+    preset = '@devground/tsconfig/next.json';
+    includes = ['next-env.d.ts', '**/*.ts', '**/*.tsx'];
+    tsconfig = {
+      extends: preset,
+      compilerOptions: { paths: { '@/*': ['./*'] } },
+      include: includes,
+      exclude: ['node_modules'],
+    };
+  } else if (isAstro) {
+    preset = '@devground/tsconfig/astro.json';
+    includes = ['.astro/types.d.ts', 'src/**/*.ts', 'src/**/*.tsx', 'src/**/*.astro'];
+    // astro.json already declares paths; do not override here.
+    tsconfig = {
+      extends: preset,
+      include: includes,
+      exclude: ['node_modules', 'dist'],
+    };
+  } else {
+    preset = '@devground/tsconfig/base.json';
+    includes = ['src/**/*.ts'];
+    tsconfig = {
+      extends: preset,
+      compilerOptions: { paths: { '@/*': ['./*'] } },
+      include: includes,
+      exclude: ['node_modules'],
+    };
+  }
+
   fs.writeFileSync(tsconfigPath, JSON.stringify(tsconfig, null, 2) + '\n');
   log(`tsconfig.json creado (extends ${preset})`);
 
-  if (isNextjs) {
-    const typecheckPath = path.join(targetDir, 'tsconfig.typecheck.json');
-    if (!fs.existsSync(typecheckPath)) {
-      const typecheck = {
-        extends: '@devground/tsconfig/next-typecheck.json',
-        include: ['app/**/*.ts', 'app/**/*.tsx', 'components/**/*.ts', 'components/**/*.tsx', 'lib/**/*.ts', 'lib/**/*.tsx'],
-        exclude: ['node_modules'],
-      };
-      fs.writeFileSync(typecheckPath, JSON.stringify(typecheck, null, 2) + '\n');
-      log('tsconfig.typecheck.json creado (CI)');
-    }
+  const typecheckPath = path.join(targetDir, 'tsconfig.typecheck.json');
+  if (isNextjs && !fs.existsSync(typecheckPath)) {
+    const typecheck = {
+      extends: '@devground/tsconfig/next-typecheck.json',
+      include: ['app/**/*.ts', 'app/**/*.tsx', 'components/**/*.ts', 'components/**/*.tsx', 'lib/**/*.ts', 'lib/**/*.tsx'],
+      exclude: ['node_modules'],
+    };
+    fs.writeFileSync(typecheckPath, JSON.stringify(typecheck, null, 2) + '\n');
+    log('tsconfig.typecheck.json creado (CI)');
+  } else if (isAstro && !fs.existsSync(typecheckPath)) {
+    const typecheck = {
+      extends: '@devground/tsconfig/astro-typecheck.json',
+      include: ['.astro/types.d.ts', 'src/**/*.ts', 'src/**/*.tsx', 'src/**/*.astro'],
+      exclude: ['node_modules', 'dist'],
+    };
+    fs.writeFileSync(typecheckPath, JSON.stringify(typecheck, null, 2) + '\n');
+    log('tsconfig.typecheck.json creado (CI)');
   }
 } else {
   warn('tsconfig.json ya existe — no se sobreescribe');

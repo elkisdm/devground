@@ -47,6 +47,7 @@ function detectSwift(dir: string): boolean {
 
 function detectFramework(allDeps: Record<string, string>): Framework {
   if ('next' in allDeps) return 'nextjs';
+  if ('astro' in allDeps) return 'astro';
   if ('react' in allDeps) return 'react';
   if (Object.keys(allDeps).length > 0) return 'node';
   return 'unknown';

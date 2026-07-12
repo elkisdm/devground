@@ -6,8 +6,18 @@
     "base.json",
     "next.json",
     "next-typecheck.json",
-    "node.json"
+    "node.json",
+    "astro.json",
+    "astro-typecheck.json"
   ],
+  "peerDependencies": {
+    "astro": ">=4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "astro": {
+      "optional": true
+    }
+  },
   "keywords": [
     "typescript",
     "tsconfig",

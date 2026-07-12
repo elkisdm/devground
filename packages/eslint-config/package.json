@@ -6,7 +6,8 @@
   "exports": {
     ".": "./index.mjs",
     "./next": "./next.mjs",
-    "./ui": "./ui.mjs"
+    "./ui": "./ui.mjs",
+    "./astro": "./astro.mjs"
   },
   "files": [
     "*.mjs"
@@ -30,7 +31,8 @@
     "@typescript-eslint/parser": ">=8.0.0",
     "eslint": ">=9.0.0",
     "eslint-config-next": ">=14.0.0",
-    "eslint-plugin-jsx-a11y": ">=6.10.0"
+    "eslint-plugin-jsx-a11y": ">=6.10.0",
+    "eslint-plugin-astro": ">=1.0.0"
   },
   "peerDependenciesMeta": {
     "@typescript-eslint/parser": {
@@ -40,6 +42,9 @@
       "optional": true
     },
     "eslint-plugin-jsx-a11y": {
+      "optional": true
+    },
+    "eslint-plugin-astro": {
       "optional": true
     }
   },

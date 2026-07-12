@@ -11,6 +11,9 @@ pnpm add -D @devground/eslint-config eslint
 # Next.js config
 pnpm add -D @devground/eslint-config eslint eslint-config-next
 
+# Astro config
+pnpm add -D @devground/eslint-config eslint eslint-plugin-astro
+
 # UI config (opt-in)
 pnpm add -D @devground/eslint-config eslint eslint-plugin-jsx-a11y
 ```
@@ -34,6 +37,15 @@ import nextConfig from '@devground/eslint-config/next';
 export default nextConfig({
   ignores: ['.next/**', 'node_modules/**', 'custom-dir/**'],
 });
+```
+
+### Astro
+
+```js
+// eslint.config.mjs
+import astroConfig from '@devground/eslint-config/astro';
+
+export default astroConfig();
 ```
 
 ### Base (framework-agnostic)

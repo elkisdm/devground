@@ -105,8 +105,8 @@ El monorepo contiene **23 paquetes** independientes. La lista viva y autoritativ
 |---|---------|-------------|
 | 🎁 | [`@devground/devground`](packages/devground#readme) | **Todo en uno** — instala y configura los presets de config |
 | 💅 | [`@devground/prettier-config`](packages/prettier-config#readme) | Configuracion compartida de Prettier |
-| 🔍 | [`@devground/eslint-config`](packages/eslint-config#readme) | ESLint Flat Config (base + Next.js), con `max-lines` y `no-explicit-any` |
-| 🧬 | [`@devground/tsconfig`](packages/tsconfig#readme) | Presets de TypeScript (base strict, next, next-loose, CI, node) |
+| 🔍 | [`@devground/eslint-config`](packages/eslint-config#readme) | ESLint Flat Config (base + Next.js + Astro), con `max-lines` y `no-explicit-any` |
+| 🧬 | [`@devground/tsconfig`](packages/tsconfig#readme) | Presets de TypeScript (base strict, next, next-loose, astro, CI, node) |
 | ✍️ | [`@devground/commitlint-config`](packages/commitlint-config#readme) | Commits convencionales con commitlint |
 | 🧹 | [`@devground/lint-staged-config`](packages/lint-staged-config#readme) | Reglas de linting para archivos staged |
 | 🪝 | [`@devground/husky-config`](packages/husky-config#readme) | Git hooks con Husky (pre-commit con gitleaks + commit-msg) |

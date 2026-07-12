@@ -40,6 +40,12 @@
     "eslint-config-next": {
       "optional": true
     },
+    "eslint-plugin-astro": {
+      "optional": true
+    },
+    "astro": {
+      "optional": true
+    },
     "@commitlint/cli": {
       "optional": true
     }
