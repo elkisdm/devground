@@ -36,11 +36,12 @@ siguiente número de la secuencia, rellénalo y añádelo al índice de abajo.
 - [ADR-0019 — Isolation por capa como default de las plantillas Swift](0019-isolation-por-capa-swift.md) (Aceptado)
 - [ADR-0020 — Swift Testing + swift-dependencies como harness estándar](0020-swift-testing-harness-estandar.md) (Aceptado)
 - [ADR-0021 — Detección de stack en `@devground/cli`](0021-deteccion-stack-cli.md) (Aceptado)
-- [ADR-0022 — Jerarquía de orquestación de agentes en sesiones interactivas](0022-jerarquia-de-orquestacion.md) (Aceptado)
+- [ADR-0022 — Jerarquía de orquestación de agentes en sesiones interactivas](0022-jerarquia-de-orquestacion.md) (Reemplazado por ADR-0027)
 - [ADR-0023 — ui-conventions: convenciones de UI como contexto antes de generar](0023-ui-conventions-contexto-antes.md) (Propuesto)
 - [ADR-0024 — Integración del ecosistema ui-conventions](0024-integracion-ecosistema-ui-conventions.md) (Propuesto)
 - [ADR-0025 — Ratchet de cobertura global + gate en CI](0025-coverage-ratchet.md) (Propuesto)
 - [ADR-0026 — Declarar el núcleo soportado y entrar en fase de consolidación](0026-fase-de-consolidacion-nucleo-soportado.md) (Propuesto)
+- [ADR-0027 — Empaquetar la regla de orquestación en @devground/sdd](0027-empaquetar-regla-de-orquestacion.md) (Propuesto)
 
 ## Estándares con enforcement automático
 

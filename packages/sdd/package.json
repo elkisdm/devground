@@ -3,14 +3,19 @@
   "version": "1.0.0",
   "description": "spec-flow: the spec-driven development intake skill — classify, enrich and route any change to the right amount of process, installable into any project",
   "bin": {
-    "devground-sdd": "./setup.js"
+    "devground-sdd": "./setup.js",
+    "devground-orchestration": "./setup-orchestration.js"
   },
   "files": [
     "setup.js",
-    "skill/"
+    "setup-orchestration.js",
+    "skill/",
+    "orchestration/"
   ],
   "scripts": {
-    "sync": "node scripts/sync-spec-flow.mjs"
+    "sync": "node scripts/sync-spec-flow.mjs",
+    "sync:orchestration": "node scripts/sync-orchestration.mjs",
+    "test": "bash orchestration/test/gate.test.sh"
   },
   "keywords": [
     "spec-driven-development",
