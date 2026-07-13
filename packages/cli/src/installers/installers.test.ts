@@ -98,6 +98,13 @@ const REACT_STACK: DetectedStack = {
   hasSwift: false,
 };
 
+const ASTRO_STACK: DetectedStack = {
+  framework: 'astro',
+  hasTypeScript: true,
+  packageManager: 'pnpm',
+  hasSwift: false,
+};
+
 function optionsFor(stack: DetectedStack, ops: InstallerOps): InstallerOptions {
   return { targetDir: '/proj', stack, ops };
 }
@@ -169,6 +176,20 @@ describe('eslint installer', () => {
     ]);
     expect(writes[0]?.content).toContain("import nextConfig from '@devground/eslint-config/next'");
     expect(writes[0]?.content).toContain('export default nextConfig();');
+  });
+
+  it('writes an Astro flat config and adds eslint-plugin-astro for an Astro project', () => {
+    const { ops, devDeps, writes } = makeRecordingOps();
+
+    eslint.install(optionsFor(ASTRO_STACK, ops));
+
+    expect(devDeps[0]?.packages).toEqual([
+      '@devground/eslint-config',
+      'eslint',
+      'eslint-plugin-astro',
+    ]);
+    expect(writes[0]?.content).toContain("import astroConfig from '@devground/eslint-config/astro'");
+    expect(writes[0]?.content).toContain('export default astroConfig();');
   });
 });
 
@@ -277,6 +298,42 @@ describe('tsconfig installer', () => {
       writes.find((w) => w.path === '/proj/tsconfig.typecheck.json')?.content ?? '{}',
     ) as Record<string, unknown>;
     expect(typecheck.extends).toBe('@devground/tsconfig/next-typecheck.json');
+  });
+
+  it('writes both Astro presets (dev + typecheck) for an Astro project', () => {
+    const { ops, devDeps, writes } = makeRecordingOps();
+
+    const result = tsconfig.install(optionsFor(ASTRO_STACK, ops));
+
+    expect(result).toBe('installed');
+    expect(devDeps[0]?.packages).toEqual(['@devground/tsconfig', 'typescript']);
+    expect(writes).toHaveLength(2);
+
+    const main = JSON.parse(
+      writes.find((w) => w.path === '/proj/tsconfig.json')?.content ?? '{}',
+    ) as Record<string, unknown>;
+    expect(main.extends).toBe('@devground/tsconfig/astro.json');
+    expect(main.include).toContain('.astro/types.d.ts');
+    expect(main.include).toContain('src/**/*.astro');
+
+    const typecheck = JSON.parse(
+      writes.find((w) => w.path === '/proj/tsconfig.typecheck.json')?.content ?? '{}',
+    ) as Record<string, unknown>;
+    expect(typecheck.extends).toBe('@devground/tsconfig/astro-typecheck.json');
+    expect(typecheck.include).toContain('src/**/*.astro');
+  });
+
+  it('skips the Astro install entirely when both tsconfigs already exist', () => {
+    const { ops, devDeps, writes } = makeRecordingOps({}, [
+      '/proj/tsconfig.json',
+      '/proj/tsconfig.typecheck.json',
+    ]);
+
+    const result = tsconfig.install(optionsFor(ASTRO_STACK, ops));
+
+    expect(result).toBe('skipped');
+    expect(devDeps).toHaveLength(0);
+    expect(writes).toHaveLength(0);
   });
 });
 

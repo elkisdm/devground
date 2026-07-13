@@ -31,6 +31,24 @@ describe('detectStack — framework detection', () => {
     expect(detectStack(tmpDir).framework).toBe('react');
   });
 
+  it('detects Astro when "astro" is in dependencies', () => {
+    writePackageJson({ dependencies: { astro: '^5.0.0' } });
+
+    expect(detectStack(tmpDir).framework).toBe('astro');
+  });
+
+  it('prefers Astro over React (islands run under the Astro umbrella)', () => {
+    writePackageJson({ dependencies: { astro: '^5.0.0', react: '^19.0.0' } });
+
+    expect(detectStack(tmpDir).framework).toBe('astro');
+  });
+
+  it('prefers Next.js over Astro when both are present', () => {
+    writePackageJson({ dependencies: { next: '^16.0.0', astro: '^5.0.0' } });
+
+    expect(detectStack(tmpDir).framework).toBe('nextjs');
+  });
+
   it('detects Node.js when no react or next, but other deps exist', () => {
     writePackageJson({ dependencies: { express: '^4.0.0' } });
 
@@ -120,6 +138,10 @@ describe('detectStack — Swift detection (ADR-0021)', () => {
     writePackageJson({ dependencies: { next: '^16.0.0' } });
 
     expect(detectStack(tmpDir).hasSwift).toBe(false);
+  });
+
+  it('reports no Swift when the directory cannot be listed', () => {
+    expect(detectStack(join(tmpDir, 'does-not-exist')).hasSwift).toBe(false);
   });
 
   it('classifies a Swift-only repo with no package.json without throwing', () => {
