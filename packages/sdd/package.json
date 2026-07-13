@@ -1,6 +1,6 @@
 {
   "name": "@devground/sdd",
-  "version": "0.3.0",
+  "version": "1.0.0",
   "description": "spec-flow: the spec-driven development intake skill — classify, enrich and route any change to the right amount of process, installable into any project",
   "bin": {
     "devground-sdd": "./setup.js"
