@@ -1,5 +1,29 @@
 # @devground/sdd
 
+## 1.1.0
+
+### Minor Changes
+
+- 617adfe: Ship the orchestration hard-rule as an installable, versioned layer.
+
+  Adds the `devground-orchestration` installer (gate + context hooks and the
+  planner/planner-deep/ejecutor agents) plus a `sync-orchestration` script, so the
+  Fable/Opus orchestration rule that lived only in a single machine's ~/.claude is now
+  reproducible for the team. Executes the bus-factor commitment of ADR-0026 §4; the
+  full tier model is documented in ADR-0027 (supersedes ADR-0022). Additive: no
+  existing behaviour changes.
+
+### Patch Changes
+
+- 03b66cf: orchestrator-gate: fail-closed and correct subagent detection.
+
+  Two fixes to the shipped hooks: (1) when a hook event lacks current_model the
+  gate now falls back to the model configured in ~/.claude/settings.json and
+  lowercases it before matching — previously such events bypassed the gate
+  entirely; (2) subagent tool calls are now recognized by the agent_id field in
+  the event payload (transcript_path always points at the main session, so the
+  path-based pattern never matched; it remains as a fallback).
+
 ## 1.0.0
 
 ### Major Changes
