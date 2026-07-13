@@ -40,6 +40,7 @@ siguiente número de la secuencia, rellénalo y añádelo al índice de abajo.
 - [ADR-0023 — ui-conventions: convenciones de UI como contexto antes de generar](0023-ui-conventions-contexto-antes.md) (Propuesto)
 - [ADR-0024 — Integración del ecosistema ui-conventions](0024-integracion-ecosistema-ui-conventions.md) (Propuesto)
 - [ADR-0025 — Ratchet de cobertura global + gate en CI](0025-coverage-ratchet.md) (Propuesto)
+- [ADR-0026 — Declarar el núcleo soportado y entrar en fase de consolidación](0026-fase-de-consolidacion-nucleo-soportado.md) (Propuesto)
 
 ## Estándares con enforcement automático
 
