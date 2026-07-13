@@ -224,14 +224,22 @@ Detalle completo en [CONTRIBUTING.md](CONTRIBUTING.md) y [CODE_OF_CONDUCT.md](CO
 
 ## Roadmap
 
+**Fase actual: consolidación** ([ADR-0026](docs/adr/0026-fase-de-consolidacion-nucleo-soportado.md)).
+El trabajo se dirige a estabilizar lo que existe — núcleo en `1.0` con semver estricto,
+veredicto (graduar o congelar) para cada experimental, y ritual de release ejecutado por
+más de una persona. La vara de entrada durante la fase: **si un cambio no arregla, testea,
+documenta o gradúa algo existente, no entra.**
+
+La expansión queda en pausa hasta cerrar la fase:
+
 | Estado | Item |
 |:------:|------|
-| 🔜 | `@devground/github-actions` — Workflows de CI reutilizables |
-| 🔜 | `@devground/vscode-settings` — Configuracion compartida de VS Code |
-| 💡 | Presets de AGENTS.md por stack (React, Angular, Go, Python) |
-| 💡 | Plugin de ESLint para tokens semanticos (detectar hardcoded colors) |
-| 💡 | `@devground/testing-config` — Presets de Vitest / Jest / Playwright |
-| 💡 | Modo `--dry-run` en el CLI para previsualizar cambios sin escribir |
+| ⏸️ | `@devground/github-actions` — Workflows de CI reutilizables |
+| ⏸️ | `@devground/vscode-settings` — Configuracion compartida de VS Code |
+| ⏸️ | Presets de AGENTS.md por stack (React, Angular, Go, Python) |
+| ⏸️ | Plugin de ESLint para tokens semanticos (detectar hardcoded colors) |
+| ⏸️ | `@devground/testing-config` — Presets de Vitest / Jest / Playwright |
+| ⏸️ | Modo `--dry-run` en el CLI para previsualizar cambios sin escribir |
 
 ---
 
