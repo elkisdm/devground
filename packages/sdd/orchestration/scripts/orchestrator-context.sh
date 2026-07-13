@@ -15,6 +15,7 @@ if [ -z "$MODEL" ]; then
   MODEL=$(jq -r '.model // empty' "$HOME/.claude/settings.json" 2>/dev/null)
 fi
 
+MODEL=$(tr '[:upper:]' '[:lower:]' <<<"$MODEL")
 case "$MODEL" in
   *fable*|*mythos*|*opus*) ;;
   *) exit 0 ;;

@@ -32,5 +32,22 @@ check "context opus -> inyecta" "UserPromptSubmit" "$o"
 o=$(echo '{"current_model":"claude-sonnet-4"}' | bash "$CTX" | evt)
 check "context sonnet -> silencio" "none" "$o"
 
+# --- fallback a settings.json cuando el evento no trae current_model (fail-closed) ---
+TMPHOME=$(mktemp -d); mkdir -p "$TMPHOME/.claude"
+echo '{"model":"claude-fable-5"}' > "$TMPHOME/.claude/settings.json"
+o=$(echo '{"tool_name":"Bash","transcript_path":"/x/main.jsonl","tool_input":{"command":"rm -rf /repo/x"}}' | HOME="$TMPHOME" bash "$GATE" | dec)
+check "sin current_model + settings fable -> deny" "deny" "$o"
+echo '{"model":"claude-sonnet-5"}' > "$TMPHOME/.claude/settings.json"
+o=$(echo '{"tool_name":"Bash","transcript_path":"/x/main.jsonl","tool_input":{"command":"rm -rf /repo/x"}}' | HOME="$TMPHOME" bash "$GATE" | dec)
+check "sin current_model + settings sonnet -> allow" "allow" "$o"
+# --- exención de subagentes por agent_id (transcript_path apunta a la sesión principal) ---
+echo '{"model":"claude-fable-5"}' > "$TMPHOME/.claude/settings.json"
+o=$(echo '{"tool_name":"Bash","agent_id":"a123","agent_type":"ejecutor","transcript_path":"/x/main.jsonl","tool_input":{"command":"touch /repo/x"}}' | HOME="$TMPHOME" bash "$GATE" | dec)
+check "subagente por agent_id -> allow" "allow" "$o"
+# --- lowercase del modelo ---
+o=$(echo '{"tool_name":"Edit","current_model":"Claude-Fable-5","transcript_path":"/x/main.jsonl","tool_input":{"file_path":"/repo/a.ts"}}' | bash "$GATE" | dec)
+check "modelo en mayúsculas -> deny" "deny" "$o"
+rm -rf "$TMPHOME"
+
 echo "passed=$pass failed=$fail"
 [ "$fail" -eq 0 ]

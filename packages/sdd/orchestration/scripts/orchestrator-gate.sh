@@ -14,10 +14,24 @@ TOOL=$(jq -r '.tool_name // empty' <<<"$INPUT")
 MODEL=$(jq -r '.current_model // empty' <<<"$INPUT")
 TRANSCRIPT=$(jq -r '.transcript_path // empty' <<<"$INPUT")
 
-# Tool calls de subagentes (Agent tool / Workflow) siempre permitidas
+# Tool calls de subagentes (Agent tool / Workflow) siempre permitidas.
+# Discriminador real (verificado 2026-07-13 con payloads capturados): los
+# eventos de subagentes traen agent_id/agent_type; transcript_path apunta
+# SIEMPRE a la sesion principal, asi que el patron por ruta solo queda como
+# respaldo por si el harness cambia de contrato.
+AGENT_ID=$(jq -r '.agent_id // empty' <<<"$INPUT")
+[ -n "$AGENT_ID" ] && exit 0
 case "$TRANSCRIPT" in
   *"/subagents/"*|*"/agent-"*) exit 0 ;;
 esac
+
+# Los eventos PreToolUse pueden no traer current_model: fallback al modelo
+# configurado (mismo criterio que orchestrator-context.sh). Sin esto, un evento
+# sin current_model deja pasar todo — fail-open del gate.
+if [ -z "$MODEL" ]; then
+  MODEL=$(jq -r '.model // empty' "$HOME/.claude/settings.json" 2>/dev/null)
+fi
+MODEL=$(tr '[:upper:]' '[:lower:]' <<<"$MODEL")
 
 # Solo aplica a modelos orquestadores; sonnet/haiku ejecutan libre
 case "$MODEL" in
