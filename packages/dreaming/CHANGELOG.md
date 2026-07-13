@@ -1,5 +1,13 @@
 # @devground/dreaming
 
+## 0.1.1
+
+### Patch Changes
+
+- Updated dependencies [78e990e]
+- Updated dependencies [48dd01b]
+  - @devground/dev-metrics@1.0.0
+
 ## 0.1.0
 
 ### Minor Changes
