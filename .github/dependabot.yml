@@ -11,6 +11,11 @@ updates:
       timezone: America/Santiago
     open-pull-requests-limit: 5
     versioning-strategy: increase
+    ignore:
+      # ADR-0026 (fase de consolidación): los majors son trabajo de migración,
+      # no de consolidación. Reevaluar al salir de la fase.
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
     commit-message:
       prefix: chore
       include: scope
