@@ -1,0 +1,15 @@
+{
+  "name": "devground",
+  "owner": {
+    "name": "elkisdm",
+    "url": "https://github.com/elkisdm"
+  },
+  "description": "Marketplace de devground — estándares de desarrollo como paquetes npm + skills curadas para Claude Code.",
+  "plugins": [
+    {
+      "name": "devground",
+      "source": "./",
+      "description": "Skills curadas de devground: cimientos, spec-flow y escritura-tecnica. Instala con /plugin install devground@devground."
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "name": "devground",
+  "version": "0.1.0",
+  "description": "Skills curadas de devground: cimientos (decisiones de arquitectura greenfield), spec-flow (intake SDD right-sized) y escritura-tecnica (prosa técnica que se acepta). Solo skills — las configs se versionan por npm y los hooks son opt-in vía npx devground-hooks.",
+  "author": {
+    "name": "elkisdm",
+    "url": "https://github.com/elkisdm"
+  },
+  "homepage": "https://github.com/elkisdm/devground",
+  "repository": "https://github.com/elkisdm/devground",
+  "license": "MIT",
+  "keywords": ["devground", "skills", "architecture", "sdd", "spec", "technical-writing"]
+}

@@ -38,6 +38,14 @@ Una feature entra solo si pasa los tres filtros:
 
 ## 1. Plugin de Claude Code — Adoptar
 
+> **Estado:** implementado en esta rama (`.claude-plugin/` + `skills/` con symlinks a las
+> fuentes, cero duplicación). Verificado con una instalación real: `claude plugin
+> validate` pasa, marketplace + install funcionan y los symlinks resuelven en el caché.
+> Los hooks quedaron deliberadamente fuera del plugin (correrían dos veces junto a
+> `devground-hooks`) y un test lo hace permanente. Matriz plugin vs npx en
+> `docs/claude-plugin.md`. Pendiente del gate: probar `/plugin install` desde GitHub
+> (no solo path local) cuando la rama sea visible.
+
 **Qué hace ECC.** Empaqueta skills, comandos y hooks en `.claude-plugin/plugin.json` +
 `marketplace.json` (marketplace auto-hosteado) y se instala con `/plugin install ecc@ecc`.
 Es su canal principal de distribución. Detalle no obvio que ECC documenta y protege con
