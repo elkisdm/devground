@@ -1,9 +1,11 @@
 # ADR-0022: Jerarquía de orquestación de agentes en sesiones interactivas
 
-- **Estado**: Aceptado
+- **Estado**: Reemplazado por ADR-0027
 - **Fecha**: 2026-07-10
 - **Decisor**: edaza
 - **Aplica a**: flujo de trabajo con agentes en Claude Code (spec-flow, model-orchestrator, subagentes)
+
+> Ampliado y empaquetado en [ADR-0027](0027-empaquetar-regla-de-orquestacion.md).
 
 ## Contexto
 

@@ -113,7 +113,7 @@ El monorepo contiene **23 paquetes** independientes. La lista viva y autoritativ
 | 🤖 | [`@devground/agents-md`](packages/agents-md#readme) | AGENTS.md + symlinks multi-agente (Claude, Cursor, Copilot, Gemini) + config nativo para Codex |
 | 🏛️ | [`@devground/architecture-guide`](packages/architecture-guide#readme) | **Knowledge base** de arquitectura + ADRs (BD, patrones, sistemas) |
 | 📊 | [`@devground/dev-metrics`](packages/dev-metrics#readme) | CLI de metricas de desarrollo con agentes (velocidad, calidad, eficiencia) + impacto de spec-flow y costo de orientación — standalone |
-| 📐 | [`@devground/sdd`](packages/sdd#readme) | **spec-flow** — skill de intake SDD instalable (clasifica, enriquece y rutea cualquier cambio al proceso mínimo que merece) |
+| 📐 | [`@devground/sdd`](packages/sdd#readme) | **spec-flow** — skill de intake SDD instalable (clasifica, enriquece y rutea cualquier cambio al proceso mínimo que merece); además instala la capa de orquestación (`devground-orchestration`: hooks + agentes planner/ejecutor) |
 | 🪵 | [`@devground/logger`](packages/logger#readme) | Logger minimalista compartido (sin dependencias) |
 | 🇨🇱 | [`@devground/chile-formats`](packages/chile-formats#readme) | Helpers es-CL sin dependencias: RUT (modulo 11), telefono +56 9, moneda/UF/numero via Intl |
 | 🧪 | [`@devground/vitest-config`](packages/vitest-config#readme) | Config Vitest compartida (entorno node, cobertura v8) |

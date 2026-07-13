@@ -1,0 +1,23 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          { "type": "command", "command": "$HOME/.claude/scripts/orchestrator-context.sh" }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|NotebookEdit|Bash|mcp__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.claude/scripts/orchestrator-gate.sh",
+            "statusMessage": "Verificando regla de orquestación"
+          }
+        ]
+      }
+    ]
+  }
+}
