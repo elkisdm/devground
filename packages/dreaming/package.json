@@ -51,7 +51,7 @@
   "devDependencies": {
     "@devground/vitest-config": "workspace:*",
     "@types/node": "^26",
-    "typescript": "^5.0.0",
+    "typescript": "^7.0.2",
     "vitest": "^2.1.0"
   }
 }
