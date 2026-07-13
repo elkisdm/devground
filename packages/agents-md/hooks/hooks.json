@@ -1,0 +1,35 @@
+{
+  "PostToolUse": [
+    {
+      "matcher": "Edit|Write|MultiEdit",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/devground/prettier-format.mjs\"",
+          "timeout": 30
+        },
+        {
+          "type": "command",
+          "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/devground/typecheck.mjs\"",
+          "timeout": 30
+        },
+        {
+          "type": "command",
+          "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/devground/console-log-warn.mjs\"",
+          "timeout": 30
+        }
+      ]
+    }
+  ],
+  "Stop": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/devground/session-summary.mjs\"",
+          "timeout": 30
+        }
+      ]
+    }
+  ]
+}

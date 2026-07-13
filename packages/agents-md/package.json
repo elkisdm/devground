@@ -3,16 +3,25 @@
   "version": "1.2.1",
   "description": "AI agent development rules — AGENTS.md + symlinks for Claude, Cursor, Copilot, Gemini, and native + .codex config for Codex",
   "bin": {
-    "devground-agents": "./setup.js"
+    "devground-agents": "./setup.js",
+    "devground-hooks": "./install-hooks.js"
   },
   "files": [
     "setup.js",
+    "install-hooks.js",
+    "hooks/",
     "AGENTS.md",
     "PROMPT.md"
   ],
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
   "keywords": [
     "agents-md",
     "claude",
+    "claude-code-hooks",
     "cursor",
     "copilot",
     "gemini",
@@ -36,5 +45,9 @@
   "homepage": "https://github.com/elkisdm/devground/tree/main/packages/agents-md#readme",
   "bugs": {
     "url": "https://github.com/elkisdm/devground/issues"
+  },
+  "devDependencies": {
+    "@devground/vitest-config": "workspace:*",
+    "vitest": "^2.1.0"
   }
 }

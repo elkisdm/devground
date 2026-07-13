@@ -66,6 +66,11 @@ un test que valide el manifest.
 
 ## 2. Hooks del harness — Adoptar parcial
 
+> **Estado:** implementado en `packages/agents-md` (bin `devground-hooks`, 53 tests de
+> contrato) con dogfooding activo vía `.claude/settings.json` de este repo apuntando a
+> la fuente del paquete. Latencia medida del typecheck single-file: ~0.9s. Pendiente:
+> las 2 semanas de dogfooding del gate antes de considerar `main`.
+
 **Qué hace ECC.** ~22 hooks sobre los eventos de Claude Code: PreToolUse (bloquear `npm
 run dev` fuera de tmux, quality check pre-commit), PostToolUse (`tsc --noEmit` tras editar
 `.ts`, prettier automático, warning de `console.log`), y ciclo de vida (session summary en

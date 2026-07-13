@@ -54,3 +54,6 @@ packages/dev-metrics/snapshots/
 # Python
 __pycache__/
 *.pyc
+
+# devground harness hooks: registro local de sesiones (session-summary.mjs)
+.claude/devground/

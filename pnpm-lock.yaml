@@ -21,7 +21,14 @@ importers:
         specifier: ^10.7.0
         version: 10.7.0(jiti@2.6.1)
 
-  packages/agents-md: {}
+  packages/agents-md:
+    devDependencies:
+      '@devground/vitest-config':
+        specifier: workspace:*
+        version: link:../vitest-config
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@26.1.1)(lightningcss@1.32.0)
 
   packages/architecture-guide: {}
 
@@ -8355,7 +8362,7 @@ snapshots:
   vite@5.4.21(@types/node@26.1.1)(lightningcss@1.32.0):
     dependencies:
       esbuild: 0.21.5
-      postcss: 8.5.14
+      postcss: 8.5.17
       rollup: 4.60.3
     optionalDependencies:
       '@types/node': 26.1.1
