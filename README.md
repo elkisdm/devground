@@ -115,9 +115,11 @@ El monorepo contiene **23 paquetes** independientes. La lista viva y autoritativ
 | 📊 | [`@devground/dev-metrics`](packages/dev-metrics#readme) | CLI de metricas de desarrollo con agentes (velocidad, calidad, eficiencia) + impacto de spec-flow y costo de orientación — standalone |
 | 📐 | [`@devground/sdd`](packages/sdd#readme) | **spec-flow** — skill de intake SDD instalable (clasifica, enriquece y rutea cualquier cambio al proceso mínimo que merece) |
 | 🪵 | [`@devground/logger`](packages/logger#readme) | Logger minimalista compartido (sin dependencias) |
+| 🇨🇱 | [`@devground/chile-formats`](packages/chile-formats#readme) | Helpers es-CL sin dependencias: RUT (modulo 11), telefono +56 9, moneda/UF/numero via Intl |
 | 🧪 | [`@devground/vitest-config`](packages/vitest-config#readme) | Config Vitest compartida (entorno node, cobertura v8) |
 | ⚡ | [`devground-init`](packages/cli#readme) | CLI para scaffolding completo |
 | 🎨 | [`@devground/design-taste`](packages/design-taste#readme) | Skills de diseño UI/UX anti-slop (layout, tipografía, motion, spacing) instalables — 10 skills vendorizadas de Leonxlnx/taste-skill (MIT) |
+| 🖼️ | [`@devground/ui-conventions`](packages/ui-conventions#readme) | Skill que carga las convenciones de UI del proyecto (base universal + overlay por proyecto) como contexto **antes** de generar o editar frontend |
 | 🍎 | [`@devground/swift-ci`](packages/swift-ci#readme) | Plantillas CI/CD para Swift/iOS: GitHub Actions build+test y firma con Fastlane Match |
 | 🎨 | [`@devground/swift-design-tokens`](packages/swift-design-tokens#readme) | Tokens de diseño semánticos (roles de color, spacing, Dynamic Type) + helpers Liquid Glass para SwiftUI |
 | 🧹 | [`@devground/swift-format-config`](packages/swift-format-config#readme) | Configuración compartida de SwiftFormat + SwiftLint |
@@ -129,12 +131,12 @@ El monorepo contiene **23 paquetes** independientes. La lista viva y autoritativ
 
 ## 🧪 Experimental
 
-Capacidades en incubacion dentro del repo. **Aun no se publican a npm** — estan en validacion antes de definir su forma de entrega. Se documentan aqui para que sean visibles, pero hoy no se instalan como paquete.
+Capacidades en incubacion dentro del repo, en validacion antes de graduarse como parte soportada del toolkit. `@devground/dreaming` ya se publica a npm en `0.x` (la API puede cambiar sin aviso); `@devground/deepcheck` es privado y no se publica. Los criterios de graduacion o congelacion estan en el [ADR-0026](docs/adr/0026-fase-de-consolidacion-nucleo-soportado.md).
 
 | | Que es | Estado |
 |---|--------|--------|
 | 🔬 [`@devground/deepcheck`](packages/deepcheck#readme) | Verificacion profunda **multi-agente** (QA · Validacion · Auditoria) que audita un flujo en paralelo por dimensiones, confirma cada hallazgo de forma **adversarial** (refutadores con lentes distintas) y **destila una skill de auditoria** que se vuelve mas afilada en cada corrida. No es un linter: razona sobre el flujo y acumula conocimiento para no re-descubrir lo mismo. | Piloto privado |
-| 🌙 [`@devground/dreaming`](packages/dreaming#readme) | Consolidacion de memoria **out-of-band** para Claude Code: revisa los transcripts recientes de un proyecto contra su memory store y propone un **diff revisado** (fusionar duplicados, deprecar memorias obsoletas/contradichas, sumar patrones y feedback no capturados, arreglar la deriva del indice). Harness TypeScript compilado para el gather (sin tokens, **reusa el lector de transcripts de `@devground/dev-metrics`**) + skill que razona y propone con evidencia por cambio. **Nada se escribe sin aprobacion; nunca borra en duro.** | Piloto privado |
+| 🌙 [`@devground/dreaming`](packages/dreaming#readme) | Consolidacion de memoria **out-of-band** para Claude Code: revisa los transcripts recientes de un proyecto contra su memory store y propone un **diff revisado** (fusionar duplicados, deprecar memorias obsoletas/contradichas, sumar patrones y feedback no capturados, arreglar la deriva del indice). Harness TypeScript compilado para el gather (sin tokens, **reusa el lector de transcripts de `@devground/dev-metrics`**) + skill que razona y propone con evidencia por cambio. **Nada se escribe sin aprobacion; nunca borra en duro.** | Publicado en npm (`0.x`, piloto) |
 | 🧭 [skill `cimientos`](.claude/skills/cimientos/SKILL.md) | Flujo **guiado** de decisiones de arquitectura para proyectos nuevos: entrevista fase por fase, razona con la knowledge base (ADRs 0001–0011) y escribe las decisiones como ADRs (status Propuesto) + un `DECISIONS.md`. Garantiza bases solidas sin sobre-ingenieria. | Skill del repo (Claude Code) |
 | ⚖️ [`model-orchestrator`](tools/model-orchestrator#readme) | Harness de **routing de modelos por complejidad**: tras `spec-flow`, asigna a cada tarea el modelo y esfuerzo optimos (Opus / Sonnet / Haiku) para balancear **precio/calidad**, presenta un plan con costo estimado y despacha sub-agentes. Reglas de piso declarativas + un juez barato que ajusta ±1 nivel; las **invariantes se imponen en codigo** (`engine.mjs`, 30/30 tests), nunca en el juicio del modelo barato. Reconcilia costo real vs estimado. | Tool del repo (Claude Code) |
 
@@ -222,14 +224,22 @@ Detalle completo en [CONTRIBUTING.md](CONTRIBUTING.md) y [CODE_OF_CONDUCT.md](CO
 
 ## Roadmap
 
+**Fase actual: consolidación** ([ADR-0026](docs/adr/0026-fase-de-consolidacion-nucleo-soportado.md)).
+El trabajo se dirige a estabilizar lo que existe — núcleo en `1.0` con semver estricto,
+veredicto (graduar o congelar) para cada experimental, y ritual de release ejecutado por
+más de una persona. La vara de entrada durante la fase: **si un cambio no arregla, testea,
+documenta o gradúa algo existente, no entra.**
+
+La expansión queda en pausa hasta cerrar la fase:
+
 | Estado | Item |
 |:------:|------|
-| 🔜 | `@devground/github-actions` — Workflows de CI reutilizables |
-| 🔜 | `@devground/vscode-settings` — Configuracion compartida de VS Code |
-| 💡 | Presets de AGENTS.md por stack (React, Angular, Go, Python) |
-| 💡 | Plugin de ESLint para tokens semanticos (detectar hardcoded colors) |
-| 💡 | `@devground/testing-config` — Presets de Vitest / Jest / Playwright |
-| 💡 | Modo `--dry-run` en el CLI para previsualizar cambios sin escribir |
+| ⏸️ | `@devground/github-actions` — Workflows de CI reutilizables |
+| ⏸️ | `@devground/vscode-settings` — Configuracion compartida de VS Code |
+| ⏸️ | Presets de AGENTS.md por stack (React, Angular, Go, Python) |
+| ⏸️ | Plugin de ESLint para tokens semanticos (detectar hardcoded colors) |
+| ⏸️ | `@devground/testing-config` — Presets de Vitest / Jest / Playwright |
+| ⏸️ | Modo `--dry-run` en el CLI para previsualizar cambios sin escribir |
 
 ---
 

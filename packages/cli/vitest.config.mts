@@ -10,10 +10,10 @@ export default defineConfig({
       thresholds: {
         ...CRITICAL_THRESHOLDS,
         autoUpdate: true,
-        lines: 69.85,
+        lines: 71.79,
         functions: 80.64,
-        branches: 93.39,
-        statements: 69.85,
+        branches: 94.69,
+        statements: 71.79,
       },
     },
   },

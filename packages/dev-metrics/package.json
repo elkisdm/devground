@@ -3,7 +3,7 @@
   "version": "0.4.0",
   "description": "Continuous, labelled time-series of how a developer evolves while coding with AI agents: code volume, quality, velocity and efficiency, computed from git history and Claude Code transcripts",
   "bin": {
-    "dev-metrics": "./dist/index.js"
+    "dev-metrics": "./bin/dev-metrics.js"
   },
   "exports": {
     ".": {
@@ -20,7 +20,8 @@
     }
   },
   "files": [
-    "dist/"
+    "dist/",
+    "bin/"
   ],
   "scripts": {
     "build": "tsc",
