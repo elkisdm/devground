@@ -6,8 +6,8 @@
 #   - commitlint disponible  -> valida el mensaje; si no cumple, bloquea (exit 1).
 #   - commitlint NO instalado -> avisa cómo instalarlo y DEJA pasar
 #     (la garantía dura la da CI; mismo criterio que gitleaks en pre-commit).
-if pnpm exec commitlint --version >/dev/null 2>&1; then
-  pnpm exec commitlint --edit "$1"
+if npx --no-install commitlint --version >/dev/null 2>&1; then
+  npx --no-install commitlint --edit "$1"
 else
   echo ""
   echo "  ! commitlint NO está disponible — se OMITE la validación del mensaje (ADR-0005)."

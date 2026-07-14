@@ -142,6 +142,9 @@ importers:
       '@devground/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
+      devground-init:
+        specifier: workspace:*
+        version: link:../cli
       eslint:
         specifier: '>=9.0.0'
         version: 10.2.0(jiti@2.6.1)

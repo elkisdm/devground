@@ -19,6 +19,9 @@
   "publishConfig": {
     "access": "public"
   },
+  "scripts": {
+    "test": "node --test"
+  },
   "dependencies": {
     "@devground/prettier-config": "workspace:*",
     "@devground/eslint-config": "workspace:*",
@@ -26,7 +29,8 @@
     "@devground/commitlint-config": "workspace:*",
     "@devground/lint-staged-config": "workspace:*",
     "@devground/husky-config": "workspace:*",
-    "@devground/agents-md": "workspace:*"
+    "@devground/agents-md": "workspace:*",
+    "devground-init": "workspace:*"
   },
   "peerDependencies": {
     "eslint": ">=9.0.0",

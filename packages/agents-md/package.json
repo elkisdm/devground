@@ -5,6 +5,9 @@
   "bin": {
     "devground-agents": "./setup.js"
   },
+  "scripts": {
+    "test": "node --test"
+  },
   "files": [
     "setup.js",
     "AGENTS.md",

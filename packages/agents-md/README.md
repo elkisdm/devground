@@ -17,8 +17,8 @@ npx devground-agents
 
 ## What it does
 
-1. Copies `AGENTS.md` to your project root with 10 development rules + a working-approach section
-2. Creates symlinks so every AI coding agent reads the same rules:
+1. Copies `AGENTS.md` to your project root with 10 development rules + a working-approach section. **Never overwrites an existing `AGENTS.md`** — if one is already there, it's left untouched with a warning.
+2. Creates symlinks so every AI coding agent reads the same rules (existing `CLAUDE.md`, `.cursorrules`, etc. are respected, not replaced):
    - `CLAUDE.md` → `AGENTS.md`
    - `.cursorrules` → `AGENTS.md`
    - `.github/copilot-instructions.md` → `AGENTS.md`
