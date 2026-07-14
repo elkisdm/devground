@@ -21,15 +21,19 @@ Eso es todo. En dos comandos tienes:
 
 ## Que hace `devground-setup`
 
-1. Detecta tu stack (Next.js / React / Node.js)
-2. Configura `prettier` y `lint-staged` en package.json
-3. Escribe `eslint.config.mjs` (Next.js o base segun stack)
-4. Escribe `tsconfig.json` (+ `tsconfig.typecheck.json` para Next.js)
-5. Escribe `commitlint.config.js`
-6. Inicializa Husky con pre-commit hook
-7. Copia AGENTS.md + crea symlinks para todos los agentes de IA
+`devground-setup` delega toda la instalación en `devground-init` (el CLI de devground) y corre su preset completo sin interacción:
 
-**No sobreescribe archivos existentes.** Si ya tienes un `eslint.config.mjs` o `tsconfig.json`, los respeta.
+1. Detecta tu stack (Next.js / Astro / React / Node.js)
+2. Configura `prettier` y `lint-staged` (via `lint-staged.config.cjs`)
+3. Escribe `eslint.config.mjs` (Next.js, Astro o base segun stack)
+4. Escribe `tsconfig.json` (+ `tsconfig.typecheck.json` para Next.js y Astro)
+5. Escribe `commitlint.config.js`
+6. Instala Vitest + ratchet de cobertura
+7. Instala Husky con hooks reales: `pre-commit` (lint-staged), `commit-msg` (commitlint + gitleaks) y `pre-push`
+8. Copia AGENTS.md + crea symlinks para todos los agentes de IA
+9. Instala la skill de convenciones de UI (React/Next) y la guia de arquitectura + templates de ADR
+
+**No sobreescribe archivos existentes.** Si ya tienes un `eslint.config.mjs`, `tsconfig.json`, `AGENTS.md` o hooks de Husky, los respeta.
 
 ## Instalacion individual
 
