@@ -40,6 +40,11 @@ function optionsFor(stack: DetectedStack, ops: InstallerOps): InstallerOptions {
   return { targetDir: '/proj', stack, ops };
 }
 
+// Captured stdout from a delegated bin that wrote an artifact vs one that
+// skipped (ADR convention: a green "✓" line means it wrote something).
+const WROTE_OUTPUT = '  \x1b[32m✓\x1b[0m Wrote something';
+const SKIPPED_OUTPUT = '  \x1b[33m!\x1b[0m Skipped: already present';
+
 beforeEach(() => {
   // installers call logger.success -> console.log; silence it.
   vi.spyOn(console, 'log').mockImplementation(() => {});
@@ -270,7 +275,7 @@ describe('tsconfig installer', () => {
 
 describe('husky installer', () => {
   it('adds deps and runs the husky setup binary in the target dir', () => {
-    const { ops, devDeps, runs } = makeRecordingOps();
+    const { ops, devDeps, runs } = makeRecordingOps({}, [], WROTE_OUTPUT);
 
     const result = husky.install(optionsFor(NODE_STACK, ops));
 
@@ -280,11 +285,21 @@ describe('husky installer', () => {
     expect(runs[0]?.cmd).toBe('npx devground-husky');
     expect(runs[0]?.cwd).toBe('/proj');
   });
+
+  it('reports skipped when the bin writes nothing on a re-run', () => {
+    const { ops, devDeps } = makeRecordingOps({}, [], SKIPPED_OUTPUT);
+
+    const result = husky.install(optionsFor(NODE_STACK, ops));
+
+    expect(result).toBe('skipped');
+    // dep is still installed even on a skip (it's idempotent and cheap)
+    expect(devDeps[0]?.packages).toEqual(['@devground/husky-config', 'husky']);
+  });
 });
 
 describe('agents-md installer', () => {
   it('adds the agents-md dep and runs the agents binary', () => {
-    const { ops, devDeps, runs } = makeRecordingOps();
+    const { ops, devDeps, runs } = makeRecordingOps({}, [], WROTE_OUTPUT);
 
     const result = agentsMd.install(optionsFor(NODE_STACK, ops));
 
@@ -293,11 +308,19 @@ describe('agents-md installer', () => {
     expect(runs[0]?.cmd).toBe('npx devground-agents');
     expect(runs[0]?.cwd).toBe('/proj');
   });
+
+  it('reports skipped when the bin writes nothing on a re-run', () => {
+    const { ops } = makeRecordingOps({}, [], SKIPPED_OUTPUT);
+
+    const result = agentsMd.install(optionsFor(NODE_STACK, ops));
+
+    expect(result).toBe('skipped');
+  });
 });
 
 describe('architecture-guide installer', () => {
   it('adds the architecture-guide dep and runs the architecture binary', () => {
-    const { ops, devDeps, runs } = makeRecordingOps();
+    const { ops, devDeps, runs } = makeRecordingOps({}, [], WROTE_OUTPUT);
 
     const result = architectureGuide.install(optionsFor(NODE_STACK, ops));
 
@@ -306,11 +329,19 @@ describe('architecture-guide installer', () => {
     expect(runs[0]?.cmd).toBe('npx devground-architecture');
     expect(runs[0]?.cwd).toBe('/proj');
   });
+
+  it('reports skipped when the bin writes nothing on a re-run', () => {
+    const { ops } = makeRecordingOps({}, [], SKIPPED_OUTPUT);
+
+    const result = architectureGuide.install(optionsFor(NODE_STACK, ops));
+
+    expect(result).toBe('skipped');
+  });
 });
 
 describe('ui-conventions installer', () => {
   it('installs for a Next project: adds dep and runs the bin', () => {
-    const { ops, devDeps, runs } = makeRecordingOps();
+    const { ops, devDeps, runs } = makeRecordingOps({}, [], WROTE_OUTPUT);
     const result = uiConventions.install(optionsFor(NEXT_STACK, ops));
     expect(result).toBe('installed');
     expect(devDeps[0]?.packages).toEqual(['@devground/ui-conventions']);
@@ -318,7 +349,7 @@ describe('ui-conventions installer', () => {
     expect(runs[0]?.cwd).toBe('/proj');
   });
   it('installs for a React project', () => {
-    const { ops, devDeps, runs } = makeRecordingOps();
+    const { ops, devDeps, runs } = makeRecordingOps({}, [], WROTE_OUTPUT);
     const result = uiConventions.install(optionsFor(REACT_STACK, ops));
     expect(result).toBe('installed');
     expect(devDeps).toHaveLength(1);
@@ -330,6 +361,11 @@ describe('ui-conventions installer', () => {
     expect(result).toBe('skipped');
     expect(devDeps).toHaveLength(0);
     expect(runs).toHaveLength(0);
+  });
+  it('reports skipped when the bin writes nothing on a re-run (React project)', () => {
+    const { ops } = makeRecordingOps({}, [], SKIPPED_OUTPUT);
+    const result = uiConventions.install(optionsFor(REACT_STACK, ops));
+    expect(result).toBe('skipped');
   });
 });
 

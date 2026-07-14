@@ -1,5 +1,6 @@
 import { success, warn } from '@devground/logger';
 import { resolveOps } from './ops.js';
+import { delegateWrote } from './delegate.js';
 import type { InstallerOptions, InstallResult } from '../types.js';
 
 /**
@@ -18,7 +19,12 @@ export function install(options: InstallerOptions): InstallResult {
   }
 
   ops.addDevDependency(targetDir, stack.packageManager, '@devground/ui-conventions');
-  ops.run('npx devground-ui-conventions', targetDir);
+  const output = ops.run('npx devground-ui-conventions', targetDir);
+
+  if (!delegateWrote(output)) {
+    warn('UI conventions skill skipped: .claude/skills/ui-conventions already exists (left untouched).');
+    return 'skipped';
+  }
 
   success('UI conventions skill installed at .claude/skills/ui-conventions');
   return 'installed';
