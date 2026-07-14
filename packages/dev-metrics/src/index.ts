@@ -13,6 +13,7 @@ import { renderReport } from './lib/report.js';
 import { renderDiff } from './lib/diff.js';
 import { addEvent } from './lib/events.js';
 import { defaultConfigPath } from './lib/config.js';
+import { readVersion } from './lib/version.js';
 import { header, log, info, warn, success, error } from '@devground/logger';
 
 const PKG_DIR = process.cwd();
@@ -36,7 +37,7 @@ const program = new Command();
 program
   .name('dev-metrics')
   .description('Track the evolution of coding-with-agents: code, quality, velocity, efficiency')
-  .version('0.1.0');
+  .version(readVersion(join(__dirname, '..')));
 
 program
   .command('collect')
