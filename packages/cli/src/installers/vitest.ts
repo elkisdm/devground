@@ -75,7 +75,11 @@ export default defineConfig({
   const wroteConfig = writeFileGuarded(ops, configPath, configContent, 'vitest.config.mjs');
 
   // Scripts: read-modify-write de package.json, agregando solo los ausentes.
-  const addedScripts = ensureScripts(ops, targetDir);
+  // test:coverage solo se agrega cuando ESTE installer provisiona la config/deps
+  // de coverage (!configExists) — si el proyecto ya trae su propio
+  // vitest.config.mjs, no sabemos si tiene @vitest/coverage-v8 instalado, y
+  // agregar el script igual dejaría un `test:coverage` que revienta en runtime.
+  const addedScripts = ensureScripts(ops, targetDir, /* includeCoverage */ !configExists);
 
   if (!wroteConfig && addedScripts.length === 0) {
     warn('Vitest coverage skipped: vitest.config.mjs and scripts already present (left untouched).');
@@ -90,17 +94,25 @@ export default defineConfig({
   return 'installed';
 }
 
-/** Adds `test`/`test:coverage` scripts to package.json, never overwriting existing ones. */
-function ensureScripts(ops: ReturnType<typeof resolveOps>, targetDir: string): string[] {
+/**
+ * Adds `test`/`test:coverage` scripts to package.json, never overwriting
+ * existing ones. `test:coverage` is only added when `includeCoverage` is true
+ * (i.e. this installer just provisioned the coverage config/deps) — otherwise
+ * a preexisting vitest.config.mjs might not have @vitest/coverage-v8, and the
+ * script would fail at runtime.
+ */
+function ensureScripts(
+  ops: ReturnType<typeof resolveOps>,
+  targetDir: string,
+  includeCoverage: boolean,
+): string[] {
   const pkg = ops.readPackageJson(targetDir);
   const scripts = (
     typeof pkg.scripts === 'object' && pkg.scripts !== null ? pkg.scripts : {}
   ) as Record<string, string>;
 
-  const wanted: Record<string, string> = {
-    test: 'vitest run',
-    'test:coverage': 'vitest run --coverage',
-  };
+  const wanted: Record<string, string> = { test: 'vitest run' };
+  if (includeCoverage) wanted['test:coverage'] = 'vitest run --coverage';
 
   const added: string[] = [];
   for (const [name, cmd] of Object.entries(wanted)) {

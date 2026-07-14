@@ -4,6 +4,35 @@ import { resolveOps } from './ops.js';
 import { writeFileGuarded } from './write-guard.js';
 import type { InstallerOptions, InstallResult } from '../types.js';
 
+const astroTsconfig = {
+  extends: '@devground/tsconfig/astro.json',
+  include: ['.astro/types.d.ts', 'src/**/*.ts', 'src/**/*.tsx', 'src/**/*.astro'],
+  exclude: ['node_modules', 'dist'],
+} as const;
+
+const astroTypecheck = {
+  extends: '@devground/tsconfig/astro-typecheck.json',
+  include: ['.astro/types.d.ts', 'src/**/*.ts', 'src/**/*.tsx', 'src/**/*.astro'],
+  exclude: ['node_modules', 'dist'],
+} as const;
+
+const nextInclude = ['next-env.d.ts', '**/*.ts', '**/*.tsx', '.next/types/**/*.ts'];
+const nextPaths = { compilerOptions: { paths: { '@/*': ['./*'] } } };
+
+const nextTsconfig = {
+  extends: '@devground/tsconfig/next.json',
+  ...nextPaths,
+  include: nextInclude,
+  exclude: ['node_modules'],
+} as const;
+
+const nextTypecheck = {
+  extends: '@devground/tsconfig/next-typecheck.json',
+  ...nextPaths,
+  include: nextInclude,
+  exclude: ['node_modules'],
+} as const;
+
 export function install(options: InstallerOptions): InstallResult {
   const { targetDir, stack } = options;
   const ops = resolveOps(options);
@@ -21,49 +50,8 @@ export function install(options: InstallerOptions): InstallResult {
 
     ops.addDevDependency(targetDir, stack.packageManager, '@devground/tsconfig', 'typescript');
 
-    const tsconfig = isAstro
-      ? {
-          extends: '@devground/tsconfig/astro.json',
-          include: ['.astro/types.d.ts', 'src/**/*.ts', 'src/**/*.tsx', 'src/**/*.astro'],
-          exclude: ['node_modules', 'dist'],
-        }
-      : {
-          extends: '@devground/tsconfig/next.json',
-          compilerOptions: {
-            paths: {
-              '@/*': ['./*'],
-            },
-          },
-          include: [
-            'next-env.d.ts',
-            '**/*.ts',
-            '**/*.tsx',
-            '.next/types/**/*.ts',
-          ],
-          exclude: ['node_modules'],
-        };
-
-    const typecheckConfig = isAstro
-      ? {
-          extends: '@devground/tsconfig/astro-typecheck.json',
-          include: ['.astro/types.d.ts', 'src/**/*.ts', 'src/**/*.tsx', 'src/**/*.astro'],
-          exclude: ['node_modules', 'dist'],
-        }
-      : {
-          extends: '@devground/tsconfig/next-typecheck.json',
-          compilerOptions: {
-            paths: {
-              '@/*': ['./*'],
-            },
-          },
-          include: [
-            'next-env.d.ts',
-            '**/*.ts',
-            '**/*.tsx',
-            '.next/types/**/*.ts',
-          ],
-          exclude: ['node_modules'],
-        };
+    const tsconfig = isAstro ? astroTsconfig : nextTsconfig;
+    const typecheckConfig = isAstro ? astroTypecheck : nextTypecheck;
 
     const wroteMain = writeFileGuarded(ops, mainPath, JSON.stringify(tsconfig, null, 2) + '\n', 'tsconfig.json');
     const wroteTypecheck = writeFileGuarded(

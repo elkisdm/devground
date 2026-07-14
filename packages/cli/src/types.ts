@@ -5,12 +5,6 @@ export interface DetectedStack {
   framework: Framework;
   hasTypeScript: boolean;
   packageManager: PackageManager;
-  /**
-   * Whether the target is a Swift/iOS project (a `Package.swift`, `.xcodeproj`,
-   * or `.xcworkspace` is present). Independent of the Node signals: a repo can
-   * be Swift-only (no package.json), Node-only, or both (ADR-0021).
-   */
-  hasSwift: boolean;
 }
 
 /**
