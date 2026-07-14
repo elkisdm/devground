@@ -11,18 +11,19 @@ import type {
 import { collectGitRepo, mergeGitMetrics, isGitRepo, type GitRepoResult } from '../lib/git.js';
 import type { AttributionResult } from '../lib/repo-attribution.js';
 import {
-  collectTranscripts,
+  collectCorpus,
+  aggregateTranscript,
   defaultTranscriptRoots,
+  type CorpusScan,
 } from '../lib/transcript-collect.js';
-import { attributeTokensByRepo } from '../lib/repo-attribution.js';
+import { attributeFromCorpus } from '../lib/repo-attribution.js';
 import { detectAdoptionMarkers, classifyCohort } from '../lib/adoption.js';
 import {
   listMemoryNotes,
   aggregateMemory,
-  computeMemorySignals,
+  memorySignalsFromRecords,
   defaultMemoryRoot,
 } from '../lib/memory.js';
-import { findTranscripts } from '../lib/transcript-collect.js';
 import { totalTokens } from '../lib/transcript.js';
 import { buildSnapshot } from '../lib/snapshot.js';
 import { readEvents, eventsInPeriod, addEvent } from '../lib/events.js';
@@ -134,32 +135,23 @@ function collectGitPhase(args: CollectArgs): {
  * repo's tokens are MEASURED from its `~/.claude/projects/<DIR>` transcripts
  * (live + backup), deduped by uuid and period-filtered. The only thing still
  * inattributable is the ACCOUNT (personal vs work) that paid — NOT the
- * project. See ADR-0006. Returns the data later phases also need (roots).
+ * project. See ADR-0006. Consumes a single `CorpusScan` (one pass over the
+ * corpus, shared with `collectMemoryPhase`) instead of re-reading disk.
  */
 function collectTranscriptPhase(
-  args: CollectArgs,
+  scan: CorpusScan,
   repoResults: readonly GitRepoResult[],
   repoPaths: readonly string[],
 ): {
   transcript: TranscriptMetrics;
   breakdown: RepoBreakdown[];
   attribution: AttributionResult;
-  roots: string[];
 } {
   info('Collecting Claude Code transcript metrics...');
-  const roots = args.transcriptRoots ?? defaultTranscriptRoots(args.transcriptBackupDir);
-  if (roots.length === 0) {
-    warn('No transcript roots found (~/.claude/projects missing). Transcript metrics will be zero.');
-  }
-  const transcript = collectTranscripts({ roots, since: args.since, until: args.until });
+  const transcript = aggregateTranscript(scan.all, scan.duplicatesDropped);
 
   info('Attributing tokens to repos by project directory...');
-  const attribution = attributeTokensByRepo({
-    repoPaths: [...repoPaths],
-    roots,
-    since: args.since,
-    until: args.until,
-  });
+  const attribution = attributeFromCorpus(scan.byProjectDir, repoPaths);
 
   const breakdown: RepoBreakdown[] = repoResults.map((r) => {
     const totals = attribution.byRepo.find((b) => b.path === r.path);
@@ -182,7 +174,7 @@ function collectTranscriptPhase(
     );
   }
 
-  return { transcript, breakdown, attribution, roots };
+  return { transcript, breakdown, attribution };
 }
 
 /** Per-repo standards adoption + cohort classification (MEJORA 2). */
@@ -201,18 +193,17 @@ function collectAdoptionPhase(repoPaths: readonly string[]): RepoAdoption[] {
   });
 }
 
-/** Memory corpus aggregation + context-cost proxy (MEJORA 3). */
-function collectMemoryPhase(args: CollectArgs, roots: readonly string[]): MemoryMetrics {
+/**
+ * Memory corpus aggregation + context-cost proxy (MEJORA 3). Signals are
+ * derived from the shared `CorpusScan` (already deduped + period-filtered),
+ * not a fresh read of the transcript files.
+ */
+function collectMemoryPhase(args: CollectArgs, scan: CorpusScan): MemoryMetrics {
   info('Measuring memory corpus and context-cost proxy...');
   const memoryRoot = defaultMemoryRoot();
   const notes = listMemoryNotes(memoryRoot);
   const corpus = aggregateMemory(notes, args.memoryBackendMigrationDate);
-  const allFiles = findTranscripts([...roots]);
-  const signals = computeMemorySignals({
-    files: allFiles,
-    since: args.since,
-    until: args.until,
-  });
+  const signals = memorySignalsFromRecords(scan.all, 3);
 
   const memory: MemoryMetrics = {
     totalNotes: corpus.totalNotes,
@@ -269,13 +260,18 @@ function collectEventsPhase(args: CollectArgs, adoption: readonly RepoAdoption[]
 /** Runs the collect command: produces a snapshot JSON file and returns its path. */
 export function runCollect(args: CollectArgs): string {
   const { git, repoResults, repoPaths } = collectGitPhase(args);
-  const { transcript, breakdown, attribution, roots } = collectTranscriptPhase(
-    args,
-    repoResults,
-    repoPaths,
-  );
+
+  // Single pass over the transcript corpus (#4/#14): shared by the transcript
+  // and memory phases instead of re-reading disk three times.
+  const roots = args.transcriptRoots ?? defaultTranscriptRoots(args.transcriptBackupDir);
+  if (roots.length === 0) {
+    warn('No transcript roots found (~/.claude/projects missing). Transcript metrics will be zero.');
+  }
+  const scan = collectCorpus({ roots, since: args.since, until: args.until });
+
+  const { transcript, breakdown, attribution } = collectTranscriptPhase(scan, repoResults, repoPaths);
   const adoption = collectAdoptionPhase(repoPaths);
-  const memory = collectMemoryPhase(args, roots);
+  const memory = collectMemoryPhase(args, scan);
   const events = collectEventsPhase(args, adoption);
 
   const snapshot = buildSnapshot({
