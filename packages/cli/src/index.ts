@@ -19,6 +19,8 @@ import * as architectureGuide from './installers/architecture-guide.js';
 import * as uiConventions from './installers/ui-conventions.js';
 import { formatTally, type InstallTally } from './tally.js';
 import type { InstallerOptions, InstallResult } from './types.js';
+import { defaultInstallerOps } from './installers/ops.js';
+import { createDepCollector } from './installers/collect-deps.js';
 
 interface Installer {
   name: string;
@@ -94,7 +96,8 @@ program
     info(`Package manager: ${stack.packageManager}`);
     log('');
 
-    const options: InstallerOptions = { targetDir, stack };
+    const { ops: collectingOps, flush } = createDepCollector(defaultInstallerOps);
+    const options: InstallerOptions = { targetDir, stack, ops: collectingOps };
 
     let selectedInstallers: Installer[];
 
@@ -156,6 +159,14 @@ program
         const message = err instanceof Error ? err.message : String(err);
         error(`Failed to install ${installer.name}: ${message}`);
       }
+    }
+
+    try {
+      flush(targetDir, stack.packageManager);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      error(`Failed to install dependencies: ${message}`);
+      process.exit(1);
     }
 
     log('');
