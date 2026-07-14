@@ -7,7 +7,9 @@ export function loadState(memDir: string): DreamState {
   const p = join(memDir, '.dream', 'state.json');
   if (!existsSync(p)) return {};
   try {
-    return JSON.parse(readFileSync(p, 'utf-8')) as DreamState;
+    const parsed = JSON.parse(readFileSync(p, 'utf-8')) as unknown;
+    if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) return {};
+    return parsed as DreamState;
   } catch {
     return {};
   }

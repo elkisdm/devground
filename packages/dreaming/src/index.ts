@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 
+import { join } from 'node:path';
 import { Command } from 'commander';
 import { info, success, warn, error } from '@devground/logger';
-import { gather } from './lib/gather.js';
+import { gather, encodeProjectDir } from './lib/gather.js';
 import { install } from './commands/install.js';
+import { readVersion } from './lib/version.js';
 
 function runInstall(global: boolean): void {
   try {
@@ -25,7 +27,7 @@ const program = new Command();
 program
   .name('devground-dreaming')
   .description('Out-of-band memory consolidation for Claude Code (gather harness + skill installer)')
-  .version('0.0.0');
+  .version(readVersion(join(__dirname, '..')));
 
 program
   .command('install', { isDefault: true })
@@ -36,7 +38,11 @@ program
 program
   .command('gather')
   .description('Deterministic gather: distill in-window transcripts + snapshot the memory store into a bundle')
-  .option('--project <dir>', 'Encoded project dir under ~/.claude/projects (pass as --project=-Users-...)', '-Users-macbookpro')
+  .option(
+    '--project <dir>',
+    'Encoded project dir under ~/.claude/projects (defaults to the current working directory, encoded)',
+    encodeProjectDir(process.cwd()),
+  )
   .option('--days <n>', 'Fallback window in days when there is no prior dream', (v) => parseInt(v, 10), 14)
   .option('--since <val>', "'last' (since last dream), or an ISO date", 'last')
   .option('--force-days', 'Ignore last-dream state; use the --days window', false)

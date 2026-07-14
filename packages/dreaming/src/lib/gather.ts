@@ -29,6 +29,24 @@ export interface GatherResult {
   bundleChars: number;
 }
 
+/** Encodes an absolute path the way Claude Code names projectDirs under
+ *  ~/.claude/projects: every non-alphanumeric char becomes '-'. */
+export function encodeProjectDir(absPath: string): string {
+  return absPath.replace(/[^A-Za-z0-9]/g, '-');
+}
+
+/** Lists `.jsonl` transcripts under a project dir, stat'd once each, sorted by
+ *  mtime descending. O(n) stat syscalls instead of O(n log n) inside sort. */
+export function listTranscriptsByMtime(projDir: string): { path: string; mtimeMs: number }[] {
+  return readdirSync(projDir)
+    .filter((f) => f.endsWith('.jsonl'))
+    .map((f) => {
+      const path = join(projDir, f);
+      return { path, mtimeMs: statSync(path).mtimeMs };
+    })
+    .sort((a, b) => b.mtimeMs - a.mtimeMs);
+}
+
 /** Resolves (memoryDir, transcriptsDir) for an encoded project name. */
 export function resolveProject(root: string, project: string): { memDir: string; projDir: string } {
   const projDir = join(root, project);
@@ -58,14 +76,10 @@ export function gather(opts: GatherOptions): GatherResult {
     now,
   });
 
-  const transcripts = readdirSync(projDir)
-    .filter((f) => f.endsWith('.jsonl'))
-    .map((f) => join(projDir, f))
-    .sort((a, b) => statSync(b).mtimeMs - statSync(a).mtimeMs);
-
+  const transcripts = listTranscriptsByMtime(projDir);
   const sessions: DistilledSession[] = [];
-  for (const path of transcripts) {
-    const mtime = new Date(statSync(path).mtimeMs);
+  for (const { path, mtimeMs } of transcripts) {
+    const mtime = new Date(mtimeMs);
     if (lower && mtime < lower) continue; // cheap pre-filter
     const d = distillFile(path, lower);
     if (d) sessions.push(d);

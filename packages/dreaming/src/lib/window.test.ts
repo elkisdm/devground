@@ -1,5 +1,8 @@
+import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 import { describe, it, expect } from 'vitest';
-import { windowStart } from './window.js';
+import { loadState, windowStart, resolveWindow } from './window.js';
 
 const NOW = new Date('2026-07-07T00:00:00Z');
 
@@ -33,5 +36,34 @@ describe('windowStart', () => {
   it('an unparseable since falls back to now - days', () => {
     const d = windowStart({}, { days: 7, since: 'garbage', forceDays: false, now: NOW });
     expect(d.toISOString()).toBe('2026-06-30T00:00:00.000Z');
+  });
+});
+
+describe('loadState', () => {
+  const tmpMem = () => mkdtempSync(join(tmpdir(), 'dreaming-state-'));
+  const writeState = (memDir: string, raw: string) => {
+    mkdirSync(join(memDir, '.dream'), { recursive: true });
+    writeFileSync(join(memDir, '.dream', 'state.json'), raw);
+  };
+  it('returns {} for a literal null (no TypeError)', () => {
+    const memDir = tmpMem();
+    writeState(memDir, 'null');
+    expect(loadState(memDir)).toEqual({});
+  });
+  it('returns {} for an array', () => {
+    const memDir = tmpMem();
+    writeState(memDir, '[1,2,3]');
+    expect(loadState(memDir)).toEqual({});
+  });
+  it('null state does not break windowStart / resolveWindow (falls back to days)', () => {
+    const memDir = tmpMem();
+    writeState(memDir, 'null');
+    const now = new Date('2026-07-07T00:00:00Z');
+    expect(() =>
+      windowStart(loadState(memDir), { days: 14, since: 'last', forceDays: false, now }),
+    ).not.toThrow();
+    expect(
+      resolveWindow(memDir, { days: 14, since: 'last', forceDays: false, now }).toISOString(),
+    ).toBe('2026-06-23T00:00:00.000Z');
   });
 });
