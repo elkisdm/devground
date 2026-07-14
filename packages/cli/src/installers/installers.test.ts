@@ -81,28 +81,24 @@ const NODE_STACK: DetectedStack = {
   framework: 'node',
   hasTypeScript: true,
   packageManager: 'pnpm',
-  hasSwift: false,
 };
 
 const NEXT_STACK: DetectedStack = {
   framework: 'nextjs',
   hasTypeScript: true,
   packageManager: 'npm',
-  hasSwift: false,
 };
 
 const REACT_STACK: DetectedStack = {
   framework: 'react',
   hasTypeScript: true,
   packageManager: 'pnpm',
-  hasSwift: false,
 };
 
 const ASTRO_STACK: DetectedStack = {
   framework: 'astro',
   hasTypeScript: true,
   packageManager: 'pnpm',
-  hasSwift: false,
 };
 
 function optionsFor(stack: DetectedStack, ops: InstallerOps): InstallerOptions {

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { Command } from 'commander';
 import prompts from 'prompts';
@@ -65,6 +65,13 @@ program
     }
 
     const targetDir = process.cwd();
+
+    // A repo with no package.json (e.g. a Swift-only project) has no JS/TS presets
+    // to install. Exit cleanly instead of running installers that crash on ENOENT.
+    if (!existsSync(join(targetDir, 'package.json'))) {
+      info('No package.json found here — there are no JS/TS presets to install.');
+      process.exit(0);
+    }
 
     let stack;
     try {
