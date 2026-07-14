@@ -184,6 +184,18 @@ describe('vitest installer', () => {
     expect(writes).toHaveLength(0);
     expect(devDeps).toHaveLength(0); // no deps when config pre-exists
   });
+
+  it('does not add test:coverage when vitest.config.mjs already exists (coverage deps not provisioned)', () => {
+    const { ops, devDeps, pkg } = makeRecordingOps({ name: 'app' }, ['/proj/vitest.config.mjs']);
+
+    const result = vitest.install(optionsFor(NODE_STACK, ops));
+
+    expect(result).toBe('installed'); // still adds the missing `test` script
+    expect(devDeps).toHaveLength(0); // config pre-exists, so no deps installed
+    const scripts = pkg().scripts as Record<string, string>;
+    expect(scripts.test).toBe('vitest run');
+    expect(scripts['test:coverage']).toBeUndefined();
+  });
 });
 
 describe('commitlint installer', () => {
