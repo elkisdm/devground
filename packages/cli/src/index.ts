@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { Command } from 'commander';
 import prompts from 'prompts';
 import { detectStack } from './detect-stack.js';
-import { isValidPreset, resolveInstall, VALID_PRESETS } from './select.js';
+import { resolveInstall, VALID_PRESETS } from './select.js';
 import { header, info, success, error, log } from '@devground/logger';
 import * as prettier from './installers/prettier.js';
 import * as eslint from './installers/eslint.js';
@@ -18,9 +18,10 @@ import * as agentsMd from './installers/agents-md.js';
 import * as architectureGuide from './installers/architecture-guide.js';
 import * as uiConventions from './installers/ui-conventions.js';
 import { formatTally, type InstallTally } from './tally.js';
-import type { InstallerOptions, InstallResult } from './types.js';
+import type { DetectedStack, InstallerOptions, InstallResult, PackageManager } from './types.js';
 import { defaultInstallerOps } from './installers/ops.js';
 import { createDepCollector } from './installers/collect-deps.js';
+import { presetIsValid, tallyExitCode } from './exit.js';
 
 interface Installer {
   name: string;
@@ -48,6 +49,97 @@ const pkgVersion = (
   JSON.parse(readFileSync(join(__dirname, '../package.json'), 'utf-8')) as { version: string }
 ).version;
 
+/** Prints the detected framework/TypeScript/package-manager summary. */
+function printStack(stack: DetectedStack): void {
+  info(`Framework:       ${stack.framework}`);
+  info(`TypeScript:      ${stack.hasTypeScript ? 'yes' : 'no'}`);
+  info(`Package manager: ${stack.packageManager}`);
+  log('');
+}
+
+/**
+ * Resolves which installers to run: from `--yes`/`--preset` in non-interactive
+ * environments, or from an interactive multiselect prompt otherwise. Returns
+ * `null` when the interactive prompt was shown but nothing was selected — the
+ * caller logs and exits(0) in that case.
+ */
+async function chooseInstallers(
+  opts: { preset?: string; yes?: boolean },
+  isTTY: boolean,
+): Promise<Installer[] | null> {
+  const resolution = resolveInstall(ALL_INSTALLERS.map((i) => i.value), opts, isTTY);
+
+  if (resolution.kind === 'install') {
+    // Either an explicit --yes/--preset, or a non-interactive environment
+    // where we default to the full preset instead of refusing (the write-guard
+    // keeps a re-run on a configured project safe).
+    if (resolution.defaulted) {
+      info(
+        'Non-interactive environment: defaulting to the full preset ' +
+          '(pass --preset <full|agents-only> or --yes to choose explicitly).',
+      );
+    }
+    return ALL_INSTALLERS.filter((i) => resolution.values.includes(i.value));
+  }
+
+  const response = await prompts({
+    type: 'multiselect',
+    name: 'tools',
+    message: 'Select tools to install:',
+    choices: ALL_INSTALLERS.map((i) => ({
+      title: i.name,
+      value: i.value,
+      selected: true,
+    })),
+    hint: '- Space to toggle. Enter to confirm.',
+  });
+
+  if (!response.tools || response.tools.length === 0) return null;
+
+  const selectedValues = response.tools as string[];
+  return ALL_INSTALLERS.filter((i) => selectedValues.includes(i.value));
+}
+
+/**
+ * Runs every selected installer, tallying installed/skipped/failed, then
+ * flushes the collected dev dependencies in a single package-manager call.
+ * A flush failure is fatal (exit 1) since a partial dependency install would
+ * leave the project in a broken state.
+ */
+function runInstallers(
+  selected: Installer[],
+  options: InstallerOptions,
+  flush: (dir: string, pm: PackageManager) => void,
+  pm: PackageManager,
+  dir: string,
+): InstallTally {
+  const tally: InstallTally = { installed: 0, skipped: 0, failed: 0 };
+  for (const installer of selected) {
+    try {
+      const result = installer.install(options);
+      if (result === 'skipped') {
+        tally.skipped++;
+      } else {
+        tally.installed++;
+      }
+    } catch (err) {
+      tally.failed++;
+      const message = err instanceof Error ? err.message : String(err);
+      error(`Failed to install ${installer.name}: ${message}`);
+    }
+  }
+
+  try {
+    flush(dir, pm);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    error(`Failed to install dependencies: ${message}`);
+    process.exit(1);
+  }
+
+  return tally;
+}
+
 const program = new Command();
 
 program
@@ -61,7 +153,7 @@ program
 
     // Validate the preset up front instead of silently falling through to the
     // interactive prompt on a typo (which read as success in CI).
-    if (opts.preset !== undefined && !isValidPreset(opts.preset)) {
+    if (!presetIsValid(opts.preset)) {
       error(`Unknown preset "${opts.preset}". Valid presets: ${VALID_PRESETS.join(', ')}.`);
       process.exit(1);
     }
@@ -91,88 +183,26 @@ program
       process.exit(1);
     }
 
-    info(`Framework:       ${stack.framework}`);
-    info(`TypeScript:      ${stack.hasTypeScript ? 'yes' : 'no'}`);
-    info(`Package manager: ${stack.packageManager}`);
-    log('');
+    printStack(stack);
 
     const { ops: collectingOps, flush } = createDepCollector(defaultInstallerOps);
     const options: InstallerOptions = { targetDir, stack, ops: collectingOps };
 
-    let selectedInstallers: Installer[];
-
-    const resolution = resolveInstall(
-      ALL_INSTALLERS.map((i) => i.value),
-      opts,
-      Boolean(process.stdin.isTTY),
-    );
-
-    if (resolution.kind === 'install') {
-      // Either an explicit --yes/--preset, or a non-interactive environment
-      // where we default to the full preset instead of refusing (the write-guard
-      // keeps a re-run on a configured project safe).
-      if (resolution.defaulted) {
-        info(
-          'Non-interactive environment: defaulting to the full preset ' +
-            '(pass --preset <full|agents-only> or --yes to choose explicitly).',
-        );
-      }
-      selectedInstallers = ALL_INSTALLERS.filter((i) => resolution.values.includes(i.value));
-    } else {
-      const response = await prompts({
-        type: 'multiselect',
-        name: 'tools',
-        message: 'Select tools to install:',
-        choices: ALL_INSTALLERS.map((i) => ({
-          title: i.name,
-          value: i.value,
-          selected: true,
-        })),
-        hint: '- Space to toggle. Enter to confirm.',
-      });
-
-      if (!response.tools || response.tools.length === 0) {
-        info('Nothing selected. Exiting.');
-        process.exit(0);
-      }
-
-      const selectedValues = response.tools as string[];
-      selectedInstallers = ALL_INSTALLERS.filter((i) =>
-        selectedValues.includes(i.value),
-      );
+    const selectedInstallers = await chooseInstallers(opts, Boolean(process.stdin.isTTY));
+    if (selectedInstallers === null) {
+      info('Nothing selected. Exiting.');
+      process.exit(0);
     }
 
     log('');
     header('Installing...');
 
-    const tally: InstallTally = { installed: 0, skipped: 0, failed: 0 };
-    for (const installer of selectedInstallers) {
-      try {
-        const result = installer.install(options);
-        if (result === 'skipped') {
-          tally.skipped++;
-        } else {
-          tally.installed++;
-        }
-      } catch (err) {
-        tally.failed++;
-        const message = err instanceof Error ? err.message : String(err);
-        error(`Failed to install ${installer.name}: ${message}`);
-      }
-    }
-
-    try {
-      flush(targetDir, stack.packageManager);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      error(`Failed to install dependencies: ${message}`);
-      process.exit(1);
-    }
+    const tally = runInstallers(selectedInstallers, options, flush, stack.packageManager, targetDir);
 
     log('');
     header('Done!');
     const summary = formatTally(tally);
-    if (tally.failed > 0) {
+    if (tallyExitCode(tally) === 1) {
       // Report the real tally and fail loudly so CI doesn't read a partial
       // install as success.
       error(summary);
