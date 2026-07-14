@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, rmSync, mkdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, dirname } from 'node:path';
 import {
   validateEvent,
   readEvents,
@@ -46,6 +46,33 @@ describe('readEvents / addEvent', () => {
     addEvent(eventsFile, { date: '2026-05-10', label: 'a' });
     const events = readEvents(eventsFile);
     expect(events.map((e) => e.label)).toEqual(['a', 'b']);
+  });
+
+  it('drops malformed rows (missing label, non-object, invalid date) but keeps valid ones', () => {
+    mkdirSync(dirname(eventsFile), { recursive: true });
+    writeFileSync(
+      eventsFile,
+      JSON.stringify([
+        { date: '2026-05-10' }, // no label
+        'not-an-object',
+        { date: 'not-iso', label: 'bad date' },
+        { date: '2026-02-01', label: 'ok' },
+      ]),
+      'utf-8',
+    );
+    expect(readEvents(eventsFile)).toEqual([{ date: '2026-02-01', label: 'ok' }]);
+  });
+
+  it('addEvent on a file with a corrupted row does not throw and persists only the valid rows', () => {
+    mkdirSync(dirname(eventsFile), { recursive: true });
+    writeFileSync(
+      eventsFile,
+      JSON.stringify([{ date: '2026-05-10' }, { date: '2026-02-01', label: 'ok' }]),
+      'utf-8',
+    );
+    expect(() => addEvent(eventsFile, { date: '2026-06-01', label: 'new' })).not.toThrow();
+    const events = readEvents(eventsFile);
+    expect(events.map((e) => e.label)).toEqual(['ok', 'new']);
   });
 });
 

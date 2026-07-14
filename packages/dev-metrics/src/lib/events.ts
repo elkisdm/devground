@@ -22,7 +22,21 @@ export function validateEvent(event: EventAnnotation): void {
   }
 }
 
-/** Reads the events file, returning `[]` when it does not exist. */
+/** Type guard: a well-formed annotation with an ISO date and non-empty label. */
+export function isValidEvent(value: unknown): value is EventAnnotation {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) return false;
+  const e = value as Record<string, unknown>;
+  if (typeof e.date !== 'string' || !ISO_DATE_RE.test(e.date)) return false;
+  if (typeof e.label !== 'string' || e.label.trim() === '') return false;
+  return true;
+}
+
+/**
+ * Reads the events file, returning `[]` when it does not exist. Rows that are
+ * not well-formed (missing/invalid date or label — e.g. hand-edited entries)
+ * are dropped rather than passed through, so undefined dates/labels never
+ * reach the timeline.
+ */
 export function readEvents(filePath: string): EventAnnotation[] {
   if (!existsSync(filePath)) return [];
   const raw = readFileSync(filePath, 'utf-8');
@@ -30,7 +44,7 @@ export function readEvents(filePath: string): EventAnnotation[] {
   if (!Array.isArray(parsed)) {
     throw new Error(`Events file ${filePath} is not a JSON array`);
   }
-  return parsed as EventAnnotation[];
+  return parsed.filter(isValidEvent);
 }
 
 /** Sorts events ascending by date (stable for equal dates). */
