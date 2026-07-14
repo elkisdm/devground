@@ -10,13 +10,15 @@ pnpm add -D @devground/lint-staged-config lint-staged eslint prettier
 
 ## Usage
 
-In your `package.json`:
+Crea `lint-staged.config.cjs` en la raíz de tu proyecto:
 
-```json
-{
-  "lint-staged": "@devground/lint-staged-config"
-}
+```js
+module.exports = require('@devground/lint-staged-config');
 ```
+
+> No uses `"lint-staged": "@devground/lint-staged-config"` en package.json:
+> lint-staged >=16 rechaza esa forma en runtime (espera un objeto o función,
+> no un string).
 
 ## Rules
 
