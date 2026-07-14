@@ -10,6 +10,16 @@ INPUT=$(cat)
 
 [ "$CLAUDE_ORCHESTRATOR_GATE" = "off" ] && exit 0
 
+# --- #23: jq es requisito duro del gate. Sin jq no se puede parsear el evento;
+# fallar-abierto dejaría pasar todo en silencio sobre una "regla dura". Fail-closed
+# con diagnóstico. Va DESPUÉS del bypass (línea 11) para no romper el escape
+# consciente, y ANTES del primer uso de jq. deny() usa jq -n, así que aquí el
+# JSON se emite estático con printf.
+if ! command -v jq >/dev/null 2>&1; then
+  printf '%s\n' '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"jq no está instalado; el gate de orquestación no puede evaluar y falla-cerrado por seguridad — instala jq (brew install jq)."}}'
+  exit 0
+fi
+
 TOOL=$(jq -r '.tool_name // empty' <<<"$INPUT")
 MODEL=$(jq -r '.current_model // empty' <<<"$INPUT")
 TRANSCRIPT=$(jq -r '.transcript_path // empty' <<<"$INPUT")
