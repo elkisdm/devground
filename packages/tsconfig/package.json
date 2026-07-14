@@ -6,6 +6,7 @@
     "base.json",
     "next.json",
     "next-typecheck.json",
+    "next-loose.json",
     "node.json",
     "astro.json",
     "astro-typecheck.json"
