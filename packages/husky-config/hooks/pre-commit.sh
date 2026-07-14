@@ -25,5 +25,6 @@ else
   echo ""
 fi
 
-# Lint + format de archivos staged (ADR-0005).
-pnpm exec lint-staged
+# Lint + format de staged (ADR-0005). npx --no-install resuelve el binario local
+# sin acoplar a pnpm (funciona en npm/yarn/pnpm) y falla ruidoso si falta (#7).
+npx --no-install lint-staged
