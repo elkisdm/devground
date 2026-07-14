@@ -1,5 +1,31 @@
 # @devground/devground
 
+## 2.0.0
+
+### Major Changes
+
+- 8efeee1: devground-setup ahora delega toda la instalación en devground-init (implementación
+  única y testeada) en vez de reimplementarla. Corrige el bug crítico de lint-staged
+  (config como string en package.json) que bloqueaba todos los commits tras el
+  quickstart, deja de sobreescribir/borrar archivos del usuario (AGENTS.md, CLAUDE.md,
+  hooks), instala el hook commit-msg + gitleaks, ya no hardcodea pnpm e instala
+  eslint-config-next en proyectos Next. Ahora corre el preset completo respetando
+  "no sobreescribe archivos existentes". Requiere devground-init como dependencia.
+  El README de @devground/lint-staged-config deja de recomendar la forma string rota.
+
+### Patch Changes
+
+- Updated dependencies [9c015c6]
+- Updated dependencies [8efeee1]
+- Updated dependencies [b4f2988]
+- Updated dependencies [8d7f86c]
+- Updated dependencies [82176e2]
+  - @devground/agents-md@1.3.0
+  - @devground/lint-staged-config@1.0.2
+  - @devground/husky-config@1.3.0
+  - devground-init@1.4.0
+  - @devground/tsconfig@2.1.1
+
 ## 1.1.0
 
 ### Minor Changes
