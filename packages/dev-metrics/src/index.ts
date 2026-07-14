@@ -122,7 +122,10 @@ program
           includeForks: opts.includeForks,
           force: opts.force,
         });
-        if (!result.written) process.exit(1);
+        if (!result.written) {
+          for (const w of result.warnings) warn(w);
+          process.exit(1);
+        }
       } catch (err) {
         error(err instanceof Error ? err.message : String(err));
         process.exit(1);
