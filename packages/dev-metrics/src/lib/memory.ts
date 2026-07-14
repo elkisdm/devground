@@ -249,22 +249,19 @@ export interface MemorySignalsOptions {
 }
 
 /**
- * Computes the context-cost proxy and memory-reuse signal from raw transcript
- * files. Records are deduped by uuid (live+backup overlap) and period-filtered.
+ * Computes the context-cost proxy and memory-reuse signal from an
+ * already-deduped, already-period-filtered list of session records. Pure.
  */
-export function computeMemorySignals(opts: MemorySignalsOptions): MemorySignals {
-  const firstN = opts.firstN ?? 3;
-  const records = readSessionRecords(opts.files);
-
-  const { kept } = dedupByUuid(records.map((sr) => ({ ...sr, uuid: sr.record.uuid })));
-  const filtered = kept.filter((sr) => inPeriod(sr.record.timestamp, opts.since, opts.until));
-
+export function memorySignalsFromRecords(
+  records: readonly SessionRecord[],
+  firstN = 3,
+): MemorySignals {
   // Group assistant messages per session in encountered order.
   const assistantBySession = new Map<string, TranscriptRecord[]>();
   const memoryReadSessions = new Set<string>();
   let memoryReadOps = 0;
 
-  for (const { sessionId, record } of filtered) {
+  for (const { sessionId, record } of records) {
     if (record.type === 'assistant' && record.message?.usage) {
       const list = assistantBySession.get(sessionId) ?? [];
       list.push(record);
@@ -299,6 +296,20 @@ export function computeMemorySignals(opts: MemorySignalsOptions): MemorySignals 
       memoryReadOps,
     },
   };
+}
+
+/**
+ * Computes the context-cost proxy and memory-reuse signal from raw transcript
+ * files. Records are deduped by uuid (live+backup overlap) and period-filtered.
+ */
+export function computeMemorySignals(opts: MemorySignalsOptions): MemorySignals {
+  const firstN = opts.firstN ?? 3;
+  const records = readSessionRecords(opts.files);
+
+  const { kept } = dedupByUuid(records.map((sr) => ({ ...sr, uuid: sr.record.uuid })));
+  const filtered = kept.filter((sr) => inPeriod(sr.record.timestamp, opts.since, opts.until));
+
+  return memorySignalsFromRecords(filtered, firstN);
 }
 
 /** Convenience helper used by the report. */

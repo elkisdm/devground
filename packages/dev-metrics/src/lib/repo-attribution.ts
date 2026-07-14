@@ -9,6 +9,7 @@ import {
   totalTokens,
   type TranscriptRecord,
 } from './transcript.js';
+import type { SessionRecord } from './transcript-collect.js';
 
 /**
  * Derives the Claude Code project directory name from an absolute repo path.
@@ -179,4 +180,37 @@ export function attributeTokensByRepo(opts: AttributeTokensOptions): Attribution
 /** Convenience: total tokens (all kinds) for a repo total. */
 export function repoTokenTotal(totals: RepoTokenTotals): number {
   return totalTokens(totals.tokens);
+}
+
+/**
+ * Attributes tokens to repos from an already-scanned, already-deduped,
+ * already-period-filtered corpus (`transcript-collect.ts`'s `CorpusScan`),
+ * without re-reading disk. `found` = the project dir had >= 1 record within
+ * the scanned window (the scan only ever buckets in-period records), i.e.
+ * "there was data in the window" rather than mere directory existence.
+ */
+export function attributeFromCorpus(
+  byProjectDir: ReadonlyMap<string, readonly SessionRecord[]>,
+  repoPaths: readonly string[],
+): AttributionResult {
+  const dirToPath = new Map<string, string>();
+  for (const path of repoPaths) dirToPath.set(repoPathToProjectDir(path), path);
+
+  const byRepo: RepoTokenTotals[] = repoPaths.map((path) => {
+    const projectDir = repoPathToProjectDir(path);
+    const records = byProjectDir.get(projectDir);
+    const tokens = emptyTokenUsage();
+    for (const sr of records ?? []) addUsage(tokens, sr.record);
+    return { path, projectDir, tokens, found: records !== undefined };
+  });
+
+  const unattributed = emptyTokenUsage();
+  let unattributedDirs = 0;
+  for (const [dir, records] of byProjectDir) {
+    if (dirToPath.has(dir)) continue;
+    unattributedDirs++;
+    for (const sr of records) addUsage(unattributed, sr.record);
+  }
+
+  return { byRepo, unattributed, unattributedDirs };
 }
