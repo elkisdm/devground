@@ -42,8 +42,10 @@ export type InstallResolution =
  *    can log the choice. This replaces an earlier hard error: refusing to
  *    install anything turned every CI/piped run red, while the real risk the
  *    refusal guarded against — a silent "installed nothing" success — is avoided
- *    here by installing the full set (and the write-guard still skips existing
- *    files, so a re-run on a configured project stays safe).
+ *    here by installing the full set: every installer (and every bin it
+ *    delegates to, e.g. agents-md and husky-config) enforces "never overwrite,
+ *    never delete" on existing files, so a re-run on a configured project
+ *    stays safe.
  * 3. Only an interactive TTY falls through to `prompt`.
  */
 export function resolveInstall(
