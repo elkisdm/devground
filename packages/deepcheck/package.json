@@ -1,6 +1,6 @@
 {
   "name": "@devground/deepcheck",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
   "description": "Self-improving multi-agent verification system (QA + Validation + Audit) that deeply checks features and flows in parallel and distills a per-flow audit skill that gets sharper on every run",
   "type": "module",
