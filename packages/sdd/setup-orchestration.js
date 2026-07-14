@@ -32,6 +32,10 @@ function copyDirGuarded(src, dst) {
 
 const home = os.homedir();
 const base = path.join(__dirname, 'orchestration');
+if (!fs.existsSync(base)) {
+  console.error('\x1b[31m✗\x1b[0m orchestration/ not found in package. Aborting.');
+  process.exit(1);
+}
 let written = 0, skipped = 0;
 for (const [sub, dst] of [['scripts', path.join(home, '.claude', 'scripts')], ['agents', path.join(home, '.claude', 'agents')]]) {
   const r = copyDirGuarded(path.join(base, sub), dst);

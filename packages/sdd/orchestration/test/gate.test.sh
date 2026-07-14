@@ -49,5 +49,28 @@ o=$(echo '{"tool_name":"Edit","current_model":"Claude-Fable-5","transcript_path"
 check "modelo en mayúsculas -> deny" "deny" "$o"
 rm -rf "$TMPHOME"
 
+# --- #22: MCP mutante vs read-only ---
+o=$(echo '{"tool_name":"mcp__supabase__apply_migration","current_model":"claude-opus-4","tool_input":{}}' | bash "$GATE" | dec)
+check "MCP mutante (apply_migration) -> deny" "deny" "$o"
+o=$(echo '{"tool_name":"mcp__supabase__list_tables","current_model":"claude-opus-4","tool_input":{}}' | bash "$GATE" | dec)
+check "MCP read-only (list_tables) -> allow" "allow" "$o"
+# --- #22: allowlist de file-ops en el scratchpad de sesión ---
+o=$(echo '{"tool_name":"Bash","current_model":"claude-opus-4","tool_input":{"command":"rm /private/tmp/claude-501/foo/bar.txt"}}' | bash "$GATE" | dec)
+check "rm dentro del scratchpad -> allow" "allow" "$o"
+o=$(echo '{"tool_name":"Bash","current_model":"claude-opus-4","tool_input":{"command":"rm /Users/foo/bar"}}' | bash "$GATE" | dec)
+check "rm fuera del scratchpad -> deny" "deny" "$o"
+# --- #22: stripping de comillas (el > vive dentro de comillas, no es redirección) ---
+o=$(echo '{"tool_name":"Bash","current_model":"claude-opus-4","tool_input":{"command":"echo \"a > b\""}}' | bash "$GATE" | dec)
+check "echo con > entre comillas -> allow" "allow" "$o"
+o=$(echo '{"tool_name":"Bash","current_model":"claude-opus-4","tool_input":{"command":"echo x > /repo/f"}}' | bash "$GATE" | dec)
+check "redirección real -> deny" "deny" "$o"
+# --- #23: jq ausente -> fail-closed (deny), y el bypass sigue funcionando sin jq ---
+JQLESS=$(mktemp -d); ln -s "$(command -v cat)" "$JQLESS/cat"
+o=$(echo '{"tool_name":"Edit","current_model":"claude-opus-4","tool_input":{"file_path":"/repo/a.ts"}}' | PATH="$JQLESS" "$(command -v bash)" "$GATE" | dec)
+check "jq ausente -> deny (fail-closed)" "deny" "$o"
+o=$(echo '{"tool_name":"Edit","current_model":"claude-opus-4","tool_input":{"file_path":"/repo/a.ts"}}' | PATH="$JQLESS" CLAUDE_ORCHESTRATOR_GATE=off "$(command -v bash)" "$GATE" | dec)
+check "jq ausente + bypass=off -> allow" "allow" "$o"
+rm -rf "$JQLESS"
+
 echo "passed=$pass failed=$fail"
 [ "$fail" -eq 0 ]
