@@ -55,6 +55,7 @@ npx devground-init
 + commitlint.config.js           ← conventional commits
 + lint-staged.config.cjs         ← re-exporta @devground/lint-staged-config
 + .husky/pre-commit              ← lint-staged en cada commit
++ vitest.config.mjs              ← Vitest + coverage ratchet
 + AGENTS.md                      ← reglas para IA (source of truth)
 + CLAUDE.md → AGENTS.md          ← symlink (Claude Code)
 + .cursorrules → AGENTS.md       ← symlink (Cursor)
@@ -62,6 +63,7 @@ npx devground-init
 + .gemini/styleguide.md → AGENTS.md
 + .codex/config.toml             ← Codex (lee AGENTS.md nativo, sin symlink)
 + knowledge/                     ← guias + 11 ADRs de arquitectura
++ .claude/skills/ui-conventions/ ← convenciones UI (solo React/Next)
 ~ package.json                   ← prettier, prepare script
 ```
 

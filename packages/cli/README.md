@@ -40,8 +40,10 @@ left untouched (see below).
 | Commitlint | Installs `@devground/commitlint-config`, writes `commitlint.config.js` |
 | lint-staged | Installs `@devground/lint-staged-config`, writes `lint-staged.config.cjs` (re-exports the shared config; a bare package.json string is rejected by lint-staged at runtime) |
 | Husky | Installs `@devground/husky-config`, runs `npx devground-husky` to set up hooks |
+| Vitest | Installs `@devground/vitest-config`, writes `vitest.config.mjs` with the coverage ratchet and adds `test`/`test:coverage` scripts |
 | AGENTS.md | Installs `@devground/agents-md`, runs `npx devground-agents` to scaffold AI agent files |
 | Architecture guide | Installs `@devground/architecture-guide`, runs `npx devground-architecture` to scaffold the knowledge base + ADR templates |
+| UI conventions | Installs `@devground/ui-conventions`, runs `npx devground-ui-conventions` to scaffold the skill (React/Next.js projects only) |
 
 > **Existing configs are left untouched.** Each config-file installer (ESLint, TypeScript, Commitlint, lint-staged) skips — installing nothing — if its target file already exists; Prettier skips if a `"prettier"` key is already present. The delegating installers (Husky, AGENTS.md, Architecture guide) defer to their own binaries.
 

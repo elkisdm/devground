@@ -6,7 +6,7 @@ infers a design direction, and ships against a strict pre-flight check instead o
 back to the usual AI clichés (centered hero over dark mesh, three equal cards, purple
 gradients, em-dashes everywhere).
 
-Bundles five skills, vendored from [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill)
+Bundles ten skills, vendored from [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill)
 (MIT). See [`skills/ATTRIBUTION.md`](skills/ATTRIBUTION.md).
 
 ## Install
