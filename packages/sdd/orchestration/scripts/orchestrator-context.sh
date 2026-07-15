@@ -10,7 +10,19 @@ INPUT=$(cat)
 [ "$CLAUDE_ORCHESTRATOR_GATE" = "off" ] && exit 0
 
 MODEL=$(jq -r '.current_model // empty' <<<"$INPUT")
-# Si el evento no trae el modelo, usar el default configurado
+TRANSCRIPT=$(jq -r '.transcript_path // empty' <<<"$INPUT")
+
+# --- Misma resolución que orchestrator-gate.sh (ver comentario extenso allí):
+# el payload de hooks no trae current_model; el modelo real se lee del transcript.
+# Se duplica a propósito para que cada hook sea autocontenido.
+# Diferencia con el gate: acá la inyección es advisory, así que si el modelo no se
+# puede determinar (primer prompt de una sesión nueva: aún no hay entrada
+# assistant) se sale en silencio en vez de fallar-cerrado. El gate es el respaldo.
+if [ -z "$MODEL" ] && [ -n "$TRANSCRIPT" ] && [ -r "$TRANSCRIPT" ]; then
+  MODEL=$(tail -n 100 "$TRANSCRIPT" 2>/dev/null \
+    | jq -Rr 'fromjson? | select(.type=="assistant" and (.isSidechain != true)) | .message.model // empty' 2>/dev/null \
+    | tail -1)
+fi
 if [ -z "$MODEL" ]; then
   MODEL=$(jq -r '.model // empty' "$HOME/.claude/settings.json" 2>/dev/null)
 fi
