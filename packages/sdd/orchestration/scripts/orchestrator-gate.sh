@@ -35,17 +35,33 @@ case "$TRANSCRIPT" in
   *"/subagents/"*|*"/agent-"*) exit 0 ;;
 esac
 
-# Los eventos PreToolUse pueden no traer current_model: fallback al modelo
-# configurado (mismo criterio que orchestrator-context.sh). Sin esto, un evento
-# sin current_model deja pasar todo — fail-open del gate.
+# --- Resolución del modelo de sesión. VERIFICADO 2026-07-14 con payloads reales
+# (Claude Code 2.1.210): el payload NO trae current_model — sus claves son
+# cwd/effort/hook_event_name/permission_mode/prompt_id/session_id/tool_input/
+# tool_name/tool_use_id/transcript_path. Leer .current_model dejaba MODEL vacío y
+# el gate fallaba-abierto SIEMPRE. La fuente real es el transcript: cada entrada
+# assistant trae .message.model, y el tool_use se persiste antes de ejecutar la
+# tool, así que en PreToolUse siempre hay al menos una. Se filtra isSidechain por
+# si el harness empieza a anexar mensajes de subagentes al transcript principal.
+# .current_model se mantiene primero por si el harness lo reintroduce.
+if [ -z "$MODEL" ] && [ -n "$TRANSCRIPT" ] && [ -r "$TRANSCRIPT" ]; then
+  MODEL=$(tail -n 100 "$TRANSCRIPT" 2>/dev/null \
+    | jq -Rr 'fromjson? | select(.type=="assistant" and (.isSidechain != true)) | .message.model // empty' 2>/dev/null \
+    | tail -1)
+fi
 if [ -z "$MODEL" ]; then
   MODEL=$(jq -r '.model // empty' "$HOME/.claude/settings.json" 2>/dev/null)
 fi
 MODEL=$(tr '[:upper:]' '[:lower:]' <<<"$MODEL")
 
-# Solo aplica a modelos orquestadores; sonnet/haiku ejecutan libre
+# Solo aplica a modelos orquestadores; sonnet/haiku ejecutan libre.
+# Si el modelo NO se pudo determinar se aplica la regla igual (fail-closed),
+# mismo criterio que el requisito de jq: una regla dura no puede fallar-abierta
+# en silencio. Las lecturas siguen pasando — solo se deniegan las mutaciones.
+MODEL_UNKNOWN=0
 case "$MODEL" in
   *fable*|*mythos*|*opus*) ;;
+  "") MODEL_UNKNOWN=1 ;;
   *) exit 0 ;;
 esac
 
@@ -54,7 +70,9 @@ deny() {
   exit 0
 }
 
-REASON="REGLA DE ORQUESTACIÓN: este modelo ($MODEL) actúa como advisor/orquestador y NO ejecuta cambios directamente. Delega según tier: Tier 0-1 → Agent(subagent_type=ejecutor) con brief autocontenido del orquestador (rutas + fragmentos inline, sin planner); Tier 2 → Agent(subagent_type=planner, Opus high) y luego ejecutor; Tier 3/riesgo alto → Agent(subagent_type=planner-deep, Opus xhigh) y luego ejecutor. Permitido sin delegar: leer, buscar, y escribir bajo ~/.claude/ o el scratchpad. Bypass consciente del usuario: CLAUDE_ORCHESTRATOR_GATE=off. Permitido también inline (allowlist administrativa): git add/commit/push/fetch/tag, gh pr create/merge/view/checks, gh run view/watch, y limpieza dentro del scratchpad — siempre como comando único sin encadenar."
+MODEL_DISPLAY=${MODEL:-indeterminado}
+REASON="REGLA DE ORQUESTACIÓN: este modelo ($MODEL_DISPLAY) actúa como advisor/orquestador y NO ejecuta cambios directamente. Delega según tier: Tier 0-1 → Agent(subagent_type=ejecutor) con brief autocontenido del orquestador (rutas + fragmentos inline, sin planner); Tier 2 → Agent(subagent_type=planner, Opus high) y luego ejecutor; Tier 3/riesgo alto → Agent(subagent_type=planner-deep, Opus xhigh) y luego ejecutor. Permitido sin delegar: leer, buscar, y escribir bajo ~/.claude/ o el scratchpad. Bypass consciente del usuario: CLAUDE_ORCHESTRATOR_GATE=off. Permitido también inline (allowlist administrativa): git add/commit/push/fetch/tag, gh pr create/merge/view/checks, gh run view/watch, y limpieza dentro del scratchpad — siempre como comando único sin encadenar."
+[ "$MODEL_UNKNOWN" -eq 1 ] && REASON="$REASON [No se pudo determinar el modelo de sesión (transcript ausente o ilegible); el gate aplica la regla por precaución. Si esta sesión es Sonnet/Haiku, reporta el fallo o usa CLAUDE_ORCHESTRATOR_GATE=off.]"
 
 case "$TOOL" in
   Edit|Write|NotebookEdit)

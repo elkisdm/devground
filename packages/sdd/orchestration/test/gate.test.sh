@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
-# Pipe-tests de los hooks de orquestación. Hermético: se pasa current_model
-# explícito, no depende de ~/.claude/settings.json. Requiere jq + bash.
+# Pipe-tests de los hooks de orquestación. Requiere jq + bash.
+# OJO CON EL MÉTODO: el payload REAL de Claude Code NO trae current_model
+# (verificado 2026-07-14 con un dump del payload en el propio hook, CC 2.1.210:
+# las claves son cwd/effort/hook_event_name/permission_mode/prompt_id/session_id/
+# tool_input/tool_name/tool_use_id/transcript_path). Los casos que pasan
+# current_model cubren solo la PRIMERA capa de resolución, que existe por si el
+# harness reintroduce el campo — construir payloads sintéticos con ese campo fue
+# justo lo que ocultó un fail-open total durante días. Todo caso nuevo debe
+# cubrirse TAMBIÉN vía transcript, que es como el gate resuelve el modelo hoy.
 set -u
 DIR="$(cd "$(dirname "$0")" && pwd)"
 GATE="$DIR/../scripts/orchestrator-gate.sh"
@@ -71,6 +78,35 @@ check "jq ausente -> deny (fail-closed)" "deny" "$o"
 o=$(echo '{"tool_name":"Edit","current_model":"claude-opus-4","tool_input":{"file_path":"/repo/a.ts"}}' | PATH="$JQLESS" CLAUDE_ORCHESTRATOR_GATE=off "$(command -v bash)" "$GATE" | dec)
 check "jq ausente + bypass=off -> allow" "allow" "$o"
 rm -rf "$JQLESS"
+
+# --- Resolución del modelo desde el transcript (2026-07-14): el mecanismo real ---
+TDIR=$(mktemp -d)
+printf '%s\n' '{"type":"user","message":{"role":"user"}}' '{"type":"assistant","isSidechain":false,"message":{"model":"claude-opus-4-8"}}' > "$TDIR/opus.jsonl"
+o=$(echo "{\"tool_name\":\"Edit\",\"transcript_path\":\"$TDIR/opus.jsonl\",\"tool_input\":{\"file_path\":\"/repo/a.ts\"}}" | bash "$GATE" | dec)
+check "transcript opus (sin current_model) -> deny" "deny" "$o"
+printf '%s\n' '{"type":"assistant","isSidechain":false,"message":{"model":"claude-sonnet-5"}}' > "$TDIR/sonnet.jsonl"
+o=$(echo "{\"tool_name\":\"Edit\",\"transcript_path\":\"$TDIR/sonnet.jsonl\",\"tool_input\":{\"file_path\":\"/repo/a.ts\"}}" | bash "$GATE" | dec)
+check "transcript sonnet -> allow" "allow" "$o"
+# un sidechain de subagente Sonnet no debe hacer pasar por Sonnet a una sesión Opus
+printf '%s\n' '{"type":"assistant","isSidechain":false,"message":{"model":"claude-opus-4-8"}}' '{"type":"assistant","isSidechain":true,"message":{"model":"claude-sonnet-5"}}' > "$TDIR/mixed.jsonl"
+o=$(echo "{\"tool_name\":\"Edit\",\"transcript_path\":\"$TDIR/mixed.jsonl\",\"tool_input\":{\"file_path\":\"/repo/a.ts\"}}" | bash "$GATE" | dec)
+check "sidechain sonnet no contamina sesión opus -> deny" "deny" "$o"
+# una línea corrupta/truncada en el transcript no debe romper la resolución
+printf '%s\n' '{"type":"assistant","isSidechain":false,"message":{"model":"claude-opus-4-8"}}' '{"type":"assistant","trunca' > "$TDIR/broken.jsonl"
+o=$(echo "{\"tool_name\":\"Edit\",\"transcript_path\":\"$TDIR/broken.jsonl\",\"tool_input\":{\"file_path\":\"/repo/a.ts\"}}" | bash "$GATE" | dec)
+check "transcript con línea corrupta -> deny (resuelve igual)" "deny" "$o"
+# fail-closed: sin current_model, sin transcript legible y sin .model en settings
+TMPHOME2=$(mktemp -d); mkdir -p "$TMPHOME2/.claude"; echo '{}' > "$TMPHOME2/.claude/settings.json"
+o=$(echo '{"tool_name":"Edit","transcript_path":"/no/existe.jsonl","tool_input":{"file_path":"/repo/a.ts"}}' | HOME="$TMPHOME2" bash "$GATE" | dec)
+check "modelo indeterminado -> deny (fail-closed)" "deny" "$o"
+o=$(echo '{"tool_name":"Bash","transcript_path":"/no/existe.jsonl","tool_input":{"command":"git status"}}' | HOME="$TMPHOME2" bash "$GATE" | dec)
+check "modelo indeterminado + read-only -> allow" "allow" "$o"
+# el context hook resuelve igual que el gate
+o=$(echo "{\"transcript_path\":\"$TDIR/opus.jsonl\"}" | bash "$CTX" | evt)
+check "context transcript opus -> inyecta" "UserPromptSubmit" "$o"
+o=$(echo "{\"transcript_path\":\"$TDIR/sonnet.jsonl\"}" | bash "$CTX" | evt)
+check "context transcript sonnet -> silencio" "none" "$o"
+rm -rf "$TDIR" "$TMPHOME2"
 
 echo "passed=$pass failed=$fail"
 [ "$fail" -eq 0 ]
