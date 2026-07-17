@@ -4,8 +4,8 @@ description: >
   Decide el modelo y nivel de esfuerzo para UNA tarea de desarrollo, partiendo de una
   asignación de piso. Juzga si la complejidad atípica de la tarea justifica escalar o
   desescalar como máximo 1 nivel de capacidad, y devuelve la decisión con justificación.
-  Es un juez de routing barato: corre en un modelo económico, no ejecuta la tarea.
-model: haiku
+  Es un juez de routing barato relativo a la ejecución: corre en Sonnet, no ejecuta la tarea.
+model: sonnet
 tools: Read, Grep, Glob
 ---
 

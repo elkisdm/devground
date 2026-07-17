@@ -16,7 +16,7 @@ El riesgo de delegar esa decisión a un modelo es el clásico problema del zorro
 Se crea `model-orchestrator` como harness en `tools/`, invocable en Claude Code **después** de `spec-flow`. Su pipeline:
 
 1. **Piso declarativo** (`policy.json`): `kind`/`tier`/`risk` de la tarea → modelo + effort. Planes, auditorías, decisiones, ADRs, diseño y security-review anclan en `opus`/`max`; feat/fix medio en `sonnet`; docs/chore/rename en `haiku`/`low`.
-2. **Ajuste ±1 nivel** por el agente `model-router` (juez barato que corre en Haiku): puede escalar o desescalar **como máximo un nivel de capacidad**, con justificación.
+2. **Ajuste ±1 nivel** por el agente `model-router` (juez que corre en Sonnet; ver actualización 2026-07-16): puede escalar o desescalar **como máximo un nivel de capacidad**, con justificación.
 3. **CLAMP determinístico** en `engine.mjs` (Node puro, cero dependencias): impone las invariantes en código —un `feat` con lógica nueva nunca cae a Haiku; un piso `locked` no se desescala; el ajuste no excede ±1; el effort acompaña al escalar—. **Las invariantes NO se delegan al juicio del agente barato.**
 4. **Costo estimado** (`pricing.json`): honesto por diseño —si un modelo no tiene tarifa verificada, el plan reporta ese costo como "pendiente", nunca inventado.
 5. **Aprobación** explícita del plan + costo antes de ejecutar.
@@ -42,3 +42,7 @@ Se crea `model-orchestrator` como harness en `tools/`, invocable en Claude Code 
 - **Un solo modelo para todo (descartada)**: Opus para todo es caro y desperdicia capacidad; Haiku para todo degrada tareas complejas. El objetivo es precio/calidad por tarea, no uniformidad.
 - **Que el modelo decida el routing sin invariantes en código (descartada)**: sin un clamp determinístico, nada impide que el juez baje una tarea crítica al modelo barato. Las invariantes van en `engine.mjs`, no en el prompt.
 - **Empaquetarlo como `@devground/*` (no ahora)**: es tooling de orquestación acoplado a Claude Code y a la telemetría de spec-flow; se mantiene en `tools/` hasta que estabilice. Se puede reconsiderar si se decide distribuirlo.
+
+## Actualización 2026-07-16: el juez sube de Haiku a Sonnet
+
+El clamp de `engine.mjs` protege el **piso** (una desescalada mala del juez se recorta en código) pero no el **techo**: una escalada perdida —el juez no percibe la complejidad sutil de una tarea y deja el piso— no la atrapa ninguna invariante, y se manifiesta como retrabajo. Detectar complejidad sutil (concurrencia, invariantes cruzadas, código más enredado de lo que el título sugiere) es exactamente donde un modelo pequeño es más débil: el único trabajo de juicio real del router es el que más capacidad exige. El delta de costo es despreciable (una consulta de routing son ~1-3k tokens; fracciones de centavo por tarea), contra retrabajos que cuestan dólares. El principio "nunca rutees con Opus" se mantiene. La dirección arquitectónica también: cada fallo sistemático del juez debe convertirse en regla determinista de `policy.json`/clamp, de modo que el rol del juez encoja con el tiempo.
