@@ -77,8 +77,8 @@ para inspeccionar una tarea suelta). El 90% de las tareas quedan bien solo con e
 ## Paso 3 — Ajuste por el agente `model-router` (±1 nivel)
 
 El piso es un punto de partida; la complejidad real de una tarea puede no estar capturada
-por las señales. Para afinar, consulta al agente **`model-router`** (corre en Haiku, es
-barato). Pásale, por tarea: `title`, `description`, `kind`, `signals`, `floor`, y
+por las señales. Para afinar, consulta al agente **`model-router`** (corre en Sonnet,
+barato relativo a la ejecución). Pásale, por tarea: `title`, `description`, `kind`, `signals`, `floor`, y
 `capability_order`/`effort_order`/`max_levels` desde `policy.json`. Si la tarea nombra
 archivos concretos, pásaselos para que calibre la complejidad real.
 
@@ -93,8 +93,8 @@ Optimizaciones (no malgastes routing):
 ### El clamp lo impone el motor en CÓDIGO (NO el agente)
 
 El agente `model-router` solo **propone**. Las invariantes se imponen determinísticamente
-en `engine.mjs` — NO se delegan a su juicio: el router corre en Haiku y puede "razonar"
-que un feat con lógica nueva es mecánico y proponer Haiku (lo verás pasar). No lo discutas
+en `engine.mjs` — NO se delegan a su juicio: el router es más barato que Opus y puede "razonar"
+que un feat con lógica nueva es mecánico y proponer Haiku (puede pasar). No lo discutas
 con el prompt; el motor lo **recorta**. No reimplementes el clamp de memoria: invoca el
 motor.
 
@@ -230,7 +230,9 @@ estimación bajo, el routing está cumpliendo; si no, ajusta `policy.json`.
 
 ## Principios
 
-- **El routing es barato; la ejecución es cara.** Nunca rutees con Opus. El juez es Haiku.
+- **El routing es barato; la ejecución es cara.** Nunca rutees con Opus. El juez es Sonnet:
+  el clamp del motor atrapa las desescaladas malas, pero una escalada perdida no la atrapa
+  nadie — el juez necesita capacidad para VER la complejidad sutil que amerita escalar.
 - **Sesgo a calidad en la duda.** Desescalar ahorra centavos y puede costar un retrabajo
   caro. Solo baja cuando la tarea es obviamente mecánica.
 - **Planes, auditorías y decisiones son sagrados**: Opus a máximo esfuerzo, no negociable.

@@ -18,7 +18,7 @@ spec-flow → brief con tareas (+ tasks.json machine-readable, Step 3.5)
 model-orchestrator
    ├─ Paso 1  parsear tareas (o consumir tasks.json directo)
    ├─ Paso 2  PISO declarativo  (policy.json: kind/tier/risk → modelo+effort)
-   ├─ Paso 3  ajuste ±1 nivel por el agente model-router (juez barato en Haiku)
+   ├─ Paso 3  ajuste ±1 nivel por el agente model-router (juez en Sonnet)
    │          → engine.mjs CLAMP determinístico impone las invariantes
    ├─ Paso 4  costo estimado    (pricing.json, honesto: sin tarifa → "pendiente")
    ├─ Paso 5  presentar plan + costo  →  ESPERAR aprobación
