@@ -32,6 +32,12 @@ En sesiones Sonnet/Haiku como modelo de sesión, no aplica el gate: se procede d
 
 ## Instalación
 
+> **Opt-in, desactivado por defecto.** Instalar `@devground/sdd` NO activa esta capa:
+> `npx @devground/sdd` solo instala la skill spec-flow. Esta capa requiere ejecutar su
+> propio installer Y pegar a mano el bloque de hooks — dos actos deliberados. Antes de
+> activarla, lee las consecuencias medidas en
+> [ADR-0028](../../../docs/adr/0028-orquestacion-opt-in-desactivada-por-defecto.md).
+
 ```bash
 npx -p @devground/sdd devground-orchestration
 ```
@@ -65,3 +71,25 @@ pnpm --filter @devground/sdd test
 
 Pipe-tests herméticos de `orchestrator-gate.sh` y `orchestrator-context.sh` en
 `test/gate.test.sh` — no dependen de `~/.claude/settings.json`.
+
+## Estado medido (2026-07-22)
+
+Medición sobre 678 sesiones reales (ver [ADR-0028](../../../docs/adr/0028-orquestacion-opt-in-desactivada-por-defecto.md)):
+
+| Señal | Resultado |
+|---|---|
+| Delegación a subagentes | 53% → 92% de las sesiones |
+| Costo por turno de usuario | $8,23 → $9,04 (+10%, sin ahorro demostrable) |
+| Invocaciones de spec-flow | 173 → 7 (el hook de contexto la desplaza) |
+| Denials del gate | 314, en 62% de las sesiones |
+
+Defectos conocidos abiertos, a resolver antes de recomendar la activación:
+
+1. `orchestrator-gate.sh` deniega **cualquier** comando Bash que contenga `>`, sin validar
+   el destino de la redirección. La validación de rutas contra el scratchpad solo existe
+   para `rm/mv/cp/mkdir/touch/chmod`. Es la mayor fuente de falsos positivos (195 de los
+   314 denials fueron Bash).
+2. `orchestrator-context.sh` menciona `spec-flow` solo como paréntesis dentro de una
+   instrucción imperativa de ruteo por tier; en la práctica la desplaza.
+3. Tier 0-1 no rentabiliza la delegación: el brief más el re-descubrimiento del repo por
+   parte del ejecutor cuestan más que el cambio.
