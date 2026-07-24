@@ -1,6 +1,6 @@
 # ADR-0012: Tests obligatorios en rutas críticas
 
-- **Estado**: Propuesto
+- **Estado**: Aceptado
 - **Fecha**: 2026-06-02
 - **Decisor**: edaza
 - **Aplica a**: cualquier proyecto del repo con lógica de dinero, captación de leads o autenticación

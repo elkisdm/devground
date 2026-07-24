@@ -18,7 +18,7 @@ description: >
 license: MIT
 metadata:
   author: edaza
-  version: "0.3"
+  version: "0.4"
 ---
 
 ## What this is
@@ -204,6 +204,13 @@ the plan; a spec without them is a wish.
 - route `POST /api/...` — <new / changed> — <handler location>
 - <"verified against code: yes" — confirms these paths were checked, not just inferred>
 
+### Tests                          (REQUIRED from Tier 1 up)
+- `path/to/file.test.ts` — <what it asserts, mapped to an acceptance criterion>
+- <every new function/route gets at least one test: happy path + the key error/edge case>
+- <Tier 2+: one test per Given/When/Then scenario>
+- <if the project measures coverage: note impact — never drops; money/leads/auth routes meet the fixed threshold (ADR-0012)>
+- <if no tests apply (docs/chore/style, no executable logic): say so with the reason, one line>
+
 ### Out of scope
 - <what we are deliberately not doing now>
 
@@ -286,6 +293,27 @@ acceptance criterion before calling it done.
 For Tier 2–3, if the project records decisions (ADRs, a CHANGELOG, a devlog), offer to
 capture the decision once the change lands — don't force it.
 
+### Definition of Done (by tier)
+
+The DoD scales with the tier — this is not bureaucracy bolted on top, it's the same
+proportionality principle from Step 2 applied to the finish line, not just the start.
+
+- **Tier 0**: no test ceremony. This preserves Tier 0's "no artifacts" promise — a
+  sanity check that the change does what it says is enough.
+- **Tier 1+**: every piece of NEW code (routes and functions) ships with a test that
+  exercises its behavior, including the obvious error/edge case. "Done" is not "it
+  compiles and runs" — it's "it runs, and a test proves it."
+- **Tier 2+**: each Given/When/Then scenario in the spec maps 1:1 to a test case. If a
+  scenario has no corresponding test, the spec isn't actually verified yet.
+- **Where the project measures coverage**: it never drops. On projects using
+  devground's vitest standard, `test:coverage` stays green — critical paths (money,
+  leads, auth — ADR-0012) meet the fixed threshold, and the global floor only moves up
+  (ADR-0025).
+- **Sensible exception**: docs/chore/style/config changes with no executable logic
+  don't require new tests — but say so in one line when you skip (this maps to the
+  `tests:"n/a"` telemetry value in Step 6). NEVER skip this on money/leads/auth logic —
+  that's where the exception stops applying.
+
 ## Step 5 — Update the code map (close the flywheel)
 
 This is what makes Step 0 get cheaper over time instead of rotting. After the change
@@ -332,7 +360,7 @@ instead of guessing by timestamp.
  "tier":1,"type":"feat|fix|refactor|perf|docs|test|chore|spike","size":"trivial|small|medium|large",
  "risk":"low|med|high","uncertainty":"known|unknown","files":["path",...],
  "assumptions":2,"questions_asked":0,"brief":"inline|docs/specs/<name>.md","codemap_used":true,
- "spec_flow_version":"0.3"}
+ "tests":"added|updated|n/a|deferred","spec_flow_version":"0.4"}
 ```
 
 Read `questions_asked` and `assumptions` **together** — never `questions_asked` alone.
@@ -340,6 +368,12 @@ Zero questions on a change that made ten high-risk assumptions is not a triumph;
 exposure waiting to be confirmed (or refuted) by the reversal events below. `assumptions`
 counts the inferred-and-stated lines in the brief. `codemap_used` records whether Step 0
 read an existing map.
+
+`tests` records DoD compliance, not a count — git already counts the test files
+touched. `"added"`/`"updated"` mean the DoD in Step 4 was met; `"deferred"` means new
+logic shipped without a test — an honest counter-weight, meant to be read alongside the
+other gauges rather than hidden; `"n/a"` means docs/chore/no executable logic. The
+field is optional and backward-compatible — older events without it still parse.
 
 ### The reversal event (the quality counter-signal)
 
@@ -352,7 +386,7 @@ user corrects it, or rework proves it — append a second line tied to the same 
 {"event":"assumption_reversed","ts":"<ISO-8601 with tz>","date":"<YYYY-MM-DD>",
  "change":"<same kebab-name as the spec event>","task_id":2,
  "assumption":"<the inferred thing that was wrong>",
- "cost":"trivial|rework|redesign","spec_flow_version":"0.3"}
+ "cost":"trivial|rework|redesign","spec_flow_version":"0.4"}
 ```
 
 This is what makes "asked 0 questions, built the wrong thing" register as the failure it is,
@@ -411,6 +445,8 @@ is a perfectly good spec for small work.
   independent; fill them all.
 - ❌ Burying a non-dev in jargon, or boring a senior dev with over-explanation. Let the
   brief's structure serve both at once.
+- ❌ Declaring done on a Tier 1+ change with new logic and no test — "it compiles and
+  runs" is not done.
 
 ## Worked example (internal reference)
 

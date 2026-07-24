@@ -51,6 +51,16 @@ describe('parseSpecFlowEvents', () => {
     expect(e.questionsAsked).toBe(0);
     expect(e.type).toBe('other');
   });
+
+  it('parses the tests field when present', () => {
+    const [e] = parseSpecFlowEvents(LINE(ev({ tests: 'added' })));
+    expect(e.tests).toBe('added');
+  });
+
+  it('leaves tests undefined when absent (backward-compat with older events)', () => {
+    const [e] = parseSpecFlowEvents(LINE(ev()));
+    expect(e.tests).toBeUndefined();
+  });
 });
 
 describe('rolloutDate', () => {

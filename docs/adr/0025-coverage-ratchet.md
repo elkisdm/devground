@@ -1,6 +1,6 @@
 # ADR-0025: Ratchet de cobertura global + gate en CI
 
-- **Estado**: Propuesto
+- **Estado**: Aceptado
 - **Fecha**: 2026-07-07
 - **Decisor**: edaza
 - **Aplica a**: cualquier proyecto JS/TS que adopte los estándares devground vía `devground-init`; el monorepo devground

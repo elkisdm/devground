@@ -3,6 +3,8 @@
 > Estado: **Propuesto** · Tipo: diseño de medición (ADR-style) · Fecha: 2026-06-03
 > Revisión 2026-06-30 (spec-flow v0.3): medición **bidireccional** — se agrega el evento
 > `assumption_reversed` como contrapeso al Goodhart de `questions_asked`. Ver §4, §5, §8.
+> Revisión 2026-07-24 (spec-flow v0.4): se añade la señal `tests` al evento spec (DoD de
+> tests por tier).
 > Cuando spec-flow se empaquete como `@devground/sdd`, este doc se promueve a un ADR
 > formal en devground.
 
@@ -56,7 +58,8 @@ spec-flow. spec-flow **emite un evento** por corrida:
   "files": ["src/app/login/page.tsx", "src/auth/session.ts"],
   "assumptions": 2,             // # de supuestos inferidos y declarados en el brief
   "questions_asked": 0,         // fricción — SIEMPRE leído contra assumptions y reversiones
-  "brief": "inline"             // inline | docs/specs/<change>.md
+  "brief": "inline",            // inline | docs/specs/<change>.md
+  "tests": "added|updated|n/a|deferred"  // cumplimiento del DoD de tests; 'deferred' = lógica sin test (contrapeso honesto)
 }
 ```
 
