@@ -71,6 +71,11 @@ state assumptions, leave genuinely open product choices as explicit out-of-scope
 > - `src/auth/session.ts` — modify — emitir sesión tras login válido
 > - verified against code: yes (paths confirmados contra `src/`, no solo inferidos del mapa)
 >
+> ### Tests
+> - `src/app/api/auth/login/route.test.ts` — credenciales válidas → sesión creada (AC1)
+> - `src/app/api/auth/login/route.test.ts` — credenciales inválidas → error genérico, sin filtrar si el email existe (AC2)
+> - `src/app/login/page.test.tsx` — campos vacíos → bloquea el submit antes de llamar al backend (AC3)
+>
 > ### Out of scope
 > - "Olvidé mi contraseña", OAuth, 2FA, rate limiting (cambios futuros).
 

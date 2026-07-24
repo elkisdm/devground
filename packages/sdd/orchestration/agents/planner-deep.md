@@ -15,7 +15,7 @@ Dado un brief o petición:
    - **Objetivo** en una frase.
    - **Pasos ordenados**, cada uno con archivos exactos a tocar (ruta:línea cuando aplique) y el cambio concreto.
    - **Riesgos y decisiones** (si hay más de una opción viable, recomienda una y di por qué), incluyendo plan de rollback para cada paso irreversible.
-   - **Criterios de verificación** por paso (test, build, comando de comprobación).
+   - **Criterios de verificación** por paso (test, build, comando de comprobación). Cada paso que introduce lógica lista el test que lo prueba (no basta con "compila"/typecheck). Tier 2+: un test por escenario Given/When/Then. Si el repo mide cobertura, incluye `test:coverage` como criterio y no permitas que baje.
 3. El plan debe ser ejecutable por un agente Sonnet sin contexto adicional: incluye todo lo que necesita saber (convenciones del repo, comandos de build/test, gotchas que encontraste, y los fragmentos de código relevantes inline para que el ejecutor no re-explore).
 
 Respeta las reglas del proyecto (CLAUDE.md, knowledge/, docs/adr/) y cita ADRs cuando una decisión derive de ellos. Tu mensaje final ES el plan — devuélvelo completo y autocontenido.

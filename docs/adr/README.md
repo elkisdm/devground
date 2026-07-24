@@ -26,7 +26,7 @@ siguiente número de la secuencia, rellénalo y añádelo al índice de abajo.
 - [ADR-0009 — Validación de entrada en toda ruta API + firma en webhooks](0009-validacion-entrada-webhooks.md) (Propuesto)
 - [ADR-0010 — Límite de tamaño de módulo/función + container-presentational](0010-limite-tamano-modulo-funcion.md) (Propuesto)
 - [ADR-0011 — Prohibido `any` en fronteras externas (DB/API)](0011-prohibido-any-fronteras-externas.md) (Propuesto)
-- [ADR-0012 — Tests obligatorios en rutas críticas](0012-tests-rutas-criticas.md) (Propuesto)
+- [ADR-0012 — Tests obligatorios en rutas críticas](0012-tests-rutas-criticas.md) (Aceptado)
 - [ADR-0013 — Sistema de agentes de auditoría auto-mejorable (deepcheck)](0013-sistema-de-agentes-de-auditoria.md) (Aceptado)
 - [ADR-0014 — Medición de impacto de spec-flow](0014-medicion-impacto-spec-flow.md) (Propuesto)
 - [ADR-0015 — Costo de orientación (tokens antes del primer edit)](0015-costo-de-orientacion.md) (Propuesto)
@@ -39,9 +39,10 @@ siguiente número de la secuencia, rellénalo y añádelo al índice de abajo.
 - [ADR-0022 — Jerarquía de orquestación de agentes en sesiones interactivas](0022-jerarquia-de-orquestacion.md) (Reemplazado por ADR-0027)
 - [ADR-0023 — ui-conventions: convenciones de UI como contexto antes de generar](0023-ui-conventions-contexto-antes.md) (Propuesto)
 - [ADR-0024 — Integración del ecosistema ui-conventions](0024-integracion-ecosistema-ui-conventions.md) (Propuesto)
-- [ADR-0025 — Ratchet de cobertura global + gate en CI](0025-coverage-ratchet.md) (Propuesto)
+- [ADR-0025 — Ratchet de cobertura global + gate en CI](0025-coverage-ratchet.md) (Aceptado)
 - [ADR-0026 — Declarar el núcleo soportado y entrar en fase de consolidación](0026-fase-de-consolidacion-nucleo-soportado.md) (Propuesto)
 - [ADR-0027 — Empaquetar la regla de orquestación en @devground/sdd](0027-empaquetar-regla-de-orquestacion.md) (Propuesto)
+- [ADR-0029 — Tests como Definition of Done en spec-flow](0029-tests-como-definition-of-done.md) (Propuesto)
 
 ## Estándares con enforcement automático
 

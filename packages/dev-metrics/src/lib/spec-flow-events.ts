@@ -37,6 +37,8 @@ export interface SpecFlowEvent {
   /** Whether Step 0 found and read a code map. */
   codemapUsed: boolean;
   specFlowVersion: string;
+  /** DoD compliance for tests: "added"|"updated"|"n/a"|"deferred". Optional, backward-compatible. */
+  tests?: string;
 }
 
 interface RawEvent {
@@ -53,6 +55,7 @@ interface RawEvent {
   brief?: unknown;
   codemap_used?: unknown;
   spec_flow_version?: unknown;
+  tests?: unknown;
 }
 
 function str(v: unknown, fallback = ''): string {
@@ -82,6 +85,7 @@ function normalize(raw: RawEvent): SpecFlowEvent | null {
     brief: str(raw.brief),
     codemapUsed: raw.codemap_used === true,
     specFlowVersion: str(raw.spec_flow_version),
+    tests: str(raw.tests) || undefined,
   };
 }
 
