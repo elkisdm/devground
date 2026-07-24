@@ -1,5 +1,14 @@
 # @devground/sdd
 
+## 1.2.0
+
+### Minor Changes
+
+- bec5e6a: spec-flow v0.4: tests as part of the Definition of Done by tier (Step 4 DoD,
+  required Tests section in the brief from Tier 1, hardened orchestration agents)
+  - `tests` signal in the spec telemetry event (backward-compatible). Skill
+    internal version bumped 0.3 → 0.4.
+
 ## 1.1.2
 
 ### Patch Changes
