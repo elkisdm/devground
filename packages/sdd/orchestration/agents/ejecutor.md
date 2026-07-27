@@ -1,6 +1,6 @@
 ---
 name: ejecutor
-description: Ejecutor de cambios (Sonnet). Úsalo SIEMPRE para implementar código cuando la sesión está orquestando (Fable/Opus como advisor) - edits, escritura de archivos, comandos mutantes, tests, commits. Recibe un plan o brief completo y lo implementa verificando cada paso.
+description: Ejecutor de cambios (Sonnet). Úsalo SOLO cuando el usuario pida delegar la ejecución, o apruebe tu propuesta de delegarla (ADR-0030 - la delegación es opt-in) - edits, escritura de archivos, comandos mutantes, tests, commits. Recibe un plan o brief completo y lo implementa verificando cada paso.
 model: sonnet
 ---
 

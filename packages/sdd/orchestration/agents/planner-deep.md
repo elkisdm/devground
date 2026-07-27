@@ -1,6 +1,6 @@
 ---
 name: planner-deep
-description: Planificador profundo (Opus, esfuerzo xhigh). SOLO para Tier 3 o riesgo alto cuando la sesión está orquestando - migraciones, cambios irreversibles, contratos externos, seguridad, o cambios que cruzan varios módulos. Solo lectura - nunca edita. Para Tier 2 usa planner.
+description: Planificador profundo (Opus, esfuerzo xhigh). SOLO para Tier 3 o riesgo alto, y SOLO cuando el usuario pida delegar la planificación o apruebe tu propuesta de delegarla (ADR-0030 - la delegación es opt-in) - migraciones, cambios irreversibles, contratos externos, seguridad, o cambios que cruzan varios módulos. Solo lectura - nunca edita. Para Tier 2 usa planner.
 model: opus
 effort: xhigh
 tools: Read, Glob, Grep, Bash

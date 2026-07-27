@@ -6,6 +6,11 @@ sesiones interactivas: cuando el modelo de sesión es Fable/Mythos/Opus, actúa 
 el tier de la petición. Ver [ADR-0027](../../../docs/adr/0027-empaquetar-regla-de-orquestacion.md)
 (sucede a [ADR-0022](../../../docs/adr/0022-jerarquia-de-orquestacion.md)).
 
+**Sin esta capa no hay delegación automática.** El flujo por defecto de `@devground/sdd`
+—`spec-flow` clasifica, tú ejecutas, los subagentes se lanzan solo si el usuario los pide—
+es el de [ADR-0030](../../../docs/adr/0030-delegacion-opt-in-por-peticion.md). Todo lo que
+sigue describe qué cambia si activas la capa a propósito.
+
 **La fuente de verdad son los archivos vivos en `~/.claude`.** Este directorio es su
 **mirror versionado** — se actualiza con `sync-orchestration.mjs`, nunca a mano.
 
@@ -47,6 +52,11 @@ sobrescribe un archivo existente). `settings.hooks.json` y `CLAUDE.rule.md` son
 **extractos de merge**, no archivos standalone — el installer imprime dónde vive cada
 snippet para que los pegues a mano en `~/.claude/settings.json` (clave `"hooks"`) y en
 tu `CLAUDE.md` (sección `## Rules`).
+
+`CLAUDE.rule.md` trae dos bullets: el **base** va siempre, el **add-on** solo si además
+registraste los hooks. Pegar el add-on sin los hooks deja una orden imperativa sin
+enforcement que delega en cada petición con Opus/Fable — es el fallo que documenta
+ADR-0030 §Contexto.
 
 ## Sync
 
@@ -92,4 +102,20 @@ Defectos conocidos abiertos, a resolver antes de recomendar la activación:
 2. `orchestrator-context.sh` menciona `spec-flow` solo como paréntesis dentro de una
    instrucción imperativa de ruteo por tier; en la práctica la desplaza.
 3. Tier 0-1 no rentabiliza la delegación: el brief más el re-descubrimiento del repo por
-   parte del ejecutor cuestan más que el cambio.
+   parte del ejecutor cuestan más que el cambio. Sacarlos exige tocar
+   `orchestrator-gate.sh`, que deniega `Edit`/`Write` en el main loop sin mirar el tier;
+   no basta con reescribir el bullet.
+
+## Post-mortem del apagado (2026-07-27)
+
+Desactivar los hooks no detuvo la delegación. Entre el 23 y el 27 de julio, con los hooks
+ya desregistrados, se lanzaron **232 subagentes sin que el usuario los pidiera** (183
+`ejecutor`, 33 `planner`, 16 `planner-deep`), concentrados en un solo repo (200).
+
+La causa fue el texto: el bullet de `CLAUDE.rule.md` seguía pegado en el `CLAUDE.md`
+**global**, y su condición es el modelo de sesión, no la petición. Con Opus como modelo
+habitual, se cumplía siempre.
+
+Lección para quien instale esta capa: **el snippet de `CLAUDE.md` es tan activo como los
+hooks, y sobrevive a desactivarlos.** Si apagas la capa, quita también el bullet add-on.
+Ver [ADR-0030](../../../docs/adr/0030-delegacion-opt-in-por-peticion.md).

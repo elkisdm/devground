@@ -42,7 +42,9 @@ siguiente número de la secuencia, rellénalo y añádelo al índice de abajo.
 - [ADR-0025 — Ratchet de cobertura global + gate en CI](0025-coverage-ratchet.md) (Aceptado)
 - [ADR-0026 — Declarar el núcleo soportado y entrar en fase de consolidación](0026-fase-de-consolidacion-nucleo-soportado.md) (Propuesto)
 - [ADR-0027 — Empaquetar la regla de orquestación en @devground/sdd](0027-empaquetar-regla-de-orquestacion.md) (Propuesto)
+- [ADR-0028 — La capa de orquestación es opt-in y queda desactivada por defecto](0028-orquestacion-opt-in-desactivada-por-defecto.md) (Propuesto)
 - [ADR-0029 — Tests como Definition of Done en spec-flow](0029-tests-como-definition-of-done.md) (Propuesto)
+- [ADR-0030 — La delegación a subagentes es opt-in por petición](0030-delegacion-opt-in-por-peticion.md) (Aceptado)
 
 ## Estándares con enforcement automático
 

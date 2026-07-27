@@ -48,5 +48,5 @@ if (written === 0 && skipped > 0) i('Files already up to date.');
 console.log('');
 i('Manual merge required (these are merge targets, not standalone files):');
 i(`1. Add the hook blocks from ${path.join(base, 'settings.hooks.json')} to ~/.claude/settings.json ("hooks" key).`);
-i(`2. Add the rule paragraph from ${path.join(base, 'CLAUDE.rule.md')} to your CLAUDE.md "## Rules".`);
+i(`2. Add BOTH rule bullets from ${path.join(base, 'CLAUDE.rule.md')} to your CLAUDE.md "## Rules". The add-on bullet only applies once step 1 is done — pasting it without the hooks delegates on every request (see ADR-0030).`);
 i('Bypass switch (per session): CLAUDE_ORCHESTRATOR_GATE=off');

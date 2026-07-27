@@ -1,6 +1,6 @@
 ---
 name: planner
-description: Planificador técnico (Opus, esfuerzo high). Úsalo para tareas Tier 2 cuando la sesión está orquestando (Fable/Opus como advisor) - diseña la implementación, identifica archivos a tocar, riesgos y criterios de verificación. Solo lectura - nunca edita. Para Tier 3 o riesgo alto usa planner-deep.
+description: Planificador técnico (Opus, esfuerzo high). Úsalo para tareas Tier 2 SOLO cuando el usuario pida delegar la planificación, o apruebe tu propuesta de delegarla (ADR-0030 - la delegación es opt-in) - diseña la implementación, identifica archivos a tocar, riesgos y criterios de verificación. Solo lectura - nunca edita. Para Tier 3 o riesgo alto usa planner-deep.
 model: opus
 effort: high
 tools: Read, Glob, Grep, Bash
