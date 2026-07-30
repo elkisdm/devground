@@ -45,6 +45,7 @@ siguiente número de la secuencia, rellénalo y añádelo al índice de abajo.
 - [ADR-0028 — La capa de orquestación es opt-in y queda desactivada por defecto](0028-orquestacion-opt-in-desactivada-por-defecto.md) (Propuesto)
 - [ADR-0029 — Tests como Definition of Done en spec-flow](0029-tests-como-definition-of-done.md) (Propuesto)
 - [ADR-0030 — La delegación a subagentes es opt-in por petición](0030-delegacion-opt-in-por-peticion.md) (Aceptado)
+- [ADR-0031 — Al delegar, el modelo del subagente va explícito por naturaleza de la tarea](0031-modelo-explicito-al-delegar.md) (Aceptado)
 
 ## Estándares con enforcement automático
 
