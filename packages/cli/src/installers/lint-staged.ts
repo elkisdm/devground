@@ -21,7 +21,18 @@ export function install(options: InstallerOptions): InstallResult {
   // file that re-exports the shared rules instead of a bare package.json string.
   // `.cjs` forces CommonJS regardless of the project's package.json "type",
   // matching the CommonJS export of @devground/lint-staged-config.
-  const configContent = `module.exports = require('@devground/lint-staged-config');\n`;
+  // El preset compartido solo cubre TS/TSX. En un proyecto JavaScript eso deja
+  // el pre-commit sin nada que lintear ni formatear, así que se agregan los
+  // globs .js/.mjs/.cjs/.jsx en el config del consumidor.
+  const configContent = stack.hasTypeScript
+    ? `module.exports = require('@devground/lint-staged-config');\n`
+    : `const base = require('@devground/lint-staged-config');
+
+module.exports = {
+  ...base,
+  '*.{js,mjs,cjs,jsx}': ['eslint --fix', 'prettier --write'],
+};
+`;
   ops.writeFile(configPath, configContent);
 
   success('lint-staged configured with @devground/lint-staged-config');
