@@ -6,11 +6,17 @@ import type { InstallerOptions, InstallResult } from '../types.js';
 export function install(options: InstallerOptions): InstallResult {
   const { targetDir, stack } = options;
   const ops = resolveOps(options);
-  const configPath = join(targetDir, 'commitlint.config.js');
+  // `.cjs` fuerza CommonJS pase lo que pase con el "type" del package.json: el
+  // config exporta con module.exports, y en un proyecto ESM ("type": "module")
+  // un `.js` lo rompe al cargarlo. Mismo criterio que lint-staged.
+  const configPath = join(targetDir, 'commitlint.config.cjs');
+  const legacyPath = join(targetDir, 'commitlint.config.js');
 
-  if (ops.fileExists(configPath)) {
-    warn(`Commitlint config skipped: ${configPath} already exists (left untouched).`);
-    return 'skipped';
+  for (const existing of [configPath, legacyPath]) {
+    if (ops.fileExists(existing)) {
+      warn(`Commitlint config skipped: ${existing} already exists (left untouched).`);
+      return 'skipped';
+    }
   }
 
   ops.addDevDependency(targetDir, stack.packageManager, '@devground/commitlint-config', '@commitlint/cli');

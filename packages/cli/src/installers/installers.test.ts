@@ -199,14 +199,15 @@ describe('vitest installer', () => {
 });
 
 describe('commitlint installer', () => {
-  it('adds deps and writes commitlint.config.js', () => {
+  it('adds deps and writes commitlint.config.cjs', () => {
     const { ops, devDeps, writes } = makeRecordingOps();
 
     const result = commitlint.install(optionsFor(NODE_STACK, ops));
 
     expect(result).toBe('installed');
     expect(devDeps[0]?.packages).toEqual(['@devground/commitlint-config', '@commitlint/cli']);
-    expect(writes[0]?.path).toBe('/proj/commitlint.config.js');
+    // .cjs, no .js: el config es CommonJS y un proyecto ESM no lo podría cargar.
+    expect(writes[0]?.path).toBe('/proj/commitlint.config.cjs');
     expect(writes[0]?.content).toContain("extends: ['@devground/commitlint-config']");
   });
 });
@@ -393,7 +394,7 @@ describe('overwrite guard (honors "no sobreescribe nada existente")', () => {
     expect(devDeps).toHaveLength(0);
   });
 
-  it('commitlint skips writing and deps when commitlint.config.js already exists', () => {
+  it('commitlint skips writing and deps when a config already exists (legacy .js included)', () => {
     const { ops, writes, devDeps } = makeRecordingOps({}, ['/proj/commitlint.config.js']);
 
     const result = commitlint.install(optionsFor(NODE_STACK, ops));
