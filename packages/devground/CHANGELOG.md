@@ -1,5 +1,14 @@
 # @devground/devground
 
+## 2.0.2
+
+### Patch Changes
+
+- Updated dependencies [bfc1d3b]
+- Updated dependencies [b5ae9f7]
+  - @devground/eslint-config@1.4.0
+  - devground-init@1.5.0
+
 ## 2.0.1
 
 ### Patch Changes
