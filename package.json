@@ -11,12 +11,22 @@
     "typecheck": "pnpm -r typecheck",
     "lint": "eslint .",
     "changeset": "changeset",
-    "publish-packages": "changeset publish"
+    "publish-packages": "changeset publish",
+    "prepare": "husky"
   },
   "devDependencies": {
     "@changesets/cli": "^2.31.0",
+    "@commitlint/cli": "^19.6.1",
+    "@devground/commitlint-config": "workspace:*",
     "@devground/eslint-config": "workspace:*",
+    "@devground/husky-config": "workspace:*",
+    "@devground/lint-staged-config": "workspace:*",
+    "@devground/prettier-config": "workspace:*",
     "@typescript-eslint/parser": "^8.63.0",
-    "eslint": "^10.7.0"
-  }
+    "eslint": "^10.7.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.2.11",
+    "prettier": "^3.4.2"
+  },
+  "prettier": "@devground/prettier-config"
 }
