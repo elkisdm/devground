@@ -39,6 +39,14 @@ export interface SpecFlowEvent {
   specFlowVersion: string;
   /** DoD compliance for tests: "added"|"updated"|"n/a"|"deferred". Optional, backward-compatible. */
   tests?: string;
+  /**
+   * Closing review gate (spec-flow 0.5, ADR-0036). `undefined` on older events and
+   * on `"n/a"`; otherwise the level that ran and its finding counts.
+   *
+   * `findings` is the gauge the other two can't give: whether the changes are
+   * getting cleaner over time. `findings > resolved` is debt left open.
+   */
+  review?: { level: string; findings: number; resolved: number };
 }
 
 interface RawEvent {
@@ -56,6 +64,7 @@ interface RawEvent {
   codemap_used?: unknown;
   spec_flow_version?: unknown;
   tests?: unknown;
+  review?: unknown;
 }
 
 function str(v: unknown, fallback = ''): string {
@@ -64,6 +73,21 @@ function str(v: unknown, fallback = ''): string {
 
 function num(v: unknown, fallback = 0): number {
   return typeof v === 'number' && Number.isFinite(v) ? v : fallback;
+}
+
+/**
+ * Normalizes the `review` field. Tolerates the three shapes it takes in the wild:
+ * absent (events written before spec-flow 0.5), the string `"n/a"`, or the object.
+ * Anything else is treated as absent rather than crashing the parse — one malformed
+ * line must never take down a whole metrics run.
+ */
+function normalizeReview(v: unknown): { level: string; findings: number; resolved: number } | undefined {
+  if (v === null || v === undefined || typeof v === 'string') return undefined;
+  if (typeof v !== 'object') return undefined;
+  const raw = v as { level?: unknown; findings?: unknown; resolved?: unknown };
+  const level = str(raw.level);
+  if (level === '') return undefined;
+  return { level, findings: num(raw.findings), resolved: num(raw.resolved) };
 }
 
 /** Normalizes one parsed JSON object into a `SpecFlowEvent`, or null if it has no date. */
@@ -86,6 +110,7 @@ function normalize(raw: RawEvent): SpecFlowEvent | null {
     codemapUsed: raw.codemap_used === true,
     specFlowVersion: str(raw.spec_flow_version),
     tests: str(raw.tests) || undefined,
+    review: normalizeReview(raw.review),
   };
 }
 

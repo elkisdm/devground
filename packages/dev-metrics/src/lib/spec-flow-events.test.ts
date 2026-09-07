@@ -90,3 +90,37 @@ describe('frictionByTier', () => {
     expect(f[3]).toBe(3);
   });
 });
+
+describe('campo review (spec-flow 0.5, ADR-0036)', () => {
+  function parseOne(extra: string) {
+    const line = `{"event":"spec","date":"2026-09-07","change":"x","tier":1${extra}}`;
+    return parseSpecFlowEvents(line)[0];
+  }
+
+  it('lee el objeto de review completo', () => {
+    const e = parseOne(',"review":{"level":"high","findings":3,"resolved":2}');
+
+    expect(e.review).toEqual({ level: 'high', findings: 3, resolved: 2 });
+  });
+
+  it('un evento viejo sin review sigue parseando', () => {
+    // Retrocompatibilidad: los eventos escritos antes de 0.5 no tienen el campo.
+    expect(parseOne('').review).toBeUndefined();
+  });
+
+  it('trata "n/a" como ausencia, no como objeto', () => {
+    expect(parseOne(',"review":"n/a"').review).toBeUndefined();
+  });
+
+  it('un review malformado no rompe el parseo de la linea', () => {
+    // Una linea corrupta no puede tumbar una corrida completa de metricas.
+    expect(parseOne(',"review":{"findings":3}').review).toBeUndefined();
+    expect(parseOne(',"review":42').review).toBeUndefined();
+  });
+
+  it('completa con 0 los conteos ausentes en vez de dar NaN', () => {
+    const e = parseOne(',"review":{"level":"medium"}');
+
+    expect(e.review).toEqual({ level: 'medium', findings: 0, resolved: 0 });
+  });
+});
