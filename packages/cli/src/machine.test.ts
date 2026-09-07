@@ -13,7 +13,10 @@ import {
   installedHooks,
   isOptedIn,
   machineHooksDir,
+  machineReport,
   planMachineInstall,
+  resolveRoots,
+  successReport,
 } from './machine.js';
 
 const TEMPLATES = join(__dirname, '..', 'templates', 'machine');
@@ -131,6 +134,78 @@ describe('installMachineHooks', () => {
     const second = installMachineHooks(TEMPLATES, hooksDir);
 
     expect(second).toHaveLength(ACTIVE_HOOKS.length + PASSTHROUGH_HOOKS.length);
+  });
+});
+
+describe('resolveRoots', () => {
+  it('cae en ~/Developer cuando no se pide nada', () => {
+    expect(resolveRoots(undefined, '/home/x')).toBe('/home/x/Developer');
+  });
+
+  it('respeta la raíz pedida', () => {
+    expect(resolveRoots('/w:/z', '/home/x')).toBe('/w:/z');
+  });
+
+  it('trata una raíz en blanco como no pedida', () => {
+    expect(resolveRoots('   ', '/home/x')).toBe('/home/x/Developer');
+  });
+});
+
+describe('machineReport', () => {
+  it('ante un hooksPath ajeno reporta error y nombra el culpable', () => {
+    const plan = planMachineInstall('/home/x', '/otra/herramienta');
+    const lines = machineReport(plan, '/home/x/Developer', '/otra/herramienta');
+
+    expect(lines.some((l) => l.kind === 'error')).toBe(true);
+    expect(lines.map((l) => l.text).join(' ')).toContain('/otra/herramienta');
+  });
+
+  it('el reporte de conflicto ofrece las dos salidas, no solo el problema', () => {
+    const plan = planMachineInstall('/home/x', '/otra');
+    const texto = machineReport(plan, '/r', '/otra')
+      .map((l) => l.text)
+      .join(' ');
+
+    expect(texto).toContain('a mano');
+    expect(texto).toContain('--unset core.hooksPath');
+  });
+
+  it('en el camino feliz no reporta ningún error', () => {
+    const plan = planMachineInstall('/home/x', undefined);
+    const lines = machineReport(plan, '/home/x/Developer', undefined);
+
+    expect(lines.every((l) => l.kind === 'info')).toBe(true);
+    expect(lines.map((l) => l.text).join(' ')).toContain('/home/x/Developer');
+  });
+
+  it('siempre dice cómo excluir un repo', () => {
+    const plan = planMachineInstall('/home/x', undefined);
+    const texto = machineReport(plan, '/r', undefined)
+      .map((l) => l.text)
+      .join(' ');
+
+    expect(texto).toContain('.devground-ignore');
+  });
+});
+
+describe('successReport', () => {
+  it('promete explícitamente que husky y los hooks locales sobreviven', () => {
+    // Es la duda que cualquiera tiene al fijar un hook global; si el mensaje
+    // no la responde, la instalación asusta aunque sea segura.
+    const texto = successReport(8)
+      .map((l) => l.text)
+      .join(' ');
+
+    expect(texto).toContain('husky');
+    expect(texto).toContain('.git/hooks');
+  });
+
+  it('incluye el rollback', () => {
+    expect(successReport(8).map((l) => l.text).join(' ')).toContain('--unset core.hooksPath');
+  });
+
+  it('reporta cuántos se instalaron', () => {
+    expect(successReport(8)[0].text).toContain('8');
   });
 });
 

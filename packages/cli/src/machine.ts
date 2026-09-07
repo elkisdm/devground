@@ -126,3 +126,59 @@ export function installedHooks(hooksDir: string): string[] {
   if (!existsSync(hooksDir)) return [];
   return readdirSync(hooksDir).filter((f) => !f.startsWith('_'));
 }
+
+/** Raíces cubiertas: lo que pidió el usuario, o `~/Developer` por defecto. */
+export function resolveRoots(requested: string | undefined, home: string): string {
+  const trimmed = requested?.trim();
+  return trimmed ? trimmed : join(home, 'Developer');
+}
+
+export interface ReportLine {
+  kind: 'info' | 'warn' | 'error' | 'success';
+  text: string;
+}
+
+/**
+ * Qué reportar, dado un plan. Devolver líneas en vez de imprimirlas mantiene
+ * el comando como una cáscara delgada sobre lógica testeable — la lección del
+ * WS4 del deepcheck de julio, donde la lógica metida en el entrypoint quedó
+ * imposible de cubrir porque corre al importarse.
+ */
+export function machineReport(
+  plan: MachineInstallPlan,
+  roots: string,
+  currentHooksPath: string | undefined,
+): ReportLine[] {
+  if (!plan.safeToProceed) {
+    return [
+      { kind: 'error', text: 'Esta máquina ya tiene un core.hooksPath global de otra herramienta:' },
+      { kind: 'error', text: `  ${currentHooksPath ?? '(desconocido)'}` },
+      { kind: 'info', text: 'devground no lo pisa. Opciones:' },
+      { kind: 'info', text: '  1. Integra los despachadores de devground en ese directorio a mano.' },
+      { kind: 'info', text: '  2. Libera el hook global:  git config --global --unset core.hooksPath' },
+    ];
+  }
+
+  return [
+    { kind: 'info', text: `Directorio de hooks : ${plan.hooksDir}` },
+    { kind: 'info', text: `Repos cubiertos     : los que cuelguen de ${roots}` },
+    { kind: 'info', text: '                      + cualquiera con un archivo .devground en su raíz' },
+    { kind: 'info', text: 'Excluir un repo     : touch .devground-ignore en su raíz' },
+  ];
+}
+
+/** Lo que se imprime tras una instalación exitosa. */
+export function successReport(written: number): ReportLine[] {
+  return [
+    { kind: 'success', text: `${written} despachadores instalados y core.hooksPath global apuntando a ellos.` },
+    {
+      kind: 'info',
+      text: 'Los repos con husky propio NO cambian: su core.hooksPath local gana sobre el global.',
+    },
+    {
+      kind: 'info',
+      text: 'Los hooks propios de cada repo (.git/hooks) siguen corriendo: el despachador encadena.',
+    },
+    { kind: 'info', text: 'Deshacer, en una línea:  git config --global --unset core.hooksPath' },
+  ];
+}
