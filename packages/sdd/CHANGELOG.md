@@ -1,5 +1,20 @@
 # @devground/sdd
 
+## 1.3.0
+
+### Minor Changes
+
+- 81b0357: Delegation to subagents is now opt-in per request, not a session default (ADR-0030).
+  `CLAUDE.rule.md` splits into two bullets — a base rule that never delegates and an
+  add-on that only applies once the orchestration hooks are registered — and the
+  installer warns that pasting the add-on without the hooks delegates on every request.
+  The `orchestration/` README documents the measured post-mortem: 232 unrequested
+  subagent launches in 4 days with the hooks already off, caused by the rule text alone.
+
+### Patch Changes
+
+- 4d30fdb: La capa `orchestration/` documenta el ruteo de modelo al delegar: la llamada a un subagente lleva `model` explícito por naturaleza de la tarea (búsqueda → sonnet, mecánico → haiku, lógica → sonnet, juicio → opus). Es un bullet condicional: no ordena delegar, solo abarata lo que ya se decidió delegar (ADR-0031).
+
 ## 1.2.0
 
 ### Minor Changes
