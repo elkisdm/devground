@@ -49,6 +49,7 @@ siguiente número de la secuencia, rellénalo y añádelo al índice de abajo.
 - [ADR-0032 — Veredicto de los 11 experimentales al cierre del ciclo de 8 semanas](0032-veredictos-experimentales.md) (Aceptado)
 - [ADR-0033 — Cerrar la fase de consolidación y reabrir la expansión hacia los stacks reales](0033-salida-de-consolidacion.md) (Aceptado)
 - [ADR-0034 — Instalar el estándar una vez por máquina, no una vez por proyecto](0034-instalacion-por-maquina.md) (Aceptado)
+- [ADR-0035 — Cubrir Python/FastAPI y TanStack cosechando configuración ya rodada](0035-cobertura-python-y-tanstack.md) (Aceptado)
 
 ## Estándares con enforcement automático
 

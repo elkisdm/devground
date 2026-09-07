@@ -1,0 +1,41 @@
+# Pre-commit — configuracion de devground para proyectos Python (ADR-0035).
+#
+# Instalacion:  pip install pre-commit && pre-commit install
+#
+# Los hooks de aqui son LIGEROS a proposito (~1-3s). mypy y pytest NO estan:
+# un pre-commit lento se termina saltando con --no-verify, y un gate que se
+# saltea no es un gate. Esos dos van en CI, donde el tiempo no interrumpe.
+#
+# Cosechado del .pre-commit-config.yaml de atlas, que ya lleva meses en uso.
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: ['--maxkb=500']
+      - id: detect-private-key
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.9
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+      - id: ruff-format
+
+  - repo: local
+    hooks:
+      # ADR-0008: higiene de secretos. detect-private-key arriba solo ve claves
+      # privadas; un .env commiteado se escapa de esa regla y es la fuga mas
+      # comun en la practica.
+      - id: no-env-secrets
+        name: Evita commitear archivos .env
+        entry: bash -c 'if git diff --cached --name-only | grep -E "(^|/)\.env$"; then echo "ERROR: no commitear .env"; exit 1; fi'
+        language: system
+        pass_filenames: false

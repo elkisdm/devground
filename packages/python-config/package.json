@@ -1,0 +1,45 @@
+{
+  "name": "@devground/python-config",
+  "version": "0.1.0",
+  "description": "Configuracion devground para proyectos Python y FastAPI: ruff, pytest y pre-commit, cosechados de un repo en produccion",
+  "bin": {
+    "devground-python": "./setup.js"
+  },
+  "files": [
+    "setup.js",
+    "lib/",
+    "templates/"
+  ],
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "keywords": [
+    "python",
+    "fastapi",
+    "ruff",
+    "pytest",
+    "pre-commit",
+    "devground"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/elkisdm/devground.git",
+    "directory": "packages/python-config"
+  },
+  "homepage": "https://github.com/elkisdm/devground/tree/main/packages/python-config#readme",
+  "bugs": {
+    "url": "https://github.com/elkisdm/devground/issues"
+  },
+  "devDependencies": {
+    "@devground/vitest-config": "workspace:*",
+    "vitest": "^2.1.0"
+  }
+}

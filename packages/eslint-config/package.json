@@ -7,10 +7,12 @@
     ".": "./index.mjs",
     "./next": "./next.mjs",
     "./ui": "./ui.mjs",
-    "./astro": "./astro.mjs"
+    "./astro": "./astro.mjs",
+    "./tanstack": "./tanstack.mjs"
   },
   "files": [
-    "*.mjs"
+    "*.mjs",
+    "!*.test.mjs"
   ],
   "keywords": [
     "eslint",
@@ -49,7 +51,9 @@
     }
   },
   "devDependencies": {
-    "eslint-plugin-jsx-a11y": "^6.10.2"
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "@devground/vitest-config": "workspace:*",
+    "vitest": "^2.1.0"
   },
   "repository": {
     "type": "git",
@@ -59,5 +63,8 @@
   "homepage": "https://github.com/elkisdm/devground/tree/main/packages/eslint-config#readme",
   "bugs": {
     "url": "https://github.com/elkisdm/devground/issues"
+  },
+  "scripts": {
+    "test": "vitest run"
   }
 }

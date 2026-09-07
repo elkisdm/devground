@@ -201,9 +201,15 @@ importers:
         specifier: '>=1.0.0'
         version: 2.1.1(@typescript-eslint/parser@8.59.3(eslint@10.7.0(jiti@2.6.1))(typescript@5.9.3))(eslint-plugin-jsx-a11y@6.10.2(eslint@10.7.0(jiti@2.6.1)))(eslint@10.7.0(jiti@2.6.1))
     devDependencies:
+      '@devground/vitest-config':
+        specifier: workspace:*
+        version: link:../vitest-config
       eslint-plugin-jsx-a11y:
         specifier: ^6.10.2
         version: 6.10.2(eslint@10.7.0(jiti@2.6.1))
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@26.1.1)(lightningcss@1.32.0)
 
   packages/husky-config:
     dependencies:
@@ -236,6 +242,15 @@ importers:
         version: 2.1.9(@types/node@26.1.1)(lightningcss@1.32.0)
 
   packages/prettier-config: {}
+
+  packages/python-config:
+    devDependencies:
+      '@devground/vitest-config':
+        specifier: workspace:*
+        version: link:../vitest-config
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@26.1.1)(lightningcss@1.32.0)
 
   packages/sdd: {}
 
