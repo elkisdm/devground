@@ -1,5 +1,10 @@
 # @devground/swift-format-config
 
+> [!WARNING]
+> **Estado: Congelado** (ADR-0032, 2026-09-07). Sin mantenimiento activo: no recibe
+> features ni actualizaciones de dependencias. Lo publicado sigue funcionando y nada se
+> borra. Reactivable con un ADR nuevo — basta con que un proyecto lo consuma.
+
 Configuración compartida de **SwiftFormat** (formateo) + **SwiftLint** (validación) para
 proyectos Swift/iOS. Es el análogo Swift de `@devground/eslint-config` +
 `@devground/prettier-config`. Materializa [ADR-0020](https://github.com/elkisdm/devground/blob/main/docs/adr/0020-swift-testing-harness-estandar.md)

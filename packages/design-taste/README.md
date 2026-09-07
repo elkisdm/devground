@@ -1,5 +1,10 @@
 # @devground/design-taste
 
+> [!WARNING]
+> **Estado: Congelado** (ADR-0032, 2026-09-07). Sin mantenimiento activo: no recibe
+> features ni actualizaciones de dependencias. Lo publicado sigue funcionando y nada se
+> borra. Reactivable con un ADR nuevo — basta con que un proyecto lo consuma.
+
 **Anti-slop UI/UX design skills for Claude Code.** Stronger layout, typography, motion and
 spacing — interfaces that read as designed, not templated. The agent reads your brief,
 infers a design direction, and ships against a strict pre-flight check instead of falling

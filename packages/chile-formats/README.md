@@ -1,5 +1,10 @@
 # @devground/chile-formats
 
+> [!WARNING]
+> **Estado: Congelado** (ADR-0032, 2026-09-07). Sin mantenimiento activo: no recibe
+> features ni actualizaciones de dependencias. Lo publicado sigue funcionando y nada se
+> borra. Reactivable con un ADR nuevo — basta con que un proyecto lo consuma.
+
 Zero-dependency es-CL formatting/validation helpers: RUT (module 11), phone (+56 9), and
 CLP/UF/number via `Intl.NumberFormat('es-CL')`.
 

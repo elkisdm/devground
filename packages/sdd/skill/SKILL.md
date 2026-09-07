@@ -18,7 +18,7 @@ description: >
 license: MIT
 metadata:
   author: edaza
-  version: "0.4"
+  version: "0.5"
 ---
 
 ## What this is
@@ -211,6 +211,11 @@ the plan; a spec without them is a wish.
 - <if the project measures coverage: note impact — never drops; money/leads/auth routes meet the fixed threshold (ADR-0012)>
 - <if no tests apply (docs/chore/style, no executable logic): say so with the reason, one line>
 
+### Review                         (REQUIRED from Tier 1 up)
+- Level: <medium (T1) | high (T2) | max or deepcheck (T3)> — see Step 4
+- <filled in AFTER implementing: findings surfaced, and what happened to each>
+- <a finding is closed by fixing it, or by one line saying why it isn't real / isn't now>
+
 ### Out of scope
 - <what we are deliberately not doing now>
 
@@ -314,6 +319,35 @@ proportionality principle from Step 2 applied to the finish line, not just the s
   `tests:"n/a"` telemetry value in Step 6). NEVER skip this on money/leads/auth logic —
   that's where the exception stops applying.
 
+### Review as the closing gate (Tier 1+)
+
+Tests prove the code does what the spec said. They can't tell you the spec was
+incomplete, that the change broke an invariant nobody wrote down, or that it duplicates
+something three modules over. That's what a review catches — and in practice a review
+after implementing **almost always surfaces something**, which is exactly why it belongs
+in the DoD rather than in good intentions.
+
+Same proportionality as everything else:
+
+| Tier | Review |
+|------|--------|
+| 0 | none — preserves the "no artifacts" promise |
+| 1 | `/code-review medium` on the diff |
+| 2 | `/code-review high` |
+| 3 | `/code-review max`, or `deepcheck` when the change crosses modules |
+
+This does not compete with `/code-review` or deepcheck — it **schedules** them. The rule
+is: **run the review for the tier, then close every finding.** A finding closes by being
+fixed, or by one line saying why it isn't real or isn't now. A change with open findings
+and no reason recorded is not done.
+
+Run it **after the tests are green**, not instead of them: a reviewer reading broken code
+spends its attention on what the tests would have caught for free.
+
+If a finding reveals that an inferred assumption was wrong, that's an
+`assumption_reversed` event (below) — not just a fix. Reviews are the main way those
+get discovered.
+
 ## Step 5 — Update the code map (close the flywheel)
 
 This is what makes Step 0 get cheaper over time instead of rotting. After the change
@@ -360,8 +394,17 @@ instead of guessing by timestamp.
  "tier":1,"type":"feat|fix|refactor|perf|docs|test|chore|spike","size":"trivial|small|medium|large",
  "risk":"low|med|high","uncertainty":"known|unknown","files":["path",...],
  "assumptions":2,"questions_asked":0,"brief":"inline|docs/specs/<name>.md","codemap_used":true,
- "tests":"added|updated|n/a|deferred","spec_flow_version":"0.4"}
+ "tests":"added|updated|n/a|deferred",
+ "review":{"level":"medium|high|max|deepcheck","findings":3,"resolved":3}|"n/a",
+ "spec_flow_version":"0.5"}
 ```
+
+`review` records the closing gate of Step 4: which level ran, how many findings it
+surfaced, and how many were closed. `"n/a"` only for Tier 0 or a change with no
+executable logic. It is the third gauge, and the one that answers a question the other
+two can't: **are the changes getting cleaner?** `findings` per change should trend down
+as the flow improves — if it doesn't, spec-flow is producing briefs that look complete
+and aren't. `findings > resolved` at close is debt, and it's meant to be visible.
 
 Read `questions_asked` and `assumptions` **together** — never `questions_asked` alone.
 Zero questions on a change that made ten high-risk assumptions is not a triumph; it's
@@ -386,7 +429,7 @@ user corrects it, or rework proves it — append a second line tied to the same 
 {"event":"assumption_reversed","ts":"<ISO-8601 with tz>","date":"<YYYY-MM-DD>",
  "change":"<same kebab-name as the spec event>","task_id":2,
  "assumption":"<the inferred thing that was wrong>",
- "cost":"trivial|rework|redesign","spec_flow_version":"0.4"}
+ "cost":"trivial|rework|redesign","spec_flow_version":"0.5"}
 ```
 
 This is what makes "asked 0 questions, built the wrong thing" register as the failure it is,

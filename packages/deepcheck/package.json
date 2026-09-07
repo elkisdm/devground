@@ -49,5 +49,10 @@
     "@types/node": "^26",
     "typescript": "^5.0.0",
     "vitest": "^2.1.0"
+  },
+  "devground": {
+    "status": "supported",
+    "graduatedBy": "ADR-0032",
+    "graduatedAt": "2026-09-07"
   }
 }

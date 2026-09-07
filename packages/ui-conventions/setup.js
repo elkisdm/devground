@@ -26,29 +26,7 @@ function info(msg) {
   console.log(`  \x1b[36m→\x1b[0m ${msg}`);
 }
 
-/** Copies a tree, skipping files that already exist at the destination. */
-function copyDirGuarded(src, dst) {
-  fs.mkdirSync(dst, { recursive: true });
-  let written = 0;
-  let skipped = 0;
-  for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
-    const srcPath = path.join(src, entry.name);
-    const dstPath = path.join(dst, entry.name);
-    if (entry.isDirectory()) {
-      const sub = copyDirGuarded(srcPath, dstPath);
-      written += sub.written;
-      skipped += sub.skipped;
-    } else if (entry.isFile()) {
-      if (fs.existsSync(dstPath)) {
-        skipped++;
-      } else {
-        fs.copyFileSync(srcPath, dstPath);
-        written++;
-      }
-    }
-  }
-  return { written, skipped };
-}
+const { copyDirGuarded } = require('./lib/copy-guarded.js');
 
 const global = process.argv.includes('--global');
 const baseDir = global ? os.homedir() : process.cwd();

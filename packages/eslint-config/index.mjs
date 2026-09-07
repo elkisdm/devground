@@ -13,6 +13,23 @@ const DEFAULT_IGNORES = [
 // @typescript-eslint si está presente (peerDependency opcional) y lo
 // registramos para los archivos TS. Si no está, el preset sigue siendo
 // framework-agnostic y válido para JS puro (la regla simplemente no aplica a TS).
+/**
+ * Selectores de `no-restricted-syntax` del preset base (ADR-0011).
+ *
+ * Se exportan porque el flat config de ESLint **reemplaza** las opciones de una
+ * regla en vez de fusionarlas: cualquier preset que vuelva a declarar
+ * `no-restricted-syntax` para los mismos archivos BORRA estos selectores sin
+ * aviso. Todo preset que use esa regla debe esparcir esta constante dentro de
+ * la suya. Hay un test que lo verifica corriendo ESLint de verdad.
+ */
+export const BASE_RESTRICTED_SYNTAX = [
+  {
+    selector: 'TSAnyKeyword',
+    message:
+      'ADR-0011: evita `any` en fronteras externas (DB/API). Genera tipos (ej. `supabase gen types`) en vez de castear. Si es inevitable, justifícalo con un eslint-disable-next-line + comentario.',
+  },
+];
+
 let tsParser;
 try {
   tsParser = (await import('@typescript-eslint/parser')).default;
@@ -64,14 +81,7 @@ export default function baseConfig(options = {}) {
         // (next.mjs) trae @typescript-eslint/no-explicit-any vía
         // eslint-config-next/typescript. Escape justificado:
         //   // eslint-disable-next-line no-restricted-syntax -- <razón>
-        'no-restricted-syntax': [
-          'warn',
-          {
-            selector: 'TSAnyKeyword',
-            message:
-              'ADR-0011: evita `any` en fronteras externas (DB/API). Genera tipos (ej. `supabase gen types`) en vez de castear. Si es inevitable, justifícalo con un eslint-disable-next-line + comentario.',
-          },
-        ],
+        'no-restricted-syntax': ['warn', ...BASE_RESTRICTED_SYNTAX],
       },
     },
   ];

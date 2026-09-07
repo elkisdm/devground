@@ -36,5 +36,10 @@
   "homepage": "https://github.com/elkisdm/devground/tree/main/packages/design-taste#readme",
   "bugs": {
     "url": "https://github.com/elkisdm/devground/issues"
+  },
+  "devground": {
+    "status": "frozen",
+    "frozenBy": "ADR-0032",
+    "frozenAt": "2026-09-07"
   }
 }

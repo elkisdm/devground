@@ -1,5 +1,10 @@
 # model-orchestrator
 
+> [!WARNING]
+> **Estado: Congelado** (ADR-0032, 2026-09-07). Sin mantenimiento activo. Motivo: 0
+> invocaciones medidas en la telemetría real de spec-flow. Nada se borra; la fuente viva
+> sigue en `~/.claude/skills/model-orchestrator/`. Reactivable con un ADR nuevo.
+
 Harness de **routing de modelos por complejidad** para Claude Code. Después de que
 `spec-flow` produce un brief con tareas, este orquestador asigna a cada tarea el modelo
 y el nivel de esfuerzo óptimos (Opus 4.8 / Sonnet 5 / Haiku 4.5) para **balancear

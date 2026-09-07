@@ -7,9 +7,15 @@
   },
   "files": [
     "setup.js",
-    "skills/"
+    "skills/",
+    "lib/",
+    "!lib/*.test.js"
   ],
-  "scripts": {},
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
   "keywords": [
     "ui",
     "conventions",
@@ -37,5 +43,15 @@
   "homepage": "https://github.com/elkisdm/devground/tree/main/packages/ui-conventions#readme",
   "bugs": {
     "url": "https://github.com/elkisdm/devground/issues"
+  },
+  "devground": {
+    "status": "supported",
+    "graduatedBy": "ADR-0032",
+    "graduatedAt": "2026-09-07"
+  },
+  "devDependencies": {
+    "@devground/vitest-config": "workspace:*",
+    "vitest": "^2.1.0",
+    "@vitest/coverage-v8": "^2.1.0"
   }
 }

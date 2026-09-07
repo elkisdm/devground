@@ -1,0 +1,52 @@
+#!/usr/bin/env sh
+# Despachador de `pre-commit` a nivel de máquina (ADR-0034).
+# Instalado por `devground-init machine`. No lo edites a mano: se reescribe.
+
+. "$(dirname "$0")/_devground-lib.sh"
+
+devground_chain_local pre-commit "$@" || exit $?
+
+REPO_ROOT=$(devground_repo_root)
+devground_opted_in "$REPO_ROOT" || exit 0
+
+# 1) Higiene de secretos (ADR-0008). Es lo único que este hook impone por sí
+#    mismo, porque no depende del ecosistema del repo: sirve igual en Python,
+#    Go o TypeScript. Degradación explícita, nunca silenciosa.
+if command -v gitleaks >/dev/null 2>&1; then
+  if ! gitleaks protect --staged --redact --verbose; then
+    echo ""
+    echo "  ✖ gitleaks detectó posibles secretos en los archivos staged."
+    echo "    Falso positivo? '# gitleaks:allow' en la línea, o un .gitleaksignore justificado."
+    echo ""
+    exit 1
+  fi
+else
+  echo "  ! gitleaks no está instalado — se omite el escaneo de secretos (ADR-0008)."
+  echo "    macOS: brew install gitleaks"
+fi
+
+# 2) A partir de aquí, delegar en las herramientas DEL PROYECTO. Nunca instalar
+#    ni descargar nada: `--no-install` es deliberado. Un hook de máquina que
+#    resuelve su propia versión de un linter formatea distinto que el CI del
+#    proyecto, y esa discrepancia es peor que no correr el linter.
+#
+#    Si el repo ya tenía su propio pre-commit y lo encadenamos arriba, esa
+#    herramienta YA corrió. Volver a lanzarla duplica el trabajo: `ruff --fix`
+#    reescribiría los mismos archivos dos veces, y lint-staged anidaría dos
+#    ciclos de stash/restore sobre un índice que la primera pasada ya mutó.
+if [ "${DEVGROUND_LOCAL_HOOK_RAN:-0}" = "1" ]; then
+  exit 0
+fi
+
+# JS/TS: lint-staged, si el proyecto lo tiene.
+if [ -f "$REPO_ROOT/package.json" ] && npx --no-install lint-staged --version >/dev/null 2>&1; then
+  npx --no-install lint-staged || exit $?
+fi
+
+# Python: pre-commit, si el proyecto lo declara y la herramienta está instalada.
+# Cosechado de atlas, que ya usa este patrón (ruff + ruff-format + detect-private-key).
+if [ -f "$REPO_ROOT/.pre-commit-config.yaml" ] && command -v pre-commit >/dev/null 2>&1; then
+  pre-commit run --hook-stage pre-commit || exit $?
+fi
+
+exit 0
