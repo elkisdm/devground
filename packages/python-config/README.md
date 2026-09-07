@@ -24,6 +24,12 @@ Despues de instalar, para que el gate corra en cada commit:
 pip install pre-commit && pre-commit install
 ```
 
+> **Si ya corriste `devground-init machine`**, instala solo la herramienta:
+> `pip install pre-commit`. NO corras `pre-commit install` — se niega a operar
+> con un `core.hooksPath` global (*"Cowardly refusing to install hooks with
+> core.hooksPath set"*), y los hooks de maquina ya ejecutan esta configuracion
+> en cada commit. El instalador detecta el caso y te dice cual corresponde.
+
 ## Tres decisiones que no son arbitrarias
 
 Esta configuracion esta **cosechada de un repo en produccion** (ADR-0035), no escrita desde

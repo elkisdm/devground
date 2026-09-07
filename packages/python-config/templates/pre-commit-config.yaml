@@ -36,6 +36,9 @@ repos:
       # comun en la practica.
       - id: no-env-secrets
         name: Evita commitear archivos .env
-        entry: bash -c 'if git diff --cached --name-only | grep -E "(^|/)\.env$"; then echo "ERROR: no commitear .env"; exit 1; fi'
+        # El sufijo importa: .env.local y .env.production son los que suelen
+        # tener credenciales de verdad, y los que menos suelen estar en un
+        # .gitignore escrito solo para `.env`.
+        entry: bash -c 'if git diff --cached --name-only | grep -E "(^|/)\.env(\..+)?$"; then echo "ERROR: no commitear archivos .env"; exit 1; fi'
         language: system
         pass_filenames: false

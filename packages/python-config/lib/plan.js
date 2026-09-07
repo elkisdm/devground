@@ -15,6 +15,9 @@ const PYTHON_MARKERS = [
   'requirements-dev.txt',
   'setup.py',
   'setup.cfg',
+  // tox.ini rara vez marca un proyecto por sí solo, pero puede contener la
+  // sección [pytest]: sin leerlo, se escribiría un pytest.ini encima.
+  'tox.ini',
   'Pipfile',
 ];
 
@@ -35,9 +38,24 @@ function detectPython({ files, manifestContents = '' }) {
     // sin `asyncio_mode = auto` los tests async se saltan en silencio y la
     // suite pasa en verde sin haber corrido nada.
     hasFastapi: /(^|[^a-z])fastapi/.test(haystack),
-    hasRuff: present.has('ruff.toml') || haystack.includes('[tool.ruff]'),
-    hasPytestConfig: present.has('pytest.ini') || haystack.includes('[tool.pytest'),
+    // `[tool.ruff]` a secas es OPCIONAL en el layout moderno: mucha gente
+    // escribe solo `[tool.ruff.lint]`. Sin el prefijo, un pyproject configurado
+    // se lee como vacío — y ruff resuelve ruff.toml ANTES que pyproject, así
+    // que el archivo nuevo reemplazaría la configuración entera del proyecto.
+    hasRuff: present.has('ruff.toml') || present.has('.ruff.toml') || haystack.includes('[tool.ruff'),
+    // pytest acepta cuatro sintaxis en tres archivos distintos. Reconocerlas
+    // todas importa porque pytest.ini tiene la precedencia MÁS ALTA: escribirlo
+    // encima desactiva addopts, markers y testpaths del proyecto sin avisar.
+    hasPytestConfig:
+      present.has('pytest.ini') ||
+      haystack.includes('[tool.pytest') || // pyproject.toml
+      haystack.includes('[tool:pytest]') || // setup.cfg (dos puntos, no punto)
+      /^\[pytest\]/m.test(manifestContents), // tox.ini
     hasPreCommit: present.has('.pre-commit-config.yaml'),
+    // pytest.ini fija `testpaths = tests`. Si no hay un tests/ en la raíz, ese
+    // archivo haría que la suite recolecte CERO y siga saliendo verde: peor
+    // que no instalar nada.
+    hasRootTestsDir: present.has('tests'),
   };
 }
 
@@ -57,11 +75,20 @@ function planPythonInstall(detected) {
   );
 
   const pytestTemplate = detected.hasFastapi ? 'pytest.fastapi.ini' : 'pytest.ini';
-  actions.push(
-    detected.hasPytestConfig
-      ? { template: pytestTemplate, dest: 'pytest.ini', status: 'skip', reason: 'ya hay config de pytest' }
-      : { template: pytestTemplate, dest: 'pytest.ini', status: 'write' },
-  );
+  let pytestAction;
+  if (detected.hasPytestConfig) {
+    pytestAction = { template: pytestTemplate, dest: 'pytest.ini', status: 'skip', reason: 'ya hay config de pytest' };
+  } else if (!detected.hasRootTestsDir) {
+    pytestAction = {
+      template: pytestTemplate,
+      dest: 'pytest.ini',
+      status: 'skip',
+      reason: 'no hay tests/ en la raiz — un testpaths equivocado recolectaria cero y saldria verde',
+    };
+  } else {
+    pytestAction = { template: pytestTemplate, dest: 'pytest.ini', status: 'write' };
+  }
+  actions.push(pytestAction);
 
   actions.push(
     detected.hasPreCommit

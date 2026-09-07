@@ -8,11 +8,13 @@
   "files": [
     "setup.js",
     "lib/",
+    "!lib/*.test.js",
     "templates/"
   ],
   "scripts": {
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "keywords": [
     "python",
@@ -40,6 +42,7 @@
   },
   "devDependencies": {
     "@devground/vitest-config": "workspace:*",
-    "vitest": "^2.1.0"
+    "vitest": "^2.1.0",
+    "@vitest/coverage-v8": "^2.1.0"
   }
 }

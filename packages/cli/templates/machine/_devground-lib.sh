@@ -71,20 +71,41 @@ devground_opted_in() {
 # en silencio, que es la peor forma de romper algo.
 #
 # El hook local manda: si falla, el commit falla.
+# Deja `1` en DEVGROUND_LOCAL_HOOK_RAN si encadenó un hook del repo, para que
+# quien llame no vuelva a correr la misma herramienta por su cuenta.
 devground_chain_local() {
   hook_name="$1"
   shift
+  DEVGROUND_LOCAL_HOOK_RAN=0
+
   repo_root=$(devground_repo_root)
   [ -n "$repo_root" ] || return 0
 
-  git_dir=$(git rev-parse --git-dir 2>/dev/null) || return 0
-  case "$git_dir" in
+  # Los hooks propios del repo viven en el *common dir*, no en el git dir.
+  # `--git-dir` rompe en un worktree enlazado: apunta a .git/worktrees/<nombre>,
+  # que NO tiene subdirectorio hooks/, así que todo hook propio dejaría de
+  # correr sin un solo mensaje — el daño silencioso que este encadenado existe
+  # para evitar.
+  #
+  # Y NO sirve `--git-path hooks/<n>`: esa forma respeta `core.hooksPath`, así
+  # que con el hook global puesto devuelve ESTE mismo archivo y el despachador
+  # se invoca a sí mismo en recursión infinita.
+  common_dir=$(git rev-parse --git-common-dir 2>/dev/null) || return 0
+  [ -n "$common_dir" ] || return 0
+  case "$common_dir" in
     /*) ;;
-    *) git_dir="$repo_root/$git_dir" ;;
+    *) common_dir="$repo_root/$common_dir" ;;
+  esac
+  local_hook="$common_dir/hooks/$hook_name"
+
+  # Cinturón de seguridad: si algo hiciera que esto apunte al propio
+  # despachador, salir en vez de recursar.
+  case "$local_hook" in
+    "$0") return 0 ;;
   esac
 
-  local_hook="$git_dir/hooks/$hook_name"
   if [ -x "$local_hook" ]; then
+    DEVGROUND_LOCAL_HOOK_RAN=1
     "$local_hook" "$@" || return $?
   fi
   return 0

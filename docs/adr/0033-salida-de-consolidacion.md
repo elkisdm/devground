@@ -4,11 +4,11 @@
 - **Fecha**: 2026-09-07
 - **Decisor**: edaza
 - **Aplica a**: todo el monorepo (criterio de entrada de trabajo nuevo, roadmap)
-- **Sucede a**: [ADR-0026](0026-declarar-nucleo-soportado.md)
+- **Sucede a**: [ADR-0026](0026-fase-de-consolidacion-nucleo-soportado.md)
 
 ## Contexto
 
-[ADR-0026](0026-declarar-nucleo-soportado.md) puso el repo en fase de consolidación con una
+[ADR-0026](0026-fase-de-consolidacion-nucleo-soportado.md) puso el repo en fase de consolidación con una
 vara de entrada estrecha ("un cambio entra solo si arregla, testea, documenta o gradúa algo
 que ya existe") y congeló el roadmap de expansión. Puso dos condiciones para salir:
 

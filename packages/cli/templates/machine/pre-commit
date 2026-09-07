@@ -29,6 +29,14 @@ fi
 #    ni descargar nada: `--no-install` es deliberado. Un hook de máquina que
 #    resuelve su propia versión de un linter formatea distinto que el CI del
 #    proyecto, y esa discrepancia es peor que no correr el linter.
+#
+#    Si el repo ya tenía su propio pre-commit y lo encadenamos arriba, esa
+#    herramienta YA corrió. Volver a lanzarla duplica el trabajo: `ruff --fix`
+#    reescribiría los mismos archivos dos veces, y lint-staged anidaría dos
+#    ciclos de stash/restore sobre un índice que la primera pasada ya mutó.
+if [ "${DEVGROUND_LOCAL_HOOK_RAN:-0}" = "1" ]; then
+  exit 0
+fi
 
 # JS/TS: lint-staged, si el proyecto lo tiene.
 if [ -f "$REPO_ROOT/package.json" ] && npx --no-install lint-staged --version >/dev/null 2>&1; then

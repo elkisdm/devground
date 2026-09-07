@@ -24,7 +24,7 @@
 
 </div>
 
-> **23 paquetes npm. Un solo comando.**
+> **24 paquetes npm. Un solo comando.**
 > devground empaqueta los estandares de desarrollo (TDD, linting, formateo, commits convencionales, git hooks, reglas para agentes de IA, knowledge base de arquitectura y metricas) en paquetes npm reutilizables.
 > **Para quien:** equipos que arrancan proyectos Node / TypeScript / Next.js y no quieren reconfigurar las mismas herramientas en cada repo.
 
@@ -101,7 +101,7 @@ Cada paquete es independiente: instala solo lo que necesitas. Detalle de uso en 
 
 ## Paquetes
 
-El monorepo contiene **23 paquetes** independientes. La lista viva y autoritativa de dónde vive cada cosa está en [docs/codemap.md](docs/codemap.md). Cada uno se instala por separado o todos juntos via el CLI. (Las versiones publicadas se ven en los badges de npm de cada paquete — no se listan aqui para evitar que queden desactualizadas.)
+El monorepo contiene **24 paquetes** independientes. La lista viva y autoritativa de dónde vive cada cosa está en [docs/codemap.md](docs/codemap.md). Cada uno se instala por separado o todos juntos via el CLI. (Las versiones publicadas se ven en los badges de npm de cada paquete — no se listan aqui para evitar que queden desactualizadas.)
 
 | | Paquete | Descripcion |
 |---|---------|-------------|
@@ -133,7 +133,7 @@ El monorepo contiene **23 paquetes** independientes. La lista viva y autoritativ
 
 ## 🧪 Experimental
 
-El ciclo de incubacion de 8 semanas del [ADR-0026](docs/adr/0026-declarar-nucleo-soportado.md) **cerro el 2026-09-07** con veredicto para los 11 experimentales ([ADR-0032](docs/adr/0032-veredictos-experimentales.md)): **graduaron 3** (`logger`, `ui-conventions`, `deepcheck`) y **se congelaron 8**. Un paquete congelado no recibe mantenimiento activo, pero **lo publicado sigue funcionando y nada se borra** — se reactiva con un ADR nuevo en cuanto un proyecto lo consuma.
+El ciclo de incubacion de 8 semanas del [ADR-0026](docs/adr/0026-fase-de-consolidacion-nucleo-soportado.md) **cerro el 2026-09-07** con veredicto para los 11 experimentales ([ADR-0032](docs/adr/0032-veredictos-experimentales.md)): **graduaron 3** (`logger`, `ui-conventions`, `deepcheck`) y **se congelaron 8**. Un paquete congelado no recibe mantenimiento activo, pero **lo publicado sigue funcionando y nada se borra** — se reactiva con un ADR nuevo en cuanto un proyecto lo consuma.
 
 | Congelado | Por que | Reactivar si |
 |---|---|---|
@@ -182,7 +182,7 @@ devground/
 ├── docs/                   # Documentacion del README: usage, faq, glossary, conceptos, codemap
 │   └── adr/                # ADRs propios del proyecto devground
 ├── demo/                   # Tape VHS + GIF de demostracion del CLI
-├── packages/               # 23 paquetes: 15 con mantenimiento activo + 8 congelados (ADR-0032)
+├── packages/               # 24 paquetes: 16 con mantenimiento activo + 8 congelados (ADR-0032)
 ├── swift-foundation/       # Monorepo SPM (Swift) — consumidor, no paquete npm
 ├── tools/                  # model-orchestrator (harness Claude Code)
 ├── research/               # Investigacion (iOS/Swift engineering)
@@ -234,13 +234,13 @@ Detalle completo en [CONTRIBUTING.md](CONTRIBUTING.md) y [CODE_OF_CONDUCT.md](CO
 
 ## Roadmap
 
-**Fase actual: consolidación** ([ADR-0026](docs/adr/0026-fase-de-consolidacion-nucleo-soportado.md)).
+**Fase actual: expansión con vara de evidencia** ([ADR-0033](docs/adr/0033-salida-de-consolidacion.md), que cierra la consolidación del [ADR-0026](docs/adr/0026-fase-de-consolidacion-nucleo-soportado.md)).
 El trabajo se dirige a estabilizar lo que existe — núcleo en `1.0` con semver estricto,
 veredicto (graduar o congelar) para cada experimental, y ritual de release ejecutado por
 más de una persona. La vara de entrada durante la fase: **si un cambio no arregla, testea,
 documenta o gradúa algo existente, no entra.**
 
-La expansión queda en pausa hasta cerrar la fase:
+Un frente nuevo entra solo si cierra una brecha MEDIDA entre el estandar y donde ocurre el trabajo real.
 
 | Estado | Item |
 |:------:|------|

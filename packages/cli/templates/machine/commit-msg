@@ -33,12 +33,18 @@ case "$FIRST_LINE" in
   '#'*|'') exit 0 ;;
 esac
 
-TYPES='build|chore|ci|docs|feat|fix|perf|refactor|revert|security|style|test'
+# Misma lista que el `type-enum` de @devground/commitlint-config. Aceptar acá
+# un tipo que el commitlint del proyecto rechaza deja pasar commits que luego
+# fallan en CI, que es peor que no validar.
+TYPES='chore|ci|docs|feat|fix|perf|refactor|revert|style|test'
 PATTERN="^(${TYPES})(\([a-z0-9._/-]+\))?!?: .+"
 
 if printf '%s' "$FIRST_LINE" | grep -Eq "$PATTERN"; then
   # El header no debe pasar de 100 caracteres (misma vara que commitlint).
-  LEN=$(printf '%s' "$FIRST_LINE" | wc -c | tr -d ' ')
+  # `wc -m` cuenta CARACTERES; `wc -c` cuenta bytes y rechazaría headers en
+  # español que commitlint acepta: siete acentos bastan para cambiar el
+  # veredicto, y justo estos repos son los que dependen de este fallback.
+  LEN=$(printf '%s' "$FIRST_LINE" | wc -m | tr -d ' ')
   if [ "$LEN" -gt 100 ]; then
     echo ""
     echo "  ✖ El header del commit tiene $LEN caracteres (máximo 100)."
@@ -55,7 +61,7 @@ echo ""
 echo "    Recibido:  $FIRST_LINE"
 echo "    Esperado:  <tipo>(<scope opcional>): <descripción>"
 echo ""
-echo "    Tipos válidos: build chore ci docs feat fix perf refactor revert security style test"
+echo "    Tipos válidos: chore ci docs feat fix perf refactor revert style test"
 echo "    Ejemplos:      feat(auth): permite login con email"
 echo "                   fix: corrige el redondeo de la UF"
 echo "                   feat(api)!: cambia el contrato de /leads"

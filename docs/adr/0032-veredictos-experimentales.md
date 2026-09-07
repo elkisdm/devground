@@ -7,7 +7,7 @@
 
 ## Contexto
 
-[ADR-0026](0026-declarar-nucleo-soportado.md) §2 le dio a cada paquete experimental un ciclo de
+[ADR-0026](0026-fase-de-consolidacion-nucleo-soportado.md) §2 le dio a cada paquete experimental un ciclo de
 **8 semanas** para acumular evidencia de uso, con un veredicto obligatorio al cierre: **gradúa**
 (entra al núcleo soportado, con tests y semver estricto) o **se congela** (estado visible en su
 README, sin mantenimiento activo, reactivable con un ADR nuevo — nunca se borra).
@@ -20,8 +20,10 @@ La evidencia se midió el 2026-09-07 con tres señales independientes: descargas
 días desde el último commit al paquete, y consumidores reales dentro y fuera del monorepo.
 
 **Calibración obligatoria de la señal de descargas**: el piso de ruido de npm (mirrors y bots) es
-**22-28 descargas/mes** — lo confirman cuatro paquetes sin ningún consumidor conocido
-(`ui-conventions` 22, `logger` 24, `design-taste` 25, `swift-package-template` 23). Una cifra en ese
+**22-28 descargas/mes**. Lo fijan los paquetes sin ningún consumidor —`design-taste` 25,
+`swift-package-template` 23, `swift-ci` 27, `swift-format-config` 27— y la prueba de que es un
+piso de ruido, y no una medida de uso, son los dos que caen DENTRO de ese rango teniendo
+consumidores verificados en el código: `ui-conventions` (22) y `logger` (24). Una cifra en ese
 rango significa "sin señal", no "sin uso": un paquete que entra como **dependencia transitiva** de
 otro no genera descargas propias atribuibles. Por eso la señal decisoria es **quién lo consume**,
 verificado en el código, y las descargas solo desempatan.

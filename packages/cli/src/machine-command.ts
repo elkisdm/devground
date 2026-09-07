@@ -13,11 +13,11 @@ import {
   type ReportLine,
 } from './machine.js';
 
-/** Lee `core.hooksPath` global, o undefined si no está configurado. */
-function readGlobalHooksPath(): string | undefined {
+/** Lee una clave global de git, o undefined si no está configurada. */
+function readGlobalConfig(key: string): string | undefined {
   try {
     return (
-      execFileSync('git', ['config', '--global', '--get', 'core.hooksPath'], {
+      execFileSync('git', ['config', '--global', '--get', key], {
         encoding: 'utf8',
         stdio: ['ignore', 'pipe', 'ignore'],
       }).trim() || undefined
@@ -45,9 +45,11 @@ export function runMachineCommand(opts: { roots?: string; dryRun?: boolean }): v
   header('devground — instalación a nivel de máquina');
 
   const home = homedir();
-  const current = readGlobalHooksPath();
+  const current = readGlobalConfig('core.hooksPath');
   const plan = planMachineInstall(home, current, process.env.XDG_CONFIG_HOME);
-  const roots = resolveRoots(opts.roots, home);
+  // Lo persistido cuenta: el hook lo lee, así que el reporte tiene que leerlo
+  // también o le miente al usuario sobre qué repos quedan cubiertos.
+  const roots = resolveRoots(opts.roots, readGlobalConfig('devground.roots'), home);
 
   print(machineReport(plan, roots, current));
 

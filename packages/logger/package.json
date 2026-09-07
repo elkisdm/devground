@@ -20,7 +20,8 @@
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "tsc",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "publishConfig": {
     "access": "public",
@@ -62,6 +63,7 @@
     "@devground/vitest-config": "workspace:*",
     "@types/node": "^26",
     "typescript": "^5.0.0",
-    "vitest": "^2.1.0"
+    "vitest": "^2.1.0",
+    "@vitest/coverage-v8": "^2.1.0"
   }
 }

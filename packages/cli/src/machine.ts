@@ -12,8 +12,22 @@ import { join } from 'node:path';
  * confinados a `installMachineHooks`.
  */
 
-/** Eventos donde devground agrega comprobaciones propias. */
-export const ACTIVE_HOOKS = ['pre-commit', 'commit-msg'] as const;
+/**
+ * Eventos donde devground agrega comprobaciones propias, y la plantilla que
+ * usa cada uno.
+ *
+ * `pre-merge-commit` comparte plantilla con `pre-commit` y NO es opcional: en
+ * un merge que crea commit, git invoca `pre-merge-commit` y **no** cae de
+ * vuelta a `pre-commit`. Sin él, `git merge` entra sin pasar por el escaneo de
+ * secretos — un agujero con forma de merge en la garantía del ADR-0008.
+ */
+export const ACTIVE_HOOK_TEMPLATES: Record<string, string> = {
+  'pre-commit': 'pre-commit',
+  'pre-merge-commit': 'pre-commit',
+  'commit-msg': 'commit-msg',
+};
+
+export const ACTIVE_HOOKS = Object.keys(ACTIVE_HOOK_TEMPLATES);
 
 /**
  * Eventos donde devground NO agrega nada, pero debe instalar un despachador de
@@ -31,6 +45,12 @@ export const PASSTHROUGH_HOOKS = [
   'post-merge',
   'post-checkout',
   'post-rewrite',
+  'pre-rebase',
+  'applypatch-msg',
+  'pre-applypatch',
+  'post-applypatch',
+  'push-to-checkout',
+  'sendemail-validate',
 ] as const;
 
 export type HooksPathState = 'unset' | 'ours' | 'foreign';
@@ -103,9 +123,9 @@ export function installMachineHooks(templatesDir: string, hooksDir: string): str
   const lib = join(templatesDir, '_devground-lib.sh');
   copyFileSync(lib, join(hooksDir, '_devground-lib.sh'));
 
-  for (const hook of ACTIVE_HOOKS) {
+  for (const [hook, template] of Object.entries(ACTIVE_HOOK_TEMPLATES)) {
     const dest = join(hooksDir, hook);
-    copyFileSync(join(templatesDir, hook), dest);
+    copyFileSync(join(templatesDir, template), dest);
     chmodSync(dest, 0o755);
     written.push(hook);
   }
@@ -127,10 +147,21 @@ export function installedHooks(hooksDir: string): string[] {
   return readdirSync(hooksDir).filter((f) => !f.startsWith('_'));
 }
 
-/** Raíces cubiertas: lo que pidió el usuario, o `~/Developer` por defecto. */
-export function resolveRoots(requested: string | undefined, home: string): string {
-  const trimmed = requested?.trim();
-  return trimmed ? trimmed : join(home, 'Developer');
+/**
+ * Raíces cubiertas, en la MISMA precedencia que aplica `_devground-lib.sh`:
+ * lo pedido ahora > lo persistido en `git config devground.roots` > el default.
+ *
+ * Los tres niveles importan: si el reporte ignora lo persistido, una corrida
+ * posterior sin `--roots` le dice al usuario que cubre `~/Developer` mientras
+ * el hook cubre otra cosa — informar mal sobre un gate es casi tan malo como
+ * no tenerlo.
+ */
+export function resolveRoots(
+  requested: string | undefined,
+  persisted: string | undefined,
+  home: string,
+): string {
+  return requested?.trim() || persisted?.trim() || join(home, 'Developer');
 }
 
 export interface ReportLine {

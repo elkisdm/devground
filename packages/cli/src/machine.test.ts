@@ -138,16 +138,25 @@ describe('installMachineHooks', () => {
 });
 
 describe('resolveRoots', () => {
-  it('cae en ~/Developer cuando no se pide nada', () => {
-    expect(resolveRoots(undefined, '/home/x')).toBe('/home/x/Developer');
+  it('cae en ~/Developer cuando no hay nada', () => {
+    expect(resolveRoots(undefined, undefined, '/home/x')).toBe('/home/x/Developer');
   });
 
-  it('respeta la raíz pedida', () => {
-    expect(resolveRoots('/w:/z', '/home/x')).toBe('/w:/z');
+  it('respeta la raíz pedida ahora', () => {
+    expect(resolveRoots('/w:/z', undefined, '/home/x')).toBe('/w:/z');
   });
 
-  it('trata una raíz en blanco como no pedida', () => {
-    expect(resolveRoots('   ', '/home/x')).toBe('/home/x/Developer');
+  it('usa lo persistido cuando no se pide nada', () => {
+    // El reporte tiene que ver lo mismo que ve el hook.
+    expect(resolveRoots(undefined, '/persistido', '/home/x')).toBe('/persistido');
+  });
+
+  it('lo pedido ahora gana sobre lo persistido', () => {
+    expect(resolveRoots('/ahora', '/persistido', '/home/x')).toBe('/ahora');
+  });
+
+  it('trata los valores en blanco como ausentes', () => {
+    expect(resolveRoots('   ', '  ', '/home/x')).toBe('/home/x/Developer');
   });
 });
 
@@ -334,6 +343,42 @@ describe('integración: los hooks de shell contra repos git reales', () => {
         },
       }),
     ).not.toThrow();
+  });
+
+  it('instala pre-merge-commit: git merge NO puede saltarse el escaneo', () => {
+    // git invoca pre-merge-commit en un merge que crea commit, y NO cae de
+    // vuelta a pre-commit. Sin el archivo, un merge entra sin escanear.
+    const { hooksDir } = setup('merge-hook');
+
+    expect(installedHooks(hooksDir)).toContain('pre-merge-commit');
+  });
+
+  it('encadena al hook local incluso desde un worktree enlazado', () => {
+    // En un worktree, --git-dir apunta a .git/worktrees/<n>, que NO tiene
+    // hooks/. Resolver por ahi dejaba mudos todos los hooks propios del repo,
+    // justo en los repos donde el usuario trabaja con worktrees.
+    const { repo, hooksDir } = setup('con-worktree');
+    execFileSync('git', ['commit', '--allow-empty', '-m', 'feat: base'], {
+      cwd: repo,
+      env: { ...process.env, DEVGROUND_ROOTS: tmp, GIT_CONFIG_GLOBAL: join(tmp, 'gitconfig') },
+    });
+
+    const marker = join(tmp, 'hook-desde-worktree');
+    mkdirSync(join(repo, '.git', 'hooks'), { recursive: true });
+    const localHook = join(repo, '.git', 'hooks', 'post-commit');
+    writeFileSync(localHook, `#!/bin/sh\ntouch "${marker}"\n`);
+    chmodSync(localHook, 0o755);
+
+    const wt = join(tmp, 'wt-enlazado');
+    execFileSync('git', ['worktree', 'add', '-q', wt, '-b', 'rama'], { cwd: repo });
+    execFileSync('git', ['config', 'core.hooksPath', hooksDir], { cwd: wt });
+
+    execFileSync('git', ['commit', '--allow-empty', '-m', 'feat: desde el worktree'], {
+      cwd: wt,
+      env: { ...process.env, DEVGROUND_ROOTS: tmp, GIT_CONFIG_GLOBAL: join(tmp, 'gitconfig') },
+    });
+
+    expect(existsSync(marker)).toBe(true);
   });
 
   it('encadena al hook local del repo en vez de reemplazarlo', () => {

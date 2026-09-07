@@ -18,7 +18,10 @@ vi.mock('./machine.js', async () => {
   return { ...actual, installMachineHooks };
 });
 
+import { homedir } from 'node:os';
+
 import { runMachineCommand } from './machine-command.js';
+import { machineHooksDir } from './machine.js';
 
 /** Simula `git config --global --get core.hooksPath`. */
 function gitReturns(hooksPath: string | null) {
@@ -33,6 +36,11 @@ function gitReturns(hooksPath: string | null) {
 
 function gitCalls() {
   return execFileSync.mock.calls.map((c) => (c[1] as string[]).join(' '));
+}
+
+/** Solo las ESCRITURAS: el comando también lee claves, y leer no es ensuciar. */
+function gitWrites() {
+  return gitCalls().filter((c) => !c.includes('--get'));
 }
 
 /** `process.exit` lanza en vez de matar el proceso, para poder afirmar sobre el aborto. */
@@ -73,11 +81,14 @@ describe('runMachineCommand', () => {
 
     expect(() => runMachineCommand({})).toThrow('process.exit');
     expect(installMachineHooks).not.toHaveBeenCalled();
-    expect(gitCalls().some((c) => c.includes('core.hooksPath /Users'))).toBe(false);
+    // Afirmar contra '/Users' seria vacuamente cierto en Linux/CI.
+    expect(gitWrites().some((c) => c.startsWith('config --global core.hooksPath'))).toBe(false);
   });
 
   it('una reinstalación sobre nuestro propio directorio NO se toma como conflicto', () => {
-    const ours = `${process.env.HOME ?? ''}/.config/devground/hooks`;
+    // Derivado de la misma funcion que usa el codigo: hardcodear ~/.config
+    // rompe bajo XDG_CONFIG_HOME, y el test pasaria por la razon equivocada.
+    const ours = machineHooksDir(homedir(), process.env.XDG_CONFIG_HOME);
     gitReturns(ours);
 
     runMachineCommand({});
@@ -91,7 +102,7 @@ describe('runMachineCommand', () => {
     runMachineCommand({ dryRun: true });
 
     expect(installMachineHooks).not.toHaveBeenCalled();
-    expect(gitCalls().some((c) => c.includes('core.hooksPath /'))).toBe(false);
+    expect(gitWrites().some((c) => c.startsWith('config --global core.hooksPath'))).toBe(false);
   });
 
   it('persiste devground.roots solo cuando se pidieron raíces propias', () => {
@@ -99,7 +110,7 @@ describe('runMachineCommand', () => {
 
     runMachineCommand({ roots: '/w' });
 
-    expect(gitCalls().some((c) => c.includes('devground.roots /w'))).toBe(true);
+    expect(gitWrites().some((c) => c.includes('devground.roots /w'))).toBe(true);
   });
 
   it('sin --roots no ensucia la configuración global con un valor por defecto', () => {
@@ -107,7 +118,7 @@ describe('runMachineCommand', () => {
 
     runMachineCommand({});
 
-    expect(gitCalls().some((c) => c.includes('devground.roots'))).toBe(false);
+    expect(gitWrites().some((c) => c.includes('devground.roots'))).toBe(false);
   });
 
   it('un core.hooksPath global vacío cuenta como no configurado', () => {

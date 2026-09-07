@@ -53,7 +53,10 @@
   "devDependencies": {
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "@devground/vitest-config": "workspace:*",
-    "vitest": "^2.1.0"
+    "vitest": "^2.1.0",
+    "eslint": "^10.7.0",
+    "@typescript-eslint/parser": "^8.63.0",
+    "@vitest/coverage-v8": "^2.1.0"
   },
   "repository": {
     "type": "git",
@@ -65,6 +68,7 @@
     "url": "https://github.com/elkisdm/devground/issues"
   },
   "scripts": {
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
   }
 }
