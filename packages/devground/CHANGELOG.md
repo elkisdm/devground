@@ -1,5 +1,13 @@
 # @devground/devground
 
+## 2.0.1
+
+### Patch Changes
+
+- Updated dependencies [e365b10]
+- Updated dependencies [800b76c]
+  - devground-init@1.4.1
+
 ## 2.0.0
 
 ### Major Changes
