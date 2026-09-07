@@ -21,3 +21,15 @@ orden sin respaldo, y con Opus/Fable como modelo de sesión delegará en cada pe
 Tier 0-1 sigue delegando porque `orchestrator-gate.sh` deniega `Edit`/`Write` en el main
 loop sin mirar el tier — es el defecto #3 de ADR-0028, abierto: sacarlos de la delegación
 exige cambiar el script, no este texto.
+
+## Ruteo de modelo — base, para todos
+
+Va junto al bullet base. Es **condicional**: aplica solo cuando ya se decidió delegar, así que
+no puede provocar delegaciones (ver [ADR-0031](../../../docs/adr/0031-modelo-explicito-al-delegar.md)).
+
+- Cuando SÍ delegues (porque el usuario lo pidió o lo aceptó), la llamada lleva `model` EXPLÍCITO según la naturaleza de la tarea: búsqueda/lectura/exploración → `sonnet`; trabajo mecánico determinista (rename, mover, bump, formato, docs) → `haiku`; implementación de lógica → `sonnet`; juicio (plan, diseño, auditoría, decisión, security review) → `opus`. Sin `model` explícito el subagente HEREDA el modelo del padre. Los agentes que ya declaran `model` en su frontmatter (`ejecutor` sonnet, `planner` opus) NO se tocan: su definición gana. Si hay un brief con varias tareas y quieres repartirlas por costo/calidad, la skill `model-orchestrator` lo hace con política de piso — pero es opt-in, la pide el usuario.
+
+Por qué importa: los agentes built-in del harness (`Explore`, `general-purpose`, `claude`) no
+tienen definición en disco donde fijar el modelo, así que heredan el del padre. Con Opus como
+modelo de sesión habitual, eso fueron 353 lanzamientos de búsqueda en Opus en julio 2026 —
+~59% de los lanzamientos Opus del mes.
