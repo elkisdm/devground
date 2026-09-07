@@ -28,8 +28,19 @@ devground_opted_in() {
   [ -f "$repo_root/.devground-ignore" ] && return 1
   [ -f "$repo_root/.devground" ] && return 0
 
-  # DEVGROUND_ROOTS es una lista separada por ':' (como PATH).
-  roots="${DEVGROUND_ROOTS:-$HOME/Developer}"
+  # Raíces cubiertas, en orden de precedencia. Lista separada por ':' (como PATH).
+  #
+  #   1. $DEVGROUND_ROOTS   — override puntual, y lo que usan los tests.
+  #   2. git config devground.roots — lo que persiste `machine --roots`.
+  #   3. ~/Developer        — el default.
+  #
+  # El paso 2 no es opcional: sin él, `--roots` escribiría una configuración que
+  # nadie lee y el hook seguiría usando el default en silencio.
+  roots="$DEVGROUND_ROOTS"
+  if [ -z "$roots" ]; then
+    roots=$(git config --get devground.roots 2>/dev/null)
+  fi
+  [ -n "$roots" ] || roots="$HOME/Developer"
   saved_ifs="$IFS"
   IFS=':'
   for root in $roots; do

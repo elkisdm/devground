@@ -301,6 +301,41 @@ describe('integración: los hooks de shell contra repos git reales', () => {
     expect(() => commit(repo, 'sin convencion', hooksDir, '/ruta/inexistente')).toThrow();
   });
 
+  it('lee las raices desde git config, no solo del entorno', () => {
+    // El disconnect que la revision encontro: `machine --roots` persiste
+    // devground.roots en git config, pero el hook solo miraba la variable de
+    // entorno — asi que la opcion no hacia nada en tiempo de ejecucion.
+    const { repo, hooksDir } = setup('via-git-config');
+    execFileSync('git', ['config', 'devground.roots', tmp], { cwd: repo });
+
+    // Sin DEVGROUND_ROOTS en el entorno: la unica fuente es git config.
+    expect(() =>
+      execFileSync('git', ['commit', '--allow-empty', '-m', 'sin convencion'], {
+        cwd: repo,
+        encoding: 'utf8',
+        env: { ...process.env, DEVGROUND_ROOTS: '', GIT_CONFIG_GLOBAL: join(tmp, 'gitconfig') },
+      }),
+    ).toThrow();
+    expect(installedHooks(hooksDir)).toContain('commit-msg');
+  });
+
+  it('el entorno gana sobre git config', () => {
+    const { repo } = setup('entorno-gana');
+    execFileSync('git', ['config', 'devground.roots', tmp], { cwd: repo });
+
+    expect(() =>
+      execFileSync('git', ['commit', '--allow-empty', '-m', 'sin convencion'], {
+        cwd: repo,
+        encoding: 'utf8',
+        env: {
+          ...process.env,
+          DEVGROUND_ROOTS: '/ruta/inexistente',
+          GIT_CONFIG_GLOBAL: join(tmp, 'gitconfig'),
+        },
+      }),
+    ).not.toThrow();
+  });
+
   it('encadena al hook local del repo en vez de reemplazarlo', () => {
     // El riesgo real que motivó el diseño: 13 repos de esta máquina tienen un
     // post-commit propio que core.hooksPath global habría dejado sin correr.

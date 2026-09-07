@@ -35,15 +35,20 @@ function gitCalls() {
   return execFileSync.mock.calls.map((c) => (c[1] as string[]).join(' '));
 }
 
-let exitSpy: ReturnType<typeof vi.spyOn>;
+/** `process.exit` lanza en vez de matar el proceso, para poder afirmar sobre el aborto. */
+function spyOnExit() {
+  return vi.spyOn(process, 'exit').mockImplementation((() => {
+    throw new Error('process.exit');
+  }) as never);
+}
+
+let exitSpy: ReturnType<typeof spyOnExit>;
 
 beforeEach(() => {
   execFileSync.mockReset();
   installMachineHooks.mockReset();
   installMachineHooks.mockReturnValue(['pre-commit', 'commit-msg']);
-  exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => {
-    throw new Error('process.exit');
-  }) as never);
+  exitSpy = spyOnExit();
 });
 
 afterEach(() => {
