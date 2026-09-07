@@ -133,14 +133,22 @@ El monorepo contiene **23 paquetes** independientes. La lista viva y autoritativ
 
 ## 🧪 Experimental
 
-Capacidades en incubacion dentro del repo, en validacion antes de graduarse como parte soportada del toolkit. `@devground/dreaming` ya se publica a npm en `0.x` (la API puede cambiar sin aviso); `@devground/deepcheck` es privado y no se publica. Los criterios de graduacion o congelacion estan en el [ADR-0026](docs/adr/0026-fase-de-consolidacion-nucleo-soportado.md).
+El ciclo de incubacion de 8 semanas del [ADR-0026](docs/adr/0026-declarar-nucleo-soportado.md) **cerro el 2026-09-07** con veredicto para los 11 experimentales ([ADR-0032](docs/adr/0032-veredictos-experimentales.md)): **graduaron 3** (`logger`, `ui-conventions`, `deepcheck`) y **se congelaron 8**. Un paquete congelado no recibe mantenimiento activo, pero **lo publicado sigue funcionando y nada se borra** — se reactiva con un ADR nuevo en cuanto un proyecto lo consuma.
+
+| Congelado | Por que | Reactivar si |
+|---|---|---|
+| [`@devground/chile-formats`](packages/chile-formats#readme) | 3 tests y utilidad real, pero **cero consumidores** | un proyecto importa RUT/telefono/UF |
+| [`@devground/dreaming`](packages/dreaming#readme) | sin consumidores desde 2026-07 | vuelve el piloto de consolidacion de memoria |
+| [`@devground/design-taste`](packages/design-taste#readme) | vendorizado de terceros, sin consumidores | se retoma el trabajo de diseno UI |
+| [`model-orchestrator`](tools/model-orchestrator#readme) | **0 invocaciones** en telemetria real de spec-flow | se decide orquestar por costo de forma sistematica |
+| `@devground/swift-*` (4 paquetes) | sin consumidores desde 2026-07-05 | se retoma el trabajo iOS de `swift-foundation/` |
+
+Sigue en incubacion lo que no es paquete npm:
 
 | | Que es | Estado |
 |---|--------|--------|
-| 🔬 [`@devground/deepcheck`](packages/deepcheck#readme) | Verificacion profunda **multi-agente** (QA · Validacion · Auditoria) que audita un flujo en paralelo por dimensiones, confirma cada hallazgo de forma **adversarial** (refutadores con lentes distintas) y **destila una skill de auditoria** que se vuelve mas afilada en cada corrida. No es un linter: razona sobre el flujo y acumula conocimiento para no re-descubrir lo mismo. | Piloto privado |
-| 🌙 [`@devground/dreaming`](packages/dreaming#readme) | Consolidacion de memoria **out-of-band** para Claude Code: revisa los transcripts recientes de un proyecto contra su memory store y propone un **diff revisado** (fusionar duplicados, deprecar memorias obsoletas/contradichas, sumar patrones y feedback no capturados, arreglar la deriva del indice). Harness TypeScript compilado para el gather (sin tokens, **reusa el lector de transcripts de `@devground/dev-metrics`**) + skill que razona y propone con evidencia por cambio. **Nada se escribe sin aprobacion; nunca borra en duro.** | Publicado en npm (`0.x`, piloto) |
+| 🔬 [`@devground/deepcheck`](packages/deepcheck#readme) | Verificacion profunda **multi-agente** (QA · Validacion · Auditoria) que audita un flujo en paralelo por dimensiones, confirma cada hallazgo de forma **adversarial** (refutadores con lentes distintas) y **destila una skill de auditoria** que se vuelve mas afilada en cada corrida. No es un linter: razona sobre el flujo y acumula conocimiento para no re-descubrir lo mismo. | **Graduado** (ADR-0032) — interno, no se publica |
 | 🧭 [skill `cimientos`](.claude/skills/cimientos/SKILL.md) | Flujo **guiado** de decisiones de arquitectura para proyectos nuevos: entrevista fase por fase, razona con la knowledge base (ADRs 0001–0011) y escribe las decisiones como ADRs (status Propuesto) + un `DECISIONS.md`. Garantiza bases solidas sin sobre-ingenieria. | Skill del repo (Claude Code) |
-| ⚖️ [`model-orchestrator`](tools/model-orchestrator#readme) | Harness de **routing de modelos por complejidad**: tras `spec-flow`, asigna a cada tarea el modelo y esfuerzo optimos (Opus / Sonnet / Haiku) para balancear **precio/calidad**, presenta un plan con costo estimado y despacha sub-agentes. Reglas de piso declarativas + un juez barato que ajusta ±1 nivel; las **invariantes se imponen en codigo** (`engine.mjs`, 30/30 tests), nunca en el juicio del modelo barato. Reconcilia costo real vs estimado. | Tool del repo (Claude Code) |
 
 > deepcheck nacio **auditando el propio CLI de devground** y cazo bugs reales que hoy estan corregidos (ver el changeset de `devground-init`). Su [README](packages/deepcheck#readme) detalla los 3 roles ortogonales y el ciclo de aprendizaje.
 
@@ -174,7 +182,7 @@ devground/
 ├── docs/                   # Documentacion del README: usage, faq, glossary, conceptos, codemap
 │   └── adr/                # ADRs propios del proyecto devground
 ├── demo/                   # Tape VHS + GIF de demostracion del CLI
-├── packages/               # 23 paquetes (incluye deepcheck y dreaming en incubacion + los swift-*)
+├── packages/               # 23 paquetes: 15 con mantenimiento activo + 8 congelados (ADR-0032)
 ├── swift-foundation/       # Monorepo SPM (Swift) — consumidor, no paquete npm
 ├── tools/                  # model-orchestrator (harness Claude Code)
 ├── research/               # Investigacion (iOS/Swift engineering)

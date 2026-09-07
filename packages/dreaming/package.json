@@ -53,5 +53,10 @@
     "@types/node": "^26",
     "typescript": "^5.0.0",
     "vitest": "^2.1.0"
+  },
+  "devground": {
+    "status": "frozen",
+    "frozenBy": "ADR-0032",
+    "frozenAt": "2026-09-07"
   }
 }

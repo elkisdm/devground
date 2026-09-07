@@ -1,5 +1,10 @@
 # @devground/dreaming
 
+> [!WARNING]
+> **Estado: Congelado** (ADR-0032, 2026-09-07). Sin mantenimiento activo: no recibe
+> features ni actualizaciones de dependencias. Lo publicado sigue funcionando y nada se
+> borra. Reactivable con un ADR nuevo — basta con que un proyecto lo consuma.
+
 **dreaming** — out-of-band memory consolidation for Claude Code. It reviews a project's
 recent session transcripts against its memory store and proposes a *reviewed diff*:
 merge duplicates, deprecate stale/contradicted memories, add recurring patterns and

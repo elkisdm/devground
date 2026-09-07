@@ -18,7 +18,9 @@
     "build": "tsc",
     "dev": "tsc --watch",
     "typecheck": "tsc --noEmit",
-    "prepublishOnly": "tsc"
+    "prepublishOnly": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "publishConfig": {
     "access": "public",
@@ -50,5 +52,16 @@
   "homepage": "https://github.com/elkisdm/devground/tree/main/packages/logger#readme",
   "bugs": {
     "url": "https://github.com/elkisdm/devground/issues"
+  },
+  "devground": {
+    "status": "supported",
+    "graduatedBy": "ADR-0032",
+    "graduatedAt": "2026-09-07"
+  },
+  "devDependencies": {
+    "@devground/vitest-config": "workspace:*",
+    "@types/node": "^26",
+    "typescript": "^5.0.0",
+    "vitest": "^2.1.0"
   }
 }

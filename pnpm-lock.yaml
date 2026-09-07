@@ -220,7 +220,20 @@ importers:
         specifier: '>=3.0.0'
         version: 3.8.1
 
-  packages/logger: {}
+  packages/logger:
+    devDependencies:
+      '@devground/vitest-config':
+        specifier: workspace:*
+        version: link:../vitest-config
+      '@types/node':
+        specifier: ^26
+        version: 26.1.1
+      typescript:
+        specifier: ^5.0.0
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@26.1.1)(lightningcss@1.32.0)
 
   packages/prettier-config: {}
 
@@ -240,7 +253,14 @@ importers:
         specifier: '>=4.0.0'
         version: 7.0.7(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.2)(@types/node@26.1.1)(jiti@2.6.1)(rollup@4.60.3)(yaml@2.8.3)
 
-  packages/ui-conventions: {}
+  packages/ui-conventions:
+    devDependencies:
+      '@devground/vitest-config':
+        specifier: workspace:*
+        version: link:../vitest-config
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@26.1.1)(lightningcss@1.32.0)
 
   packages/vitest-config:
     devDependencies:
@@ -8358,7 +8378,7 @@ snapshots:
   vite@5.4.21(@types/node@26.1.1)(lightningcss@1.32.0):
     dependencies:
       esbuild: 0.21.5
-      postcss: 8.5.14
+      postcss: 8.5.17
       rollup: 4.60.3
     optionalDependencies:
       '@types/node': 26.1.1

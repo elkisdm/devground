@@ -1,5 +1,10 @@
 # @devground/swift-ci
 
+> [!WARNING]
+> **Estado: Congelado** (ADR-0032, 2026-09-07). Sin mantenimiento activo: no recibe
+> features ni actualizaciones de dependencias. Lo publicado sigue funcionando y nada se
+> borra. Reactivable con un ADR nuevo — basta con que un proyecto lo consuma.
+
 Plantillas de CI/CD para proyectos Swift/iOS: **GitHub Actions** (build + test en runner
 macOS) y **Fastlane Match** (firma sin certificados sueltos). Materializa
 [ADR-0011 de dominio](https://github.com/elkisdm/devground/blob/main/swift-foundation/docs/adr/0011-cicd-xcode-cloud-vs-github-actions-fastlane.md).
