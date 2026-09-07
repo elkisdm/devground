@@ -1,0 +1,13 @@
+#!/usr/bin/env sh
+# Despachador de paso a nivel de máquina (ADR-0034).
+#
+# devground no agrega nada a este evento: existe solo para que el hook propio
+# del repo siga corriendo. Al fijar `core.hooksPath` global, git deja de mirar
+# `.git/hooks/`, así que sin este archivo las automatizaciones que ya vivían ahí
+# morirían en silencio.
+#
+# Deriva su nombre de $0, así que el mismo contenido sirve para cualquier evento.
+
+. "$(dirname "$0")/_devground-lib.sh"
+
+devground_chain_local "$(basename "$0")" "$@"

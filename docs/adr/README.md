@@ -48,6 +48,7 @@ siguiente número de la secuencia, rellénalo y añádelo al índice de abajo.
 - [ADR-0031 — Al delegar, el modelo del subagente va explícito por naturaleza de la tarea](0031-modelo-explicito-al-delegar.md) (Aceptado)
 - [ADR-0032 — Veredicto de los 11 experimentales al cierre del ciclo de 8 semanas](0032-veredictos-experimentales.md) (Aceptado)
 - [ADR-0033 — Cerrar la fase de consolidación y reabrir la expansión hacia los stacks reales](0033-salida-de-consolidacion.md) (Aceptado)
+- [ADR-0034 — Instalar el estándar una vez por máquina, no una vez por proyecto](0034-instalacion-por-maquina.md) (Aceptado)
 
 ## Estándares con enforcement automático
 

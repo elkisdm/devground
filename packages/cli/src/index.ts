@@ -12,6 +12,7 @@ import { defaultInstallerOps } from './installers/ops.js';
 import { createDepCollector } from './installers/collect-deps.js';
 import { presetIsValid, tallyExitCode } from './exit.js';
 import { printStack, chooseInstallers, runInstallers } from './run.js';
+import { runMachineCommand } from './machine-command.js';
 
 // Single source of truth for the version: the package manifest, not a literal.
 // __dirname is dist/ at runtime (CommonJS output), so ../package.json is the
@@ -90,6 +91,15 @@ program
     }
     success(summary);
     log('');
+  });
+
+program
+  .command('machine')
+  .description('Instala el estandar UNA VEZ para toda la maquina (hooks globales de git) — ADR-0034')
+  .option('--roots <paths>', 'Raices cubiertas, separadas por ":" (default: ~/Developer)')
+  .option('--dry-run', 'Muestra que haria, sin escribir nada')
+  .action((opts: { roots?: string; dryRun?: boolean }) => {
+    runMachineCommand(opts);
   });
 
 program.parse();

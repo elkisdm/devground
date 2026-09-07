@@ -1,0 +1,66 @@
+#!/usr/bin/env sh
+# Despachador de `commit-msg` a nivel de máquina (ADR-0034).
+# Instalado por `devground-init machine`. No lo edites a mano: se reescribe.
+
+. "$(dirname "$0")/_devground-lib.sh"
+
+devground_chain_local commit-msg "$@" || exit $?
+
+REPO_ROOT=$(devground_repo_root)
+devground_opted_in "$REPO_ROOT" || exit 0
+
+MSG_FILE="$1"
+
+# 1) Si el repo tiene commitlint instalado, manda su configuración: es más
+#    precisa que cualquier regex y respeta los scopes propios del proyecto.
+if npx --no-install commitlint --version >/dev/null 2>&1; then
+  npx --no-install commitlint --edit "$MSG_FILE"
+  exit $?
+fi
+
+# 2) Sin commitlint (repo Python, Go, o JS sin la dependencia): validación
+#    equivalente en shell puro. Es la razón de existir de este hook — los repos
+#    que más lo necesitan son justamente los que no pueden instalar commitlint.
+FIRST_LINE=$(sed -n '1p' "$MSG_FILE")
+
+# Los merges y reverts que genera git no siguen la convención, y no deben.
+case "$FIRST_LINE" in
+  "Merge "*|"Revert "*|"fixup!"*|"squash!"*|"Reapply "*) exit 0 ;;
+esac
+
+# Comentarios y líneas vacías: git ya se encarga de abortar el commit vacío.
+case "$FIRST_LINE" in
+  '#'*|'') exit 0 ;;
+esac
+
+TYPES='build|chore|ci|docs|feat|fix|perf|refactor|revert|security|style|test'
+PATTERN="^(${TYPES})(\([a-z0-9._/-]+\))?!?: .+"
+
+if printf '%s' "$FIRST_LINE" | grep -Eq "$PATTERN"; then
+  # El header no debe pasar de 100 caracteres (misma vara que commitlint).
+  LEN=$(printf '%s' "$FIRST_LINE" | wc -c | tr -d ' ')
+  if [ "$LEN" -gt 100 ]; then
+    echo ""
+    echo "  ✖ El header del commit tiene $LEN caracteres (máximo 100)."
+    echo "    Mueve el detalle al cuerpo del mensaje."
+    echo ""
+    exit 1
+  fi
+  exit 0
+fi
+
+echo ""
+echo "  ✖ El mensaje no sigue Conventional Commits."
+echo ""
+echo "    Recibido:  $FIRST_LINE"
+echo "    Esperado:  <tipo>(<scope opcional>): <descripción>"
+echo ""
+echo "    Tipos válidos: build chore ci docs feat fix perf refactor revert security style test"
+echo "    Ejemplos:      feat(auth): permite login con email"
+echo "                   fix: corrige el redondeo de la UF"
+echo "                   feat(api)!: cambia el contrato de /leads"
+echo ""
+echo "    Este repo optó por el estándar devground. Para excluirlo:"
+echo "      touch \"\$(git rev-parse --show-toplevel)/.devground-ignore\""
+echo ""
+exit 1
