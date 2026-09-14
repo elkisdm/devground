@@ -41,12 +41,12 @@ por CLI y dejar que las identidades vengan del config o de la auto-detección.
 
 ```jsonc
 {
-  "repos": ["/ruta/repoA", "/ruta/repoB"],        // 1..N (nunca un número fijo)
+  "repos": ["/ruta/repoA", "/ruta/repoB"], // 1..N (nunca un número fijo)
   "identities": ["123+tuusuario@users.noreply.github.com", "tu@correo.com"], // CONFIRMADAS
-  "candidateIdentities": ["colega@empresa.cl"],     // ambiguas: revísalas y promuévelas a mano
-  "baseDir": "/Users/tu/Documents",                 // carpeta a escanear por `init`
-  "excludes": ["vendor", "legacy"],                 // fragmentos de ruta a excluir
-  "events": [{ "date": "2026-05-14", "label": "adopté eslint" }] // opcional
+  "candidateIdentities": ["colega@empresa.cl"], // ambiguas: revísalas y promuévelas a mano
+  "baseDir": "/Users/tu/Documents", // carpeta a escanear por `init`
+  "excludes": ["vendor", "legacy"], // fragmentos de ruta a excluir
+  "events": [{ "date": "2026-05-14", "label": "adopté eslint" }], // opcional
 }
 ```
 
@@ -84,20 +84,20 @@ Qué hace:
   - `candidateIdentities` (ambiguas): emails que no mapean a ninguna cuenta (ej. un
     colega, o automatización que pasó el filtro). NO se usan para filtrar git;
     el usuario las revisa y mueve las suyas a `identities`.
-  Se filtran bots/agentes (`[bot]`, Anthropic, Cursor, `codex`, `cursoragent`,
-  `github-actions`, `@local`) vía `isBotEmail`. El log avisa: "N identidades
-  confirmadas, M candidatas".
+    Se filtran bots/agentes (`[bot]`, Anthropic, Cursor, `codex`, `cursoragent`,
+    `github-actions`, `@local`) vía `isBotEmail`. El log avisa: "N identidades
+    confirmadas, M candidatas".
 
 El config resultante es **editable a mano** (override manual de repos/identidades).
 
-| Opción | Default | Descripción |
-| --- | --- | --- |
-| `--config <path>` | `./dev-metrics.config.json` | Dónde escribir el config. |
-| `--base-dir <dir>` | `~/Documents` | Carpeta a escanear. |
-| `--max-depth <n>` | `2` | Profundidad máxima de escaneo. |
-| `--excludes <fragments>` | — | Fragmentos de ruta a excluir (coma). |
-| `--include-forks` | (excluye forks) | Conservar forks de terceros. |
-| `--force` | (no sobrescribe) | Sobrescribir un config existente. |
+| Opción                   | Default                     | Descripción                          |
+| ------------------------ | --------------------------- | ------------------------------------ |
+| `--config <path>`        | `./dev-metrics.config.json` | Dónde escribir el config.            |
+| `--base-dir <dir>`       | `~/Documents`               | Carpeta a escanear.                  |
+| `--max-depth <n>`        | `2`                         | Profundidad máxima de escaneo.       |
+| `--excludes <fragments>` | —                           | Fragmentos de ruta a excluir (coma). |
+| `--include-forks`        | (excluye forks)             | Conservar forks de terceros.         |
+| `--force`                | (no sobrescribe)            | Sobrescribir un config existente.    |
 
 ### `collect`
 
@@ -113,17 +113,17 @@ dev-metrics collect \
   --label "2026-05 baseline"
 ```
 
-| Opción | Default | Descripción |
-| --- | --- | --- |
-| `--repos <paths>` | config / auto | Repos a recorrer (coma). Override del config/auto-detección. |
-| `--emails <emails>` | config / auto | Emails de autor para filtrar git. Override del config/auto-detección. |
-| `--config <path>` | `./dev-metrics.config.json` | Config a leer si no pasas flags. |
-| `--since <date>` | — | Solo commits/transcripts ≥ fecha (YYYY-MM-DD). |
-| `--until <date>` | — | Solo commits/transcripts ≤ fecha. |
-| `--label <text>` | — | Etiqueta libre del snapshot. |
-| `--out-dir <dir>` | `./snapshots` | Carpeta de salida. |
-| `--events-file <path>` | `./snapshots/events.json` | Log de eventos. |
-| `--no-seed-events` | (siembra activa) | No auto-sembrar `events.json` con marcadores detectados. |
+| Opción                 | Default                     | Descripción                                                           |
+| ---------------------- | --------------------------- | --------------------------------------------------------------------- |
+| `--repos <paths>`      | config / auto               | Repos a recorrer (coma). Override del config/auto-detección.          |
+| `--emails <emails>`    | config / auto               | Emails de autor para filtrar git. Override del config/auto-detección. |
+| `--config <path>`      | `./dev-metrics.config.json` | Config a leer si no pasas flags.                                      |
+| `--since <date>`       | —                           | Solo commits/transcripts ≥ fecha (YYYY-MM-DD).                        |
+| `--until <date>`       | —                           | Solo commits/transcripts ≤ fecha.                                     |
+| `--label <text>`       | —                           | Etiqueta libre del snapshot.                                          |
+| `--out-dir <dir>`      | `./snapshots`               | Carpeta de salida.                                                    |
+| `--events-file <path>` | `./snapshots/events.json`   | Log de eventos.                                                       |
+| `--no-seed-events`     | (siembra activa)            | No auto-sembrar `events.json` con marcadores detectados.              |
 
 Si no pasas `--repos`/`--emails` y no hay config, `collect` **auto-detecta**
 (escanea `~/Documents` por repos e infiere identidades del `git log`). El log
@@ -178,10 +178,22 @@ dev-metrics spec-flow-impact                 # usa repos/identidades del config
 dev-metrics spec-flow-impact --repos ~/a,~/b --emails me@x.com
 ```
 
+**Señales de spec-flow 0.6 (ADR-0037)**: el reporte suma un bloque "Review loop" con
+las señales del pre-mortem y la cota al ciclo de revisión. `findings` es el conteo
+de hallazgos de la **primera** pasada de review (no el total acumulado); es la cifra
+que se compara entre cambios. `findings_capped` avisa cuando esa lista llegó al tope
+del revisor (10 o 15 hallazgos): en ese caso `findings` es "al menos", no "exactamente".
+`passes` dice en cuántas pasadas cerró el cambio (la meta es ≤2); `induced` cuenta
+hallazgos de una pasada posterior que caen dentro del diff de los arreglos de la
+pasada anterior — si hay, la pieza se rediseña en vez de parchearse en línea, y
+`redesigned` lo registra. `premortem` segmenta los hallazgos de la primera pasada
+entre cambios que sí escribieron el pre-mortem del Step 3 y los que no, para
+responder si el pre-mortem efectivamente baja esa cifra.
+
 ### `orientation`
 
 Mide el **costo de orientación**: output tokens gastados antes del primer `Edit`/`Write`
-por sesión (lo que cuesta orientarse antes de tocar código), más un *share* robusto al
+por sesión (lo que cuesta orientarse antes de tocar código), más un _share_ robusto al
 tamaño de tarea, y una comparación del payoff del codemap restringida a repos que
 realmente tienen `docs/codemap.md` (ver ADR-0015).
 

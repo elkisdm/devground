@@ -1,6 +1,6 @@
 # @devground/sdd
 
-**spec-flow** — the spec-driven development *intake* skill for Claude Code. It turns a
+**spec-flow** — the spec-driven development _intake_ skill for Claude Code. It turns a
 raw, vague change request into a right-sized, professional spec, then routes it to the
 minimum process the change actually deserves. Infer aggressively, state assumptions,
 proceed — escalate ceremony only when the change is big or risky enough to earn it.
@@ -34,9 +34,18 @@ Given a change request ("add login", "make this faster", "fix this bug"), the sk
 3. **Routes** to one of 4 tiers (Express → Light → Standard → Full) so a typo skips
    straight to the fix while a risky migration gets explore + spec + design + ADR.
 4. **Enriches** into a dual-audience brief (plain-language summary + technical depth)
-   with the concrete files & routes to touch.
-5. **Emits telemetry** (one line per change to `.spec-flow/events.jsonl`) so impact is
-   measurable.
+   with the concrete files & routes to touch — and, from Tier 2 up, a **pre-mortem**:
+   paths, failure modes, invariants (each with the test that breaks it), symmetries and
+   reuse, answered _before_ code exists. It is the reviewer's question list, moved to spec
+   time (ADR-0037).
+5. **Gates the design** (Step 3.6): the brief is reviewed against that checklist before
+   the first edit; on Tier 3 the gate can be delegated to a read-only planner.
+6. **Closes with tests and a bounded review**: new logic ships with tests watched to
+   fail with the fix reverted (ADR-0029), then `/code-review` runs as a gate with a
+   ledger — two passes by default, a third only after a redesign (ADR-0036, ADR-0037).
+7. **Emits telemetry** (one line per change to `.spec-flow/events.jsonl`) so impact is
+   measurable — including first-pass findings with vs without a pre-mortem, the number
+   that says whether the whole thing works.
 
 ## Measuring impact
 

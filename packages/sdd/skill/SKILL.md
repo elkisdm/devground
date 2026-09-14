@@ -18,7 +18,7 @@ description: >
 license: MIT
 metadata:
   author: edaza
-  version: "0.5"
+  version: '0.6'
 ---
 
 ## What this is
@@ -79,8 +79,8 @@ wrong high-risk assumption is a FAILURE, even though its friction gauge looks pe
 the telemetry in Step 6 is built to expose exactly that, by recording whether the
 inferences held up alongside how little you asked.
 
-Practical test before you skip a question on a Tier 2-3 change: *"If this assumption is
-wrong, is it cheap to reverse?"* Cheap → infer and proceed. Expensive or irreversible →
+Practical test before you skip a question on a Tier 2-3 change: _"If this assumption is
+wrong, is it cheap to reverse?"_ Cheap → infer and proceed. Expensive or irreversible →
 that's the must-ask bar; confirm it in the batched round. Don't let the anti-friction
 culture push you past a genuine one-way door.
 
@@ -92,8 +92,8 @@ notes. The discipline is: **the index narrows the search; the code confirms it.*
 
 There are three sources of standing knowledge. Read whichever exist:
 
-1. **The code map** — `docs/codemap.md` (the project's living index of *where things
-   live*: subsystem → paths → responsibility → key routes/entrypoints → related ADRs).
+1. **The code map** — `docs/codemap.md` (the project's living index of _where things
+   live_: subsystem → paths → responsibility → key routes/entrypoints → related ADRs).
    This is your primary tool for "which files does this touch?" **If `docs/codemap.md`
    exists, read it before your first Edit** — when it's fresh it's the cheapest path from
    request to the handful of files in play. Treat it as a strong default, NOT a hard
@@ -103,7 +103,7 @@ There are three sources of standing knowledge. Read whichever exist:
    reading it is never a ritual you owe the process. Only set `codemap_used:true` in the
    Step 6 event when you actually read it; that flag is how we measure whether the map pays
    off, so never fake it.
-2. **Decision records** — ADRs (`docs/adr/`, `knowledge/adr/`) for *why* things are the
+2. **Decision records** — ADRs (`docs/adr/`, `knowledge/adr/`) for _why_ things are the
    way they are, and `AGENTS.md`/`CLAUDE.md` for project conventions.
 3. **Memory** — durable cross-session facts already in context.
 
@@ -114,7 +114,7 @@ the source of truth; the map is a hint that drifts. The win you're capturing is
 "check 3 files instead of 300," never "check 0 files."
 
 **If no code map exists**, don't stall. Do a normal targeted scan for this request, and
-at the end (Step 5) offer to seed `docs/codemap.md` with what you learned, so the *next*
+at the end (Step 5) offer to seed `docs/codemap.md` with what you learned, so the _next_
 request is cheaper. The flywheel starts with one turn.
 
 See `references/codemap-template.md` for the map's format and seeding rules.
@@ -126,19 +126,20 @@ changes, tests, conventions). Then place the request on five **orthogonal** axes
 They are independent — a request has a value on each, not one single label. (This is
 why "improvement" or "mejora" isn't a category: it decomposes across these axes.)
 
-| Axis | Values | What it decides |
-|------|--------|-----------------|
-| **1. Type** | `feat` · `fix` · `refactor` · `perf` · `docs` · `test` · `chore` · `spike` | What kind of change it is. Maps to Conventional Commits. Add a `breaking` flag if it breaks a public contract. |
-| **2. Size** | trivial · small · medium · large | Rough effort. Drives how much process. |
-| **3. Risk** | low · med · high | Blast radius. HIGH if it touches: data model / migrations, external contracts or public APIs, auth / security, money, concurrency, or any irreversible operation. |
-| **4. Uncertainty** | known · unknown | Is the *how* clear? `unknown` ⇒ a short exploration comes first. |
-| **5. Surface** | list of files / modules / packages | Where the change lands. Feeds the spec's scope and which coding standards apply. |
+| Axis               | Values                                                                     | What it decides                                                                                                                                                   |
+| ------------------ | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **1. Type**        | `feat` · `fix` · `refactor` · `perf` · `docs` · `test` · `chore` · `spike` | What kind of change it is. Maps to Conventional Commits. Add a `breaking` flag if it breaks a public contract.                                                    |
+| **2. Size**        | trivial · small · medium · large                                           | Rough effort. Drives how much process.                                                                                                                            |
+| **3. Risk**        | low · med · high                                                           | Blast radius. HIGH if it touches: data model / migrations, external contracts or public APIs, auth / security, money, concurrency, or any irreversible operation. |
+| **4. Uncertainty** | known · unknown                                                            | Is the _how_ clear? `unknown` ⇒ a short exploration comes first.                                                                                                  |
+| **5. Surface**     | list of files / modules / packages                                         | Where the change lands. Feeds the spec's scope and which coding standards apply.                                                                                  |
 
 Infer every axis. For each one you couldn't read directly off the request, record a
-one-line assumption (e.g. *"Assuming this is a `feat`, not a `fix` — there's no
-existing login flow to repair"*). The Prime Directive applies: assume, don't ask.
+one-line assumption (e.g. _"Assuming this is a `feat`, not a `fix` — there's no
+existing login flow to repair"_). The Prime Directive applies: assume, don't ask.
 
 **Disambiguating fuzzy words** (do this silently, in your head):
+
 - "mejora" / "improve" → does a NEW capability appear? → `feat`. Same behavior, cleaner
   code? → `refactor`. Faster/lighter? → `perf`.
 - "optimiza" / "optimize" → almost always `perf` (no behavior change). If it adds
@@ -151,12 +152,12 @@ existing login flow to repair"*). The Prime Directive applies: assume, don't ask
 Ceremony must be **proportional** to the change. The intake (Steps 1–3) is cheap and
 always runs. Everything downstream scales by tier. Pick the tier from the axes:
 
-| Tier | Trigger | What runs |
-|------|---------|-----------|
-| **0 — Express** | trivial · `chore`/`docs`/`style`/tiny `fix` · low risk | No artifacts. State the one-line classification, make the change, verify it. |
-| **1 — Light** | small `feat`/`fix` · low risk · known | A **thin brief** (goal + acceptance criteria) → implement → verify. No proposal, no design doc. |
-| **2 — Standard** | medium · OR risk ≥ med · OR `refactor`/`perf` with observable impact | **Full brief + spec** (Given/When/Then) → implement → verify. Add a short design note if there's a real architectural choice. |
-| **3 — Full** | large · OR high risk · OR `breaking` · OR `unknown` | **Explore first**, then brief + spec + design + task breakdown → implement → verify → record the decision (ADR if the project uses them). |
+| Tier             | Trigger                                                              | What runs                                                                                                                                 |
+| ---------------- | -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| **0 — Express**  | trivial · `chore`/`docs`/`style`/tiny `fix` · low risk               | No artifacts. State the one-line classification, make the change, verify it.                                                              |
+| **1 — Light**    | small `feat`/`fix` · low risk · known                                | A **thin brief** (goal + acceptance criteria) → implement → verify. No proposal, no design doc.                                           |
+| **2 — Standard** | medium · OR risk ≥ med · OR `refactor`/`perf` with observable impact | **Full brief + spec** (Given/When/Then) → implement → verify. Add a short design note if there's a real architectural choice.             |
+| **3 — Full**     | large · OR high risk · OR `breaking` · OR `unknown`                  | **Explore first**, then brief + spec + design + task breakdown → implement → verify → record the decision (ADR if the project uses them). |
 
 The matrix is a floor, not a cage. If your gut says a "small" change is actually
 dangerous, bump the tier and say why in one line. Quality judgment overrides the table.
@@ -211,10 +212,19 @@ the plan; a spec without them is a wish.
 - <if the project measures coverage: note impact — never drops; money/leads/auth routes meet the fixed threshold (ADR-0012)>
 - <if no tests apply (docs/chore/style, no executable logic): say so with the reason, one line>
 
-### Review                         (REQUIRED from Tier 1 up)
+### Pre-mortem                     (REQUIRED from Tier 2 up — see references/premortem-and-review-loop.md)
+- **Caminos**: <every entry the data/behavior flows through — alta, reingreso, backfill, histórico, sync, API/MCP/UI, undo — each "covered" or "out: <reason>">
+- **Fallas**: <per external dependency: down / slow / malformed / partial; per operation: fails open or closed>
+- **Invariantes**: <3-5 statements that must always hold → the test that breaks each one>
+- **Simetrías**: <if the rule applies to read/budget/create, does it apply to write/status/edit/delete?>
+- **Reutilización**: <the existing helper that already does this, or "none exists">
+- <`n/a — <reason>` is a valid answer per row; omitting a row is not. ~15 lines max.>
+
+### Review                         (REQUIRED from Tier 1 up — a ledger, filled AFTER implementing)
 - Level: <medium (T1) | high (T2) | max or deepcheck (T3)> — see Step 4
-- <filled in AFTER implementing: findings surfaced, and what happened to each>
-- <a finding is closed by fixing it, or by one line saying why it isn't real / isn't now>
+- Pass 1 (full diff): <n> found (capped? yes/no) → <n> fixed · deferred: <reason> · refuted: <reason>
+- Pass 2 (T2: fix-diff + callers | T3: full branch): <n> found · induced: <n> → closed | back to spec: redesign of <piece>
+- <Pass 3 only after a redesign; it is the last one. Anything still open is recorded as debt, not chased.>
 
 ### Out of scope
 - <what we are deliberately not doing now>
@@ -265,17 +275,23 @@ es inline), conforme al contrato
 
 ```json
 {
-  "change": "<kebab>", "spec_flow_tier": 2,
+  "change": "<kebab>",
+  "spec_flow_tier": 2,
   "tasks": [
-    { "id": 1, "title": "<tarea>", "kind": "decision|feat|fix|refactor|perf|test|docs|chore|spike|...",
+    {
+      "id": 1,
+      "title": "<tarea>",
+      "kind": "decision|feat|fix|refactor|perf|test|docs|chore|spike|...",
       "size": "small|medium|large",
       "signals": { "type": "feat", "tier": 2, "risk": "med", "breaking": false },
-      "depends_on": [] }
+      "depends_on": []
+    }
   ]
 }
 ```
 
 Reglas para llenarlo (lo infieres del brief que ya escribiste, sin preguntar):
+
 - **`kind`** por tarea = su naturaleza (una "decisión de arquitectura" es `decision`,
   "implementar endpoint" es `feat`, "actualizar README" es `docs`). El orquestador rutea
   por `kind`, así que es el campo que más importa.
@@ -286,6 +302,26 @@ Reglas para llenarlo (lo infieres del brief que ya escribiste, sin preguntar):
 
 No dispares el orquestador tú: solo dejas el `tasks.json` listo. El usuario decide
 orquestar. Si no se pide orquestación, omite este paso.
+
+## Step 3.6 — Design gate: review the spec before the first Edit (Tier 2–3)
+
+The post-implementation review asks eleven questions of the diff — which paths call
+this, what invariant did the deleted line enforce, what happens when the dependency is
+down. Measured across 73 reviewed sessions, **most findings answer questions the spec
+never asked**, and fixing them inside the review loop is what makes the loop run to 14–18
+passes. So ask them **here**, while a gap costs one line instead of a pass.
+
+- **Tier 2**: walk the checklist in `references/premortem-and-review-loop.md` against your
+  own brief. Every gap you find becomes a Given/When/Then scenario or an invariant with
+  its test — added to the brief _before_ you touch code.
+- **Tier 3**: propose delegating the gate to `planner` (read-only, Opus): give it the brief,
+  the code map and the files in the surface; its output is **gaps in the spec**, not a new
+  plan. Delegation stays opt-in (ADR-0030) — if the user declines, do the Tier 2 walk.
+
+Record the result as `spec_review: {gaps_found, gaps_adopted}` in the Step 6 event. A gap
+you saw and chose not to adopt needs its one-line reason in the brief, same rule as a
+review finding. Zero gaps found on a Tier 3 change is a signal the gate was skimmed, not a
+signal the spec was perfect.
 
 ## Step 4 — Implement and verify
 
@@ -310,6 +346,14 @@ proportionality principle from Step 2 applied to the finish line, not just the s
   compiles and runs" — it's "it runs, and a test proves it."
 - **Tier 2+**: each Given/When/Then scenario in the spec maps 1:1 to a test case. If a
   scenario has no corresponding test, the spec isn't actually verified yet.
+- **Tier 2+, verified both ways**: a test that protects an invariant or a guard counts only
+  once you have watched it **fail with the fix reverted** (or the guard deleted) and pass
+  with it restored. One-step manual mutation, a minute of work — and the thing that ended
+  the two longest review chains on record, where suites of 800+ tests stayed green through
+  five rounds of the same bug because the fakes never exercised the guard.
+- **Fakes carry a contract**: a fake that ignores its arguments (an `eq()` that returns the
+  same rows whatever it is asked) does not test a filter or a security guard. If the real
+  dependency selects, the fake must select.
 - **Where the project measures coverage**: it never drops. On projects using
   devground's vitest standard, `test:coverage` stays green — critical paths (money,
   leads, auth — ADR-0012) meet the fixed threshold, and the global floor only moves up
@@ -329,20 +373,40 @@ in the DoD rather than in good intentions.
 
 Same proportionality as everything else:
 
-| Tier | Review |
-|------|--------|
-| 0 | none — preserves the "no artifacts" promise |
-| 1 | `/code-review medium` on the diff |
-| 2 | `/code-review high` |
-| 3 | `/code-review max`, or `deepcheck` when the change crosses modules |
+| Tier | Review                                                             |
+| ---- | ------------------------------------------------------------------ |
+| 0    | none — preserves the "no artifacts" promise                        |
+| 1    | `/code-review medium` on the diff                                  |
+| 2    | `/code-review high`                                                |
+| 3    | `/code-review max`, or `deepcheck` when the change crosses modules |
 
-This does not compete with `/code-review` or deepcheck — it **schedules** them. The rule
-is: **run the review for the tier, then close every finding.** A finding closes by being
-fixed, or by one line saying why it isn't real or isn't now. A change with open findings
-and no reason recorded is not done.
+This does not compete with `/code-review` or deepcheck — it **schedules** them, and it
+bounds them. The review is a **gate with a ledger, not a loop**: measured over 171 runs,
+44% of sessions re-ran it two or more times, and from the third pass on most findings were
+_caused by the previous pass's fixes_. The protocol below is what stops that.
 
-Run it **after the tests are green**, not instead of them: a reviewer reading broken code
-spends its attention on what the tests would have caught for free.
+1. **Pass 1** at the tier's level, on the full diff, **after the tests are green** (a
+   reviewer reading broken code spends its attention on what the tests would have caught
+   for free). Before touching code, read the whole list and **group it by root cause**;
+   fix by class, never finding by finding. The reviewer caps its output (15, or 10 via
+   ReportFindings): a list that hits the cap means _at least_ that many — note it as
+   `findings_capped` and expect more behind it.
+2. **Close every finding**: fixed (with its test verified both ways), deferred with a
+   reason, or refuted with a reason. Write the **ledger** into the `### Review` section —
+   and, before launching the next pass, state it in the conversation: the reviewer runs as
+   a fork that inherits this context, so the ledger reaches it without any file or flag.
+   Commit the fixes separately from the change.
+3. **Pass 2 is the gate.** Tier 2 reviews the fix diff plus its callers; Tier 3 reviews
+   the full branch. Tell the reviewer not to re-flag what the ledger deferred or refuted
+   unless the recorded reason is wrong.
+4. **Stop rule.** A pass-2 finding whose `file:line` falls inside the pass-1 fix diff is
+   **induced**. Induced findings are not fixed in place: go back to the brief, write the
+   invariant that was missing, redesign that piece, then run **pass 3 — the last one**.
+   No induced findings → close what remains and stop at `passes: 2`. Whatever is still
+   open after pass 3 is recorded as debt (`findings > resolved`), visible, not chased.
+5. **Zero findings is not the target.** The reviewer keeps every non-refuted candidate
+   (recall mode), so it has a floor. The target is a low first pass and a second pass
+   that is the last.
 
 If a finding reveals that an inferred assumption was wrong, that's an
 `assumption_reversed` event (below) — not just a fix. Reviews are the main way those
@@ -358,7 +422,7 @@ lands, reconcile `docs/codemap.md` with reality:
 - **Removed** code → delete the entry.
 - A responsibility you discovered the map got wrong → correct it.
 
-The map stays fresh precisely because the same flow that *reads* it also *maintains* it —
+The map stays fresh precisely because the same flow that _reads_ it also _maintains_ it —
 it's touched on every change, so it can't drift far. Keep entries terse: a path and a
 one-line responsibility, not a tutorial. The map is an index of WHERE, not a manual of
 HOW (that's what code and ADRs are for).
@@ -384,7 +448,7 @@ race; just add a line.
 
 Emit it once the classification and the files are settled (after the brief). The line is
 **versioned and gets committed alongside the change** — deliberate: it gives the metrics
-tool a *direct* event↔commit link (the same commit touches `events.jsonl` and the code),
+tool a _direct_ event↔commit link (the same commit touches `events.jsonl` and the code),
 instead of guessing by timestamp.
 
 ### The spec event (one per run, Tier 1+)
@@ -394,17 +458,28 @@ instead of guessing by timestamp.
  "tier":1,"type":"feat|fix|refactor|perf|docs|test|chore|spike","size":"trivial|small|medium|large",
  "risk":"low|med|high","uncertainty":"known|unknown","files":["path",...],
  "assumptions":2,"questions_asked":0,"brief":"inline|docs/specs/<name>.md","codemap_used":true,
- "tests":"added|updated|n/a|deferred",
- "review":{"level":"medium|high|max|deepcheck","findings":3,"resolved":3}|"n/a",
- "spec_flow_version":"0.5"}
+ "premortem":true|false|"n/a",
+ "spec_review":{"gaps_found":3,"gaps_adopted":2}|"n/a",
+ "tests":"verified|added|updated|n/a|deferred",
+ "review":{"level":"medium|high|max|deepcheck","passes":2,"findings":10,"findings_capped":true,
+           "induced":0,"resolved":12,"redesigned":false}|"n/a",
+ "spec_flow_version":"0.6"}
 ```
 
-`review` records the closing gate of Step 4: which level ran, how many findings it
-surfaced, and how many were closed. `"n/a"` only for Tier 0 or a change with no
-executable logic. It is the third gauge, and the one that answers a question the other
-two can't: **are the changes getting cleaner?** `findings` per change should trend down
-as the flow improves — if it doesn't, spec-flow is producing briefs that look complete
-and aren't. `findings > resolved` at close is debt, and it's meant to be visible.
+`review` records the closing gate of Step 4. **`findings` is the first pass only** — the
+one number comparable across changes; `resolved` is the total closed across all passes.
+`passes` is how many ran; `findings_capped` says pass 1 hit the reviewer's cap (so
+`findings` is a floor, not a count); `induced` counts pass ≥2 findings caused by earlier
+fixes; `redesigned` says the stop rule fired. `"n/a"` only for Tier 0 or a change with no
+executable logic. Together they answer what ADR-0036 asked and could not yet read: **are
+the changes getting cleaner** — first-pass findings with a pre-mortem vs without — and
+**is the loop bounded** — median passes ≤ 2. `findings > resolved` at close is debt, and
+it's meant to be visible.
+
+`premortem` is `true`/`false` from Tier 2 up (`"n/a"` on Tier 1); five `n/a` rows count as
+`true` here, which is exactly why the design gate exists. `spec_review` is Step 3.6's
+result; `"n/a"` on Tier 1. `tests:"verified"` means added/updated _and_ watched fail with
+the fix reverted — the expected value from Tier 2 up.
 
 Read `questions_asked` and `assumptions` **together** — never `questions_asked` alone.
 Zero questions on a change that made ten high-risk assumptions is not a triumph; it's
@@ -426,10 +501,16 @@ the structural counterweight. **When an inferred assumption later turns out wron
 user corrects it, or rework proves it — append a second line tied to the same `change`:
 
 ```jsonc
-{"event":"assumption_reversed","ts":"<ISO-8601 with tz>","date":"<YYYY-MM-DD>",
- "change":"<same kebab-name as the spec event>","task_id":2,
- "assumption":"<the inferred thing that was wrong>",
- "cost":"trivial|rework|redesign","spec_flow_version":"0.5"}
+{
+  "event": "assumption_reversed",
+  "ts": "<ISO-8601 with tz>",
+  "date": "<YYYY-MM-DD>",
+  "change": "<same kebab-name as the spec event>",
+  "task_id": 2,
+  "assumption": "<the inferred thing that was wrong>",
+  "cost": "trivial|rework|redesign",
+  "spec_flow_version": "0.6",
+}
 ```
 
 This is what makes "asked 0 questions, built the wrong thing" register as the failure it is,
@@ -454,7 +535,7 @@ Older events have no `event` field; readers (dev-metrics) treat a missing `event
 is in being committed with the change.
 
 Don't invent token counts or timings here — those are derived later from git + transcripts
-by dev-metrics; these events carry only the *labels* dev-metrics can't otherwise know. Keep
+by dev-metrics; these events carry only the _labels_ dev-metrics can't otherwise know. Keep
 it dead simple: one line per event, then move on.
 
 ## Persistence (keep it light)
@@ -490,10 +571,20 @@ is a perfectly good spec for small work.
   brief's structure serve both at once.
 - ❌ Declaring done on a Tier 1+ change with new logic and no test — "it compiles and
   runs" is not done.
+- ❌ Fixing review findings one at a time and re-running the review to "see what's left"
+  — the cap hides the rest, and each in-place fix is the next pass's finding. Group by
+  root cause, close the list, then one gate pass.
+- ❌ A pre-mortem of five `n/a` on a change that touches a data path with more than one
+  entry or an external dependency — that's the section filled to comply, and the design
+  gate should catch it.
+- ❌ Calling a test "verified" that nobody has watched fail.
 
 ## Worked example (internal reference)
 
 See `references/examples.md` for three end-to-end walk-throughs (a typo → Tier 0, a
 small feature → Tier 1, a risky migration → Tier 3) showing the classification, the
 routing decision, and the brief produced — including how each one avoids asking the
-user anything it could infer.
+user anything it could infer. `references/premortem-and-review-loop.md` carries the
+pre-mortem checklist (each row mapped to the reviewer angle it anticipates), the ledger
+protocol, and a real case where the review found exactly what the pre-mortem would have
+listed.

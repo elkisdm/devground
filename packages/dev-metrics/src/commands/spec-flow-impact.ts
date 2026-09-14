@@ -4,6 +4,7 @@ import {
   readSpecFlowEvents,
   rolloutDate as rolloutOf,
   frictionByTier as frictionOf,
+  reviewLoopStats,
   type SpecFlowEvent,
 } from '../lib/spec-flow-events.js';
 import {
@@ -24,7 +25,11 @@ export interface SpecFlowImpactArgs {
 }
 
 /** Computes the impact comparison for one repo, or null when it has no spec-flow telemetry. */
-export function impactForRepo(repoPath: string, emails: readonly string[], until: string | null): RepoImpact | null {
+export function impactForRepo(
+  repoPath: string,
+  emails: readonly string[],
+  until: string | null,
+): RepoImpact | null {
   if (!isGitRepo(repoPath)) return null;
   const events = readSpecFlowEvents(join(repoPath, '.spec-flow', 'events.jsonl'));
   const rollout = rolloutOf(events);
@@ -64,5 +69,6 @@ export function runSpecFlowImpact(args: SpecFlowImpactArgs): string {
 
   const aggregate = aggregateImpact(impacts);
   const friction = frictionOf(allEvents);
-  return renderSpecFlowImpact(impacts, aggregate, friction);
+  const reviewLoop = reviewLoopStats(allEvents);
+  return renderSpecFlowImpact(impacts, aggregate, friction, reviewLoop);
 }

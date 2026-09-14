@@ -1,4 +1,5 @@
 import type { RepoImpact, MetricDelta, ImpactMetricKey } from './spec-flow-segment.js';
+import type { ReviewLoopStats } from './spec-flow-events.js';
 
 /**
  * Renders the spec-flow impact comparison as markdown. The report is honest by
@@ -12,7 +13,9 @@ function pctStr(rate: number): string {
 
 /** Is this metric a 0..1 rate (render as %) or a raw number? */
 function isRate(metric: ImpactMetricKey): boolean {
-  return metric === 'testCouplingRate' || metric === 'adrCouplingRate' || metric === 'netGrossRatio';
+  return (
+    metric === 'testCouplingRate' || metric === 'adrCouplingRate' || metric === 'netGrossRatio'
+  );
 }
 
 function fmt(metric: ImpactMetricKey, value: number | null): string {
@@ -30,10 +33,16 @@ const METRIC_LABEL: Record<ImpactMetricKey, string> = {
   netGrossRatio: 'survival (net/gross)',
 };
 
+/** One decimal, no trailing float noise — for the review-loop's mean findings. */
+function fmtMean(value: number): string {
+  return value.toFixed(1);
+}
+
 export function renderSpecFlowImpact(
   impacts: readonly RepoImpact[],
   aggregate: readonly MetricDelta[],
   frictionByTier: Record<number, number>,
+  reviewLoop?: ReviewLoopStats,
 ): string {
   const lines: string[] = [];
   lines.push('# spec-flow impact');
@@ -44,7 +53,9 @@ export function renderSpecFlowImpact(
   // Per-repo
   lines.push('## Per-repo (spec-flow vs same-repo pre-rollout control)');
   lines.push('');
-  lines.push('| repo | n_sf | n_ctrl | comparable | ADR sf→ctrl | TEST sf→ctrl | files/commit sf→ctrl | survival sf→ctrl |');
+  lines.push(
+    '| repo | n_sf | n_ctrl | comparable | ADR sf→ctrl | TEST sf→ctrl | files/commit sf→ctrl | survival sf→ctrl |',
+  );
   lines.push('|---|--:|--:|:--:|---|---|---|---|');
   for (const i of impacts) {
     const s = i.specFlow;
@@ -78,15 +89,46 @@ export function renderSpecFlowImpact(
   lines.push('');
   lines.push('| tier | mean questions |');
   lines.push('|--:|--:|');
-  for (const tier of Object.keys(frictionByTier).map(Number).sort((a, b) => a - b)) {
+  for (const tier of Object.keys(frictionByTier)
+    .map(Number)
+    .sort((a, b) => a - b)) {
     lines.push(`| T${tier} | ${frictionByTier[tier].toFixed(2)} |`);
   }
   lines.push('');
 
+  // Review loop (spec-flow 0.6, ADR-0037) — only when there is at least one reviewed event.
+  if (reviewLoop && reviewLoop.withReview > 0) {
+    lines.push(`## Review loop (n=${reviewLoop.withReview} con review)`);
+    lines.push('');
+    if (reviewLoop.medianPasses !== null && reviewLoop.sharePassesAtMost2 !== null) {
+      lines.push(
+        `- pasadas: mediana ${reviewLoop.medianPasses} · ≤2 pasadas: ${pctStr(reviewLoop.sharePassesAtMost2)}`,
+      );
+    }
+    if (reviewLoop.cappedRate !== null) {
+      lines.push(
+        `- tope alcanzado en la 1ª pasada (findings censurados): ${pctStr(reviewLoop.cappedRate)}`,
+      );
+    }
+    if (reviewLoop.inducedRate !== null) {
+      lines.push(`- cambios con hallazgos inducidos: ${pctStr(reviewLoop.inducedRate)}`);
+    }
+    const { withPremortem, withoutPremortem } = reviewLoop.firstPassFindings;
+    if (withPremortem !== null || withoutPremortem !== null) {
+      const parts: string[] = [];
+      if (withPremortem !== null) parts.push(`con pre-mortem ${fmtMean(withPremortem)}`);
+      if (withoutPremortem !== null) parts.push(`sin pre-mortem ${fmtMean(withoutPremortem)}`);
+      lines.push(`- hallazgos 1ª pasada: ${parts.join(' · ')}`);
+    }
+    lines.push('');
+  }
+
   // Honesty footer
   const notComparable = impacts.filter((i) => !i.comparable);
   if (notComparable.length > 0) {
-    lines.push('## Not comparable (insufficient pre-rollout control — NOT dropped, just unrankable)');
+    lines.push(
+      '## Not comparable (insufficient pre-rollout control — NOT dropped, just unrankable)',
+    );
     lines.push('');
     for (const i of notComparable) {
       lines.push(`- ${i.repo} (n_control=${i.control.commits}, rollout=${i.rolloutDate ?? 'n/a'})`);
