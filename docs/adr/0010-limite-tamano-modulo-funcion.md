@@ -1,6 +1,6 @@
 # ADR-0010: Límite de tamaño de módulo/función + container-presentational
 
-- **Estado**: Propuesto
+- **Estado**: Aceptado
 - **Fecha**: 2026-06-02
 - **Decisor**: edaza
 - **Aplica a**: `@devground/eslint-config` y todos los paquetes/proyectos que la consumen
@@ -39,24 +39,26 @@ Se añaden a `@devground/eslint-config` (preset base, heredado por el preset Nex
 'max-lines-per-function': ['warn', { max: 80, skipBlankLines: true, skipComments: true, IIFEs: true }],
 ```
 
-Se eligen como **`warn`**, no `error`, deliberadamente: el tamaño es una *señal*, no una falta categórica. Hay funciones legítimamente largas (un `switch` exhaustivo, un schema grande). El `warn` genera una conversación en el review sin bloquear el build. Si un proyecto quiere endurecerlo, puede subirlo a `error` en su config local.
+Se eligen como **`warn`**, no `error`, deliberadamente: el tamaño es una _señal_, no una falta categórica. Hay funciones legítimamente largas (un `switch` exhaustivo, un schema grande). El `warn` genera una conversación en el review sin bloquear el build. Si un proyecto quiere endurecerlo, puede subirlo a `error` en su config local.
 
 ## Consecuencias
 
 **Positivas**
+
 - Señal automática y temprana de archivos/funciones que crecieron demasiado.
 - Empuja la lógica imperativa fuera del render → componentes testeables (habilita [ADR-0012](0012-tests-rutas-criticas.md)).
 - Container-presentational mejora reuso y aísla el estado.
 - `warn` mantiene DX: informa sin frenar.
 
 **Negativas / Trade-offs**
+
 - `max-lines-per-function` puede marcar funciones largas pero legítimas (schemas, configs, switches exhaustivos). Mitigación: `// eslint-disable-next-line max-lines-per-function` justificado con comentario, o extraer la constante.
 - Los umbrales (400/80) son heurísticos, no verdades absolutas. Se documentan como tales.
 - El warn puede ignorarse; depende de la cultura de review prestarle atención.
 
 ## Alternativas consideradas
 
-1. **`error` en vez de `warn`**: descartado para el default. Bloquearía builds por un *síntoma* y empujaría a la gente a partir funciones de forma artificial solo para callar al linter. El proyecto puede endurecerlo si quiere.
+1. **`error` en vez de `warn`**: descartado para el default. Bloquearía builds por un _síntoma_ y empujaría a la gente a partir funciones de forma artificial solo para callar al linter. El proyecto puede endurecerlo si quiere.
 2. **Sin límite, confiar en review**: descartado — es lo que permitió los componentes de 1790 líneas.
 3. **`complexity` / `max-statements` adicionales**: buenas reglas complementarias, pero generan más ruido y falsos positivos al inicio. Se dejan fuera de este ADR para no sobrecargar; re-evaluables.
 4. **Umbrales más bajos (ej. 200/50)**: descartado por ahora — demasiado ruido inicial en bases existentes. 400/80 atrapa los casos patológicos sin avalancha de warnings.

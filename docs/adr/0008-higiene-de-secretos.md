@@ -1,6 +1,6 @@
 # ADR-0008: Higiene de secretos (gitleaks pre-commit + política de .gitignore)
 
-- **Estado**: Propuesto
+- **Estado**: Aceptado
 - **Fecha**: 2026-06-02
 - **Decisor**: edaza
 - **Aplica a**: monorepo `devground-1` y proyectos consumidores vía `@devground/husky-config`
@@ -27,7 +27,7 @@ Comportamiento clave — **degradación explícita, nunca silenciosa**:
 - Si gitleaks **detecta un secreto** → el commit se **bloquea** (exit ≠ 0) con el reporte de gitleaks.
 - Si gitleaks **no está instalado** → el hook **NO rompe el commit en silencio**. Imprime un aviso claro con instrucciones de instalación (`brew install gitleaks`, etc.) y deja pasar el commit. La filosofía: una herramienta de seguridad ausente no debe convertirse en un bloqueo opaco que el dev no entienda; pero el aviso debe ser imposible de ignorar para que el dev la instale.
 
-   > Nota de seguridad: dejar pasar el commit cuando gitleaks falta es un trade-off de **DX sobre garantía**. La garantía dura la da CI (gitleaks como job obligatorio en el pipeline), donde sí debe fallar si la herramienta no está. El hook local es una primera línea de defensa de "buen comportamiento", no la última.
+  > Nota de seguridad: dejar pasar el commit cuando gitleaks falta es un trade-off de **DX sobre garantía**. La garantía dura la da CI (gitleaks como job obligatorio en el pipeline), donde sí debe fallar si la herramienta no está. El hook local es una primera línea de defensa de "buen comportamiento", no la última.
 
 El hook se integra **después** de lint-staged en el mismo `pre-commit`, de modo que un proyecto que ya use `@devground/husky-config` lo obtiene al regenerar sus hooks.
 
@@ -57,12 +57,14 @@ Todo proyecto del repo debe ignorar por defecto datos y binarios que no son cód
 ## Consecuencias
 
 **Positivas**
+
 - Barrera automática antes de que un secreto llegue al historial.
 - Datos sensibles (PII en CSV, dumps) y binarios pesados dejan de inflar el repo.
 - `.env.example` documenta las variables requeridas sin filtrar valores.
 - El aviso explícito cuando falta gitleaks educa al dev en vez de fallar misteriosamente.
 
 **Negativas / Trade-offs**
+
 - Falsos positivos de gitleaks ocasionales (ej. claves de ejemplo). Mitigación: `.gitleaksignore` o `# gitleaks:allow` en la línea, documentado y revisable.
 - El hook local es saltable con `--no-verify` y no protege si gitleaks no está instalado → **CI debe ser el gate duro** (gitleaks obligatorio en pipeline).
 - gitleaks es una dependencia externa que el dev debe instalar manualmente (no es un paquete npm). Es el precio de usar la herramienta estándar del ecosistema.

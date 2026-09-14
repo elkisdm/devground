@@ -1,6 +1,7 @@
 # ADR-0007: Rate-limiting distribuido obligatorio
 
-- **Estado**: Propuesto
+- **Estado**: Aceptado
+  - Norma para proyectos consumidores; enforcement por auditoría (ADR-0013), sin regla automática.
 - **Fecha**: 2026-06-02
 - **Decisor**: edaza
 - **Aplica a**: cualquier proyecto del repo que exponga rutas API o webhooks en entornos serverless (Vercel, Netlify Functions, Cloudflare Workers, Lambda)
@@ -22,7 +23,7 @@ export function POST(req: Request) {
 }
 ```
 
-En un servidor monolítico de larga vida (un solo proceso Node) esto *parece* funcionar. Pero en **entornos serverless el modelo de ejecución es otro**: la plataforma crea múltiples instancias concurrentes y las recicla con frecuencia. Cada instancia tiene **su propio heap**, así que:
+En un servidor monolítico de larga vida (un solo proceso Node) esto _parece_ funcionar. Pero en **entornos serverless el modelo de ejecución es otro**: la plataforma crea múltiples instancias concurrentes y las recicla con frecuencia. Cada instancia tiene **su propio heap**, así que:
 
 - El `Map` no se comparte entre instancias → con N instancias activas el límite real es `N × 10`, no `10`.
 - En cold start el `Map` arranca vacío → el contador se resetea de forma impredecible.
@@ -74,14 +75,16 @@ Cualquier store elegido debe ser **atómico** (la lectura+incremento no puede te
 ## Consecuencias
 
 **Positivas**
+
 - El límite es real: todas las instancias comparten el mismo contador.
 - Resiste cold starts y autoscaling.
 - Upstash y similares exponen métricas, lo que da observabilidad del abuso.
 - Patrón explícito y copiable → menos probabilidad de reintroducir el antipatrón.
 
 **Negativas / Trade-offs**
+
 - Añade una dependencia de infraestructura (Redis/Upstash) y variables de entorno.
-- Cada request paga una latencia de red extra (mitigable: Upstash es HTTP de baja latencia y soporta caché local de *no contar dos veces*).
+- Cada request paga una latencia de red extra (mitigable: Upstash es HTTP de baja latencia y soporta caché local de _no contar dos veces_).
 - La opción de tabla en DB añade carga de escritura; hay que dimensionar y limpiar.
 - Costo monetario (aunque Upstash tiene tier gratuito generoso para la mayoría de proyectos pequeños).
 

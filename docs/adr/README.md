@@ -21,15 +21,15 @@ siguiente número de la secuencia, rellénalo y añádelo al índice de abajo.
 - [ADR-0004 — TypeScript strict por defecto](0004-typescript-strict.md)
 - [ADR-0005 — Husky + lint-staged para git hooks](0005-husky-lint-staged.md)
 - [ADR-0006 — dev-metrics: serie temporal de "codificar con agentes"](0006-dev-metrics.md) (Aceptado)
-- [ADR-0007 — Rate-limiting distribuido obligatorio](0007-rate-limiting-distribuido.md) (Propuesto)
-- [ADR-0008 — Higiene de secretos (gitleaks pre-commit + política de .gitignore)](0008-higiene-de-secretos.md) (Propuesto)
-- [ADR-0009 — Validación de entrada en toda ruta API + firma en webhooks](0009-validacion-entrada-webhooks.md) (Propuesto)
-- [ADR-0010 — Límite de tamaño de módulo/función + container-presentational](0010-limite-tamano-modulo-funcion.md) (Propuesto)
-- [ADR-0011 — Prohibido `any` en fronteras externas (DB/API)](0011-prohibido-any-fronteras-externas.md) (Propuesto)
+- [ADR-0007 — Rate-limiting distribuido obligatorio](0007-rate-limiting-distribuido.md) (Aceptado)
+- [ADR-0008 — Higiene de secretos (gitleaks pre-commit + política de .gitignore)](0008-higiene-de-secretos.md) (Aceptado)
+- [ADR-0009 — Validación de entrada en toda ruta API + firma en webhooks](0009-validacion-entrada-webhooks.md) (Aceptado)
+- [ADR-0010 — Límite de tamaño de módulo/función + container-presentational](0010-limite-tamano-modulo-funcion.md) (Aceptado)
+- [ADR-0011 — Prohibido `any` en fronteras externas (DB/API)](0011-prohibido-any-fronteras-externas.md) (Aceptado)
 - [ADR-0012 — Tests obligatorios en rutas críticas](0012-tests-rutas-criticas.md) (Aceptado)
 - [ADR-0013 — Sistema de agentes de auditoría auto-mejorable (deepcheck)](0013-sistema-de-agentes-de-auditoria.md) (Aceptado)
-- [ADR-0014 — Medición de impacto de spec-flow](0014-medicion-impacto-spec-flow.md) (Propuesto)
-- [ADR-0015 — Costo de orientación (tokens antes del primer edit)](0015-costo-de-orientacion.md) (Propuesto)
+- [ADR-0014 — Medición de impacto de spec-flow](0014-medicion-impacto-spec-flow.md) (Aceptado)
+- [ADR-0015 — Costo de orientación (tokens antes del primer edit)](0015-costo-de-orientacion.md) (Aceptado)
 - [ADR-0016 — spec-flow se distribuye como `@devground/sdd`](0016-spec-flow-como-paquete-sdd.md) (Aceptado)
 - [ADR-0017 — Routing de modelos por complejidad (model-orchestrator)](0017-model-orchestrator-routing.md) (Aceptado)
 - [ADR-0018 — devground políglota: workspace TS + Swift](0018-devground-poliglota-ts-swift.md) (Aceptado)
@@ -37,13 +37,13 @@ siguiente número de la secuencia, rellénalo y añádelo al índice de abajo.
 - [ADR-0020 — Swift Testing + swift-dependencies como harness estándar](0020-swift-testing-harness-estandar.md) (Aceptado)
 - [ADR-0021 — Detección de stack en `@devground/cli`](0021-deteccion-stack-cli.md) (Aceptado)
 - [ADR-0022 — Jerarquía de orquestación de agentes en sesiones interactivas](0022-jerarquia-de-orquestacion.md) (Reemplazado por ADR-0027)
-- [ADR-0023 — ui-conventions: convenciones de UI como contexto antes de generar](0023-ui-conventions-contexto-antes.md) (Propuesto)
-- [ADR-0024 — Integración del ecosistema ui-conventions](0024-integracion-ecosistema-ui-conventions.md) (Propuesto)
+- [ADR-0023 — ui-conventions: convenciones de UI como contexto antes de generar](0023-ui-conventions-contexto-antes.md) (Aceptado)
+- [ADR-0024 — Integración del ecosistema ui-conventions](0024-integracion-ecosistema-ui-conventions.md) (Aceptado)
 - [ADR-0025 — Ratchet de cobertura global + gate en CI](0025-coverage-ratchet.md) (Aceptado)
-- [ADR-0026 — Declarar el núcleo soportado y entrar en fase de consolidación](0026-fase-de-consolidacion-nucleo-soportado.md) (Propuesto)
-- [ADR-0027 — Empaquetar la regla de orquestación en @devground/sdd](0027-empaquetar-regla-de-orquestacion.md) (Propuesto)
-- [ADR-0028 — La capa de orquestación es opt-in y queda desactivada por defecto](0028-orquestacion-opt-in-desactivada-por-defecto.md) (Propuesto)
-- [ADR-0029 — Tests como Definition of Done en spec-flow](0029-tests-como-definition-of-done.md) (Propuesto)
+- [ADR-0026 — Declarar el núcleo soportado y entrar en fase de consolidación](0026-fase-de-consolidacion-nucleo-soportado.md) (Reemplazado por ADR-0033)
+- [ADR-0027 — Empaquetar la regla de orquestación en @devground/sdd](0027-empaquetar-regla-de-orquestacion.md) (Aceptado)
+- [ADR-0028 — La capa de orquestación es opt-in y queda desactivada por defecto](0028-orquestacion-opt-in-desactivada-por-defecto.md) (Aceptado)
+- [ADR-0029 — Tests como Definition of Done en spec-flow](0029-tests-como-definition-of-done.md) (Aceptado)
 - [ADR-0030 — La delegación a subagentes es opt-in por petición](0030-delegacion-opt-in-por-peticion.md) (Aceptado)
 - [ADR-0031 — Al delegar, el modelo del subagente va explícito por naturaleza de la tarea](0031-modelo-explicito-al-delegar.md) (Aceptado)
 - [ADR-0032 — Veredicto de los 11 experimentales al cierre del ciclo de 8 semanas](0032-veredictos-experimentales.md) (Aceptado)
@@ -56,9 +56,9 @@ siguiente número de la secuencia, rellénalo y añádelo al índice de abajo.
 
 Estos ADRs no son solo documentación: tienen control automático en el repo.
 
-| ADR | Enforcement | Dónde |
-| --- | --- | --- |
-| 0008 | Hook pre-commit con gitleaks + política de `.gitignore` | `.husky/pre-commit`, `packages/husky-config/hooks/pre-commit.sh`, `.gitignore` |
-| 0010 | Reglas `max-lines` (400) y `max-lines-per-function` (80) como `warn` | `packages/eslint-config/index.mjs`, `next.mjs` |
-| 0011 | `@typescript-eslint/no-explicit-any` (`warn`) + `no-restricted-syntax` para `any` en base | `packages/eslint-config/next.mjs`, `index.mjs` |
-| 0024 | Preset opt-in `./ui`: `jsx-a11y` (`error`) + `no-restricted-syntax`/`no-restricted-imports` parametrizables (`warn`) | `packages/eslint-config/ui.mjs` |
+| ADR  | Enforcement                                                                                                          | Dónde                                                                          |
+| ---- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| 0008 | Hook pre-commit con gitleaks + política de `.gitignore`                                                              | `.husky/pre-commit`, `packages/husky-config/hooks/pre-commit.sh`, `.gitignore` |
+| 0010 | Reglas `max-lines` (400) y `max-lines-per-function` (80) como `warn`                                                 | `packages/eslint-config/index.mjs`, `next.mjs`                                 |
+| 0011 | `@typescript-eslint/no-explicit-any` (`warn`) + `no-restricted-syntax` para `any` en base                            | `packages/eslint-config/next.mjs`, `index.mjs`                                 |
+| 0024 | Preset opt-in `./ui`: `jsx-a11y` (`error`) + `no-restricted-syntax`/`no-restricted-imports` parametrizables (`warn`) | `packages/eslint-config/ui.mjs`                                                |

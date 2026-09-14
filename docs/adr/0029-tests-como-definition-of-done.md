@@ -1,6 +1,6 @@
 # ADR-0029: Tests como parte de la Definition of Done en spec-flow
 
-- **Estado**: Propuesto
+- **Estado**: Aceptado
 - **Fecha**: 2026-07-24
 - **Decisor**: edaza
 - **Aplica a**: `@devground/sdd` (skill spec-flow + agentes de orquestación ejecutor/planner/planner-deep); cualquier proyecto que use spec-flow
@@ -26,12 +26,14 @@ Spec-flow pasa a v0.4: **los tests son parte del Definition of Done, con el mism
 ## Consecuencias
 
 **Positivas**
+
 - Cierra la brecha entre "el estándar de tests existe" (ADR-0012/0025) y "el flujo que genera la mayoría de los cambios lo exige" (spec-flow).
 - La señal `tests` da visibilidad temprana de deuda de tests por cambio, sin esperar a que `test:coverage` la detecte en agregado.
 - Mismo principio de proporcionalidad que ya gobierna toda la skill (Step 2): no agrega ceremonia a Tier 0, escala con el riesgo real.
 - Backward-compatible: eventos viejos sin `tests` siguen parseando; el campo es aditivo.
 
 **Negativas / Trade-offs**
+
 - Un campo más en el brief y en el evento — fricción marginal, mitigada por ser opcional/declarativo (una línea basta para `n/a`).
 - `"deferred"` depende de que el agente lo reporte honestamente; no hay enforcement mecánico de ese campo específico (el enforcement mecánico real sigue siendo el gate de CI de ADR-0025, que no puede mentir).
 - El patrón de umbral inline (Capitalacademy) duplica configuración que en el monorepo vive centralizada — aceptado porque la alternativa (romper `--frozen-lockfile` o el ratchet) es peor.
