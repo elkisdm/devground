@@ -11,13 +11,12 @@ import {
   computeRepoImpact,
   median,
   aggregateImpact,
-  aggregateReviewLoop,
   MIN_CONTROL_COMMITS,
   MIN_SPECFLOW_COMMITS,
+  untilGitArg,
   type CommitDetail,
   type RepoImpact,
 } from './spec-flow-segment.js';
-import type { ReviewLoopStats } from './spec-flow-events.js';
 
 const REC = '\x1e';
 const SEP = '\x1f';
@@ -95,6 +94,7 @@ describe('isCodeCommit', () => {
 
 describe('selectControl', () => {
   const sf = new Set(['s1']);
+  const followUp = new Set<string>();
   const rollout = '2026-06-04';
   const commits: CommitDetail[] = [
     commit({ hash: 's1', day: '2026-06-05', subject: 'feat: sf' }), // spec-flow, excluded
@@ -104,11 +104,15 @@ describe('selectControl', () => {
     commit({ hash: 'd', day: '2026-06-02', subject: 'docs: d' }), // not code, excluded
   ];
   it('takes the most-recent pre-rollout code commits (recency controls trend)', () => {
-    const ctrl = selectControl(commits, sf, rollout, 2);
+    const ctrl = selectControl(commits, sf, followUp, rollout, 2);
     expect(ctrl.map((c) => c.hash)).toEqual(['c2', 'c1']); // most recent first, docs/sf/old excluded
   });
   it('keeps all when under target', () => {
-    expect(selectControl(commits, sf, rollout).map((c) => c.hash)).toEqual(['c2', 'c1', 'old']);
+    expect(selectControl(commits, sf, followUp, rollout).map((c) => c.hash)).toEqual([
+      'c2',
+      'c1',
+      'old',
+    ]);
   });
 });
 
@@ -122,24 +126,45 @@ describe('spanDays', () => {
 
 describe('classifyCommit', () => {
   const sf = new Set(['sfhash']);
+  const followUp = new Set(['fuhash']);
   const rollout = '2026-06-04';
   it('tags spec-flow by hash', () => {
-    expect(classifyCommit(commit({ hash: 'sfhash' }), sf, rollout)).toBe('spec-flow');
+    expect(classifyCommit(commit({ hash: 'sfhash' }), sf, followUp, rollout)).toBe('spec-flow');
   });
   it('tags pre-rollout code commits as control', () => {
     expect(
-      classifyCommit(commit({ hash: 'x', day: '2026-05-30', subject: 'feat: a' }), sf, rollout),
+      classifyCommit(
+        commit({ hash: 'x', day: '2026-05-30', subject: 'feat: a' }),
+        sf,
+        followUp,
+        rollout,
+      ),
     ).toBe('control');
   });
   it('does not treat pre-rollout docs as control', () => {
     expect(
-      classifyCommit(commit({ hash: 'x', day: '2026-05-30', subject: 'docs: a' }), sf, rollout),
+      classifyCommit(
+        commit({ hash: 'x', day: '2026-05-30', subject: 'docs: a' }),
+        sf,
+        followUp,
+        rollout,
+      ),
     ).toBe('other');
   });
   it('tags post-rollout non-spec-flow as other', () => {
     expect(
-      classifyCommit(commit({ hash: 'x', day: '2026-06-10', subject: 'feat: a' }), sf, rollout),
+      classifyCommit(
+        commit({ hash: 'x', day: '2026-06-10', subject: 'feat: a' }),
+        sf,
+        followUp,
+        rollout,
+      ),
     ).toBe('other');
+  });
+  it('L-9: a follow-up commit (review-only) is neither spec-flow nor control', () => {
+    expect(
+      classifyCommit(commit({ hash: 'fuhash', day: '2026-05-30' }), sf, followUp, rollout),
+    ).toBe('follow-up');
   });
 });
 
@@ -185,8 +210,9 @@ describe('computeRepoImpact', () => {
       repo: 'demo',
       commits,
       sfHashes,
+      followUpHashes: new Set(),
       rolloutDate: rollout,
-      frictionByTier: { 2: 0 },
+      frictionByTier: { 2: { mean: 0, n: 1 } },
     });
     expect(impact.specFlow.commits).toBe(2);
     expect(impact.control.commits).toBe(3); // c1, c2, old — no longer starved by a calendar window
@@ -209,6 +235,7 @@ describe('computeRepoImpact', () => {
       repo: 'r',
       commits,
       sfHashes,
+      followUpHashes: new Set(),
       rolloutDate: rollout,
       frictionByTier: {},
     });
@@ -262,66 +289,8 @@ describe('aggregateImpact', () => {
   });
 });
 
-describe('aggregateReviewLoop (ADR-0037, causa C #8/#12)', () => {
-  it('combina per-repo con la mediana-de-repos y suma los n, nunca pooling crudo', () => {
-    const repoA: ReviewLoopStats = {
-      passes: { median: 2, sharePassesAtMost2: 0.8, n: 5 },
-      capped: { rate: 0.4, n: 5 },
-      induced: { rate: 0.2, n: 5 },
-      redesigned: { rate: 0.1, n: 5 },
-      unclosed: { count: 1, n: 6 },
-      open: { sum: 3, median: 1, n: 5 },
-      firstPassFindings: {
-        premortem: { mean: 3, n: 4, cappedShare: 0.25 },
-        compliance: null,
-        baseline05: { mean: 9, n: 20, cappedShare: null },
-      },
-    };
-    const repoB: ReviewLoopStats = {
-      passes: { median: 4, sharePassesAtMost2: 0.6, n: 3 },
-      capped: { rate: 0.6, n: 3 },
-      induced: null, // este repo no reporta induced en absoluto
-      redesigned: { rate: 0.3, n: 3 },
-      unclosed: { count: 0, n: 4 },
-      open: { sum: 1, median: 0, n: 3 },
-      firstPassFindings: {
-        premortem: { mean: 5, n: 4, cappedShare: 0.5 },
-        compliance: null,
-        baseline05: { mean: 11, n: 20, cappedShare: null },
-      },
-    };
-
-    const agg = aggregateReviewLoop([repoA, repoB]);
-
-    expect(agg.repos).toBe(2);
-    expect(agg.passes).toEqual({ median: 3, sharePassesAtMost2: 0.7, n: 8, repos: 2 });
-    expect(agg.capped).toEqual({ rate: 0.5, n: 8, repos: 2 });
-    // induced solo lo reporta un repo -> repos:1, sin pooling con el que no lo tiene
-    expect(agg.induced).toEqual({ rate: 0.2, n: 5, repos: 1 });
-    expect(agg.redesigned).toEqual({ rate: 0.2, n: 8, repos: 2 });
-    expect(agg.unclosed).toEqual({ count: 1, n: 10, repos: 2 });
-    expect(agg.open).toEqual({ sum: 4, median: 0.5, n: 8, repos: 2 });
-    expect(agg.firstPassFindings.premortem).toEqual({
-      mean: 4,
-      n: 8,
-      cappedShare: 0.375,
-      repos: 2,
-    });
-    // ningun repo aporta compliance -> null, no cero
-    expect(agg.firstPassFindings.compliance).toBeNull();
-    expect(agg.firstPassFindings.baseline05).toEqual({
-      mean: 10,
-      n: 40,
-      cappedShare: null,
-      repos: 2,
-    });
-  });
-
-  it('sin ningun repo con datos, todo queda null', () => {
-    const agg = aggregateReviewLoop([]);
-    expect(agg.repos).toBe(0);
-    expect(agg.passes).toBeNull();
-    expect(agg.capped).toBeNull();
-    expect(agg.firstPassFindings).toEqual({ premortem: null, compliance: null, baseline05: null });
+describe('untilGitArg (L-8)', () => {
+  it('includes the full day, matching the event filter date <= until', () => {
+    expect(untilGitArg('2026-09-14')).toBe('--until=2026-09-14T23:59:59');
   });
 });

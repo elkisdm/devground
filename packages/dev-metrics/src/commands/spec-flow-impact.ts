@@ -4,21 +4,19 @@ import {
   readSpecFlowLog,
   rolloutDate as rolloutOf,
   frictionByTier as frictionOf,
-  reviewLoopStats,
   type SpecFlowEvent,
   type SpecFlowLog,
 } from '../lib/spec-flow-events.js';
+import { reviewLoopStats, aggregateReviewLoop } from '../lib/spec-flow-review-loop.js';
 import {
   specFlowHashes,
   collectCommitDetails,
   computeRepoImpact,
   aggregateImpact,
-  aggregateReviewLoop,
   type RepoImpact,
 } from '../lib/spec-flow-segment.js';
 import { dedupeWorktrees } from '../lib/repo-discovery.js';
 import { renderSpecFlowImpact } from '../lib/spec-flow-report.js';
-import { warn } from '@devground/logger';
 
 export interface SpecFlowImpactArgs {
   repos: string[];
@@ -51,14 +49,15 @@ export function impactForRepo(
   const rollout = rolloutOf(specs);
   if (rollout === null) return null; // repo never used spec-flow → nothing to compare
 
-  const sfHashes = specFlowHashes(repoPath);
+  const classification = specFlowHashes(repoPath);
   // Collect the full history (no `since`) so the pre-rollout control is available.
   const commits = collectCommitDetails(repoPath, emails, null, until);
 
   const impact = computeRepoImpact({
     repo: repoName(repoPath),
     commits,
-    sfHashes,
+    sfHashes: classification.specFlow,
+    followUpHashes: classification.followUp,
     rolloutDate: rollout,
     frictionByTier: frictionOf(specs),
   });
@@ -66,14 +65,29 @@ export function impactForRepo(
   return { impact, log: { specs, reviews, reversals } };
 }
 
+/** L-8: `--until` must be a real calendar date, or the git/event clocks silently disagree. */
+function assertValidUntil(until: string | null): void {
+  if (until === null) return;
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(until);
+  if (m === null) throw new Error(`--until must be YYYY-MM-DD, got "${until}"`);
+  const [, y, mo, d] = m;
+  const parsed = new Date(`${until}T00:00:00Z`);
+  if (
+    Number.isNaN(parsed.getTime()) ||
+    parsed.getUTCFullYear() !== Number(y) ||
+    parsed.getUTCMonth() + 1 !== Number(mo) ||
+    parsed.getUTCDate() !== Number(d)
+  ) {
+    throw new Error(`--until must be a real calendar date, got "${until}"`);
+  }
+}
+
 /** Runs the spec-flow-impact analysis across repos and returns a markdown report. */
 export function runSpecFlowImpact(args: SpecFlowImpactArgs): string {
+  assertValidUntil(args.until);
   // Two repo paths that are worktrees of the same repository would otherwise
   // double-count that repo's spec-flow history in every aggregate below.
   const { kept, discarded } = dedupeWorktrees(args.repos);
-  for (const d of discarded) {
-    warn(`spec-flow-impact: ${d.path} is a worktree of ${d.keptAs} — skipping (already counted)`);
-  }
 
   const impacts: RepoImpact[] = [];
   const allSpecs: SpecFlowEvent[] = [];
@@ -84,7 +98,9 @@ export function runSpecFlowImpact(args: SpecFlowImpactArgs): string {
     if (result) {
       impacts.push(result.impact);
       allSpecs.push(...result.log.specs);
-      perRepoReviewLoop.push(reviewLoopStats(result.log.specs, result.log.reviews));
+      perRepoReviewLoop.push(
+        reviewLoopStats(result.log.specs, result.log.reviews, result.log.reversals),
+      );
     }
   }
 

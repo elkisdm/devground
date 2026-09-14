@@ -185,40 +185,53 @@ dev-metrics spec-flow-impact --repos ~/a,~/b --emails me@x.com
 momentos distintos y viajan en commits distintos — la telemetría de 0.5 forzaba
 placeholders como `"findings":"pending"` cuando el review todavía no cerraba. Un
 tercer tipo, `event:"assumption_reversed"`, es la reversión de un supuesto y NUNCA
-cuenta como un cambio Tier 0-3 (antes de 0.6 el parser ignoraba `event` y esas líneas
-se contaban como specs Tier 0 falsos — 185 repos tenían una fila `T0` inflada por
-esto). El evento `spec` lleva `premortem`/`spec_review` (Step 3/3.6); el evento
-`review` lleva el cierre del bucle: `passes`, `findings`, `findings_capped`,
-`found_total`, `induced`, `resolved`, `open`, `redesigned`, `tests`. Ambos se unen
-por `change` (el `review` más reciente por `ts` cuando hay varios).
+cuenta como un cambio Tier 0-3. El evento `spec` lleva `premortem`/`spec_review`
+(Step 3/3.6); el evento `review` lleva el cierre del bucle: `passes`, `findings`,
+`findings_capped`, `found_total`, `induced`, `resolved`, `open`, `redesigned`,
+`tests`.
 
-El reporte suma un bloque "Review loop" con estas señales. Cada línea lleva **su
-propio n** — nunca un n global compartido entre métricas distintas: `findings_capped`
-solo cuenta reviews que reportan ese campo, `induced` solo los que reportan
-`induced`, etc. Una línea sin datos se omite en vez de mostrarse en 0% o `—`.
-`findings` es el conteo de hallazgos de la **primera** pasada de review (no el
-total acumulado); es la cifra que se compara entre cambios, y `findings_capped`
-avisa cuando esa lista llegó al tope del revisor (10 o 15 hallazgos), en cuyo caso
-`findings` es "al menos", no "exactamente" — un valor censurado nunca entra en una
-media junto a valores exactos, así que la media de hallazgos de la 1ª pasada se
-calcula **solo sobre los no censurados**, y la proporción de censurados se reporta
-aparte (`cappedShare`). `passes` dice en cuántas pasadas cerró el cambio (la meta es
-≤2); `induced` cuenta hallazgos de una pasada posterior cuyo defecto no existía antes
-de los arreglos de la pasada anterior — si hay, la pieza se rediseña en vez de
-parchearse en línea, y `redesigned` lo registra. Los hallazgos de la 1ª pasada se
-comparan en tres brazos con su propio n y su propio `cappedShare`: `con pre-mortem`
-(specs 0.6 con `premortem.na ≤ 3`), `pre-mortem de cumplimiento` (`na ≥ 4` o
-`premortem` omitido) y `línea base 0.5` (el `review` inline de antes de 0.6, que
-contaba todas las pasadas y no conocía el tope — por eso su `cappedShare` es
-siempre desconocido). Comparar el primer brazo contra la línea base es lo que dice
-si el pre-mortem realmente funciona.
+La lectura de esta telemetría vive en `lib/spec-flow-review-loop.ts` como un
+modelo de datos con once invariantes (L-1..L-11, cada una con su test en
+`spec-flow-review-loop.test.ts`), no como una lista suelta de métricas:
+
+- **L-1** la unidad es el **cambio**: los `spec` se colapsan por `change`
+  (el último por `ts` gana; sin `change` se descarta), y su review es el
+  `review` más reciente con `ts ≥` el del spec, o el `review` inline del
+  propio spec (L-6), o ninguno (cambio **abierto**).
+- **L-2** un campo ausente es **desconocido**, nunca `0` ni `false`; un
+  review "no aplicó" (`level` ausente o `"n/a"`) excluye el cambio de TODAS
+  las métricas, incluida "sin cierre".
+- **L-3** los hallazgos de 1ª pasada son exactos, censurados
+  (`findings_capped:true`) o desconocidos (flag ausente); la media usa solo
+  los exactos, y cada brazo reporta los tres conteos y su `cappedShare` aparte
+  — un brazo con datos nunca es `null` aunque su media lo sea.
+- **L-4** "sin cierre" cubre cambios Tier ≥ 1 que son 0.6 o traen review
+  inline, sin review aplicable o con `findings` no numérico (`"pending"`).
+- **L-5** los hallazgos de 1ª pasada se comparan en brazos exhaustivos y
+  excluyentes sobre cambios 0.6 Tier ≥ 2: `con pre-mortem` (`na ≤ 3`),
+  `pre-mortem de cumplimiento` (`na ≥ 4` o `premortem:false`), `sin declarar`
+  (ausente/`"n/a"`/`true` legado) y `línea base 0.5` (el `review` inline
+  anterior a 0.6, que no conocía el tope de hallazgos).
+- **L-6** el contrato intermedio — un spec 0.6 con `review` inline, como el
+  que ya circula en producción — se lee igual que un evento `review` propio.
+- **L-7** dos rutas de repo que son worktrees del mismo repositorio (mismo
+  `git rev-parse --git-common-dir`, canonicalizado con `realpath`) se
+  deduplican quedándose con el **worktree principal**, no el primero visto;
+  la descartada se lista una sola vez en el reporte.
+- **L-8** `--until` se valida como `YYYY-MM-DD` real y usa un solo reloj:
+  eventos por `date ≤ until`, git con `--until=<until>T23:59:59`.
+- **L-9** un commit que solo agrega líneas `review`/`assumption_reversed` es
+  un **seguimiento** del cambio, no un commit spec-flow ni de control.
+- **L-10** también se leen `assumptions` (tasa de reversión de supuestos),
+  `spec_review` (adopción del gate), `tests` (verificados en Tier 2+) y
+  `resolved`/`found_total` (resueltos sobre encontrados).
+- **L-11** cada número del reporte lleva su `n`; `repos` en el encabezado
+  cuenta solo los repos con al menos un dato; el render es puro (no escribe
+  en stdout).
 
 Por repo se calcula su propio `ReviewLoopStats`; entre repos se combina con la
 MISMA regla que el resto del reporte (mediana de valores por-repo, nunca un pool
-crudo de eventos — un repo con más cambios no debe dominar el promedio). Dos rutas
-de repo que resultan ser worktrees del mismo repositorio (mismo `git
-rev-parse --git-common-dir`) se deduplican antes de agregar, y la ruta descartada
-se lista en el reporte para que no cuente dos veces.
+crudo de eventos — un repo con más cambios no debe dominar el promedio).
 
 ### `orientation`
 

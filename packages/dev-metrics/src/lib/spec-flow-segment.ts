@@ -1,9 +1,8 @@
 import { execFileSync } from 'node:child_process';
-import { join } from 'node:path';
 import { parseCommitType } from './conventional.js';
 import { netGrossRatio, round, median } from './stats.js';
 import { isTestFile, isAdrOrSpecFile } from './detectors.js';
-import type { ReviewLoopStats, RateMetric, FirstPassArm } from './spec-flow-events.js';
+import type { TierFriction } from './spec-flow-events.js';
 
 export { median };
 
@@ -30,6 +29,7 @@ const SEP = '\x1f'; // unit separator, safe inside commit metadata
 const REC = '\x1e'; // record separator, prefixes each commit
 const CODE_TYPES: ReadonlySet<string> = new Set(['feat', 'fix', 'perf', 'refactor']);
 const SPEC_FLOW_DIR = '.spec-flow/';
+const SPEC_FLOW_EVENTS_PATH = '.spec-flow/events.jsonl';
 
 /** Minimum control commits for a repo's comparison to be trustworthy. */
 export const MIN_CONTROL_COMMITS = 8;
@@ -48,7 +48,7 @@ export interface CommitDetail {
   deleted: number;
 }
 
-export type Segment = 'spec-flow' | 'control' | 'other';
+export type Segment = 'spec-flow' | 'control' | 'follow-up' | 'other';
 
 export interface SegmentMetrics {
   commits: number;
@@ -80,18 +80,68 @@ function safeGit(args: readonly string[], maxBuffer: number): string {
   }
 }
 
-/** Hashes of commits that touched `.spec-flow/events.jsonl` — the spec-flow changes. */
-export function specFlowHashes(repoPath: string): Set<string> {
-  const out = safeGit(
-    ['-C', repoPath, 'log', '--no-merges', '--format=%H', '--', '.spec-flow/events.jsonl'],
+export interface SpecFlowCommitClassification {
+  /** Commits that add ≥1 `spec` (or discriminator-absent) line — the spec-flow population. */
+  specFlow: Set<string>;
+  /** Commits that add ONLY `review`/`assumption_reversed` lines — a follow-up (L-9): excluded from BOTH segments. */
+  followUp: Set<string>;
+}
+
+/** Parses one JSON object line, or `null` if it isn't a parseable plain object. */
+function tryParseEventLine(line: string): { event?: unknown } | null {
+  try {
+    const v: unknown = JSON.parse(line);
+    return v !== null && typeof v === 'object' && !Array.isArray(v)
+      ? (v as { event?: unknown })
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * L-9: the spec-flow segment must not change population when a change's
+ * follow-up commits (a `review` line committed with the fix, or an
+ * `assumption_reversed` line) land later. Classifies each commit that touches
+ * `.spec-flow/events.jsonl` by the lines it ADDS: ≥1 line with `event` absent
+ * or `"spec"` → spec-flow; only `review`/`assumption_reversed` lines added →
+ * follow-up (neither spec-flow nor control).
+ */
+export function specFlowHashes(repoPath: string): SpecFlowCommitClassification {
+  const specFlow = new Set<string>();
+  const followUp = new Set<string>();
+  const hashesOut = safeGit(
+    ['-C', repoPath, 'log', '--no-merges', '--format=%H', '--', SPEC_FLOW_EVENTS_PATH],
     16 * 1024 * 1024,
   );
-  return new Set(
-    out
-      .split('\n')
-      .map((l) => l.trim())
-      .filter((l) => l !== ''),
-  );
+  const hashes = hashesOut
+    .split('\n')
+    .map((l) => l.trim())
+    .filter((l) => l !== '');
+
+  for (const hash of hashes) {
+    const diff = safeGit(
+      ['-C', repoPath, 'show', hash, '--', SPEC_FLOW_EVENTS_PATH],
+      16 * 1024 * 1024,
+    );
+    let addsSpec = false;
+    let addsAny = false;
+    for (const line of diff.split('\n')) {
+      if (!line.startsWith('+') || line.startsWith('+++')) continue;
+      const content = line.slice(1).trim();
+      if (content === '') continue;
+      const parsed = tryParseEventLine(content);
+      if (parsed === null) continue;
+      addsAny = true;
+      if (parsed.event === undefined || parsed.event === 'spec') {
+        addsSpec = true;
+        break;
+      }
+    }
+    if (addsSpec || !addsAny) specFlow.add(hash);
+    else followUp.add(hash);
+  }
+  return { specFlow, followUp };
 }
 
 /** Collects per-commit detail (files + churn) for the given authors. */
@@ -112,8 +162,13 @@ export function collectCommitDetails(
   ];
   for (const email of authorEmails) args.push(`--author=${email}`);
   if (since) args.push(`--since=${since}`);
-  if (until) args.push(`--until=${until}`);
+  if (until) args.push(untilGitArg(until));
   return parseCommitDetails(safeGit(args, 256 * 1024 * 1024));
+}
+
+/** L-8: one clock for `--until` — the full day is included (`T23:59:59`), matching the event filter `date ≤ until`. */
+export function untilGitArg(until: string): string {
+  return `--until=${until}T23:59:59`;
 }
 
 /** Parses `git log --numstat` output (REC-prefixed) into commit details. Pure. */
@@ -178,11 +233,14 @@ export function isCodeCommit(subject: string): boolean {
 export function selectControl(
   commits: readonly CommitDetail[],
   sfHashes: ReadonlySet<string>,
+  followUpHashes: ReadonlySet<string>,
   rollout: string,
   target: number = CONTROL_TARGET,
 ): CommitDetail[] {
   return commits
-    .filter((c) => classifyCommit(c, sfHashes, rollout) === 'control' && c.day !== '')
+    .filter(
+      (c) => classifyCommit(c, sfHashes, followUpHashes, rollout) === 'control' && c.day !== '',
+    )
     .sort((a, b) => (a.day < b.day ? 1 : a.day > b.day ? -1 : 0)) // most recent first
     .slice(0, target);
 }
@@ -197,12 +255,18 @@ export function spanDays(commits: readonly CommitDetail[]): number {
   return Math.max(daysBetween(days[0]!, days[days.length - 1]!) + 1, 1);
 }
 
-/** Classifies a commit into a segment given the spec-flow hashes and rollout date. */
+/**
+ * Classifies a commit into a segment given the spec-flow hashes, the
+ * follow-up hashes (L-9: a commit that only adds `review`/`assumption_reversed`
+ * lines — excluded from both spec-flow and control), and the rollout date.
+ */
 export function classifyCommit(
   commit: CommitDetail,
   sfHashes: ReadonlySet<string>,
+  followUpHashes: ReadonlySet<string>,
   rollout: string,
 ): Segment {
+  if (followUpHashes.has(commit.hash)) return 'follow-up';
   if (sfHashes.has(commit.hash)) return 'spec-flow';
   if (commit.day < rollout && isCodeCommit(commit.subject)) return 'control';
   return 'other';
@@ -258,8 +322,8 @@ export interface RepoImpact {
   control: SegmentMetrics;
   /** True when the control window has enough commits to trust the comparison. */
   comparable: boolean;
-  /** Mean questionsAsked per tier (the friction gauge). */
-  frictionByTier: Record<number, number>;
+  /** Mean questionsAsked (+ n) per tier (the friction gauge). */
+  frictionByTier: Record<number, TierFriction>;
 }
 
 /**
@@ -270,13 +334,14 @@ export function computeRepoImpact(args: {
   repo: string;
   commits: readonly CommitDetail[];
   sfHashes: ReadonlySet<string>;
+  followUpHashes: ReadonlySet<string>;
   rolloutDate: string | null;
-  frictionByTier: Record<number, number>;
+  frictionByTier: Record<number, TierFriction>;
 }): RepoImpact {
-  const { repo, commits, sfHashes, rolloutDate, frictionByTier } = args;
+  const { repo, commits, sfHashes, followUpHashes, rolloutDate, frictionByTier } = args;
 
   const sf = commits.filter((c) => sfHashes.has(c.hash));
-  const control = rolloutDate ? selectControl(commits, sfHashes, rolloutDate) : [];
+  const control = rolloutDate ? selectControl(commits, sfHashes, followUpHashes, rolloutDate) : [];
 
   return {
     repo,
@@ -337,119 +402,4 @@ export function aggregateImpact(impacts: readonly RepoImpact[]): MetricDelta[] {
       repos: comparable.length,
     };
   });
-}
-
-// ---------------------------------------------------------------------------
-// review-loop cross-repo aggregation (ADR-0037, causa C #8/#12)
-// ---------------------------------------------------------------------------
-
-export interface AggregatedRate extends RateMetric {
-  /** Repos that reported this metric at all (out of the repos passed in). */
-  repos: number;
-}
-
-export interface AggregatedFirstPassArm extends FirstPassArm {
-  repos: number;
-}
-
-export interface AggregatedReviewLoop {
-  /** Repos with any spec-flow review-loop data at all. */
-  repos: number;
-  passes: { median: number; sharePassesAtMost2: number; n: number; repos: number } | null;
-  capped: AggregatedRate | null;
-  induced: AggregatedRate | null;
-  redesigned: AggregatedRate | null;
-  unclosed: { count: number; n: number; repos: number } | null;
-  open: { sum: number; median: number; n: number; repos: number } | null;
-  firstPassFindings: {
-    premortem: AggregatedFirstPassArm | null;
-    compliance: AggregatedFirstPassArm | null;
-    baseline05: AggregatedFirstPassArm | null;
-  };
-}
-
-function aggregateRate(items: readonly (RateMetric | null)[]): AggregatedRate | null {
-  const withData = items.filter((i): i is RateMetric => i !== null);
-  if (withData.length === 0) return null;
-  return {
-    rate: median(withData.map((i) => i.rate)) as number,
-    n: withData.reduce((a, i) => a + i.n, 0),
-    repos: withData.length,
-  };
-}
-
-function aggregateArm(items: readonly (FirstPassArm | null)[]): AggregatedFirstPassArm | null {
-  const withData = items.filter((i): i is FirstPassArm => i !== null);
-  if (withData.length === 0) return null;
-  const cappedShares = withData.map((i) => i.cappedShare).filter((c): c is number => c !== null);
-  return {
-    mean: median(withData.map((i) => i.mean)) as number,
-    n: withData.reduce((a, i) => a + i.n, 0),
-    cappedShare: cappedShares.length > 0 ? median(cappedShares) : null,
-    repos: withData.length,
-  };
-}
-
-/**
- * Combines per-repo `ReviewLoopStats` (ADR-0037) the BASELINE-RELATIVE way,
- * same rule as `aggregateImpact`: the cross-repo value is the MEDIAN of
- * per-repo values, never a pooled count (a repo with worktree duplicates or
- * simply more changes would otherwise dominate). Each metric's `n` IS a sum
- * across repos (it is a sample-size count, not a rate to median), and each
- * metric also reports how many repos actually had data for it — never a
- * shared denominator across unrelated metrics.
- */
-export function aggregateReviewLoop(perRepo: readonly ReviewLoopStats[]): AggregatedReviewLoop {
-  const passesData = perRepo
-    .map((r) => r.passes)
-    .filter((p): p is NonNullable<ReviewLoopStats['passes']> => p !== null);
-  const passes =
-    passesData.length > 0
-      ? {
-          median: median(passesData.map((p) => p.median)) as number,
-          sharePassesAtMost2: median(passesData.map((p) => p.sharePassesAtMost2)) as number,
-          n: passesData.reduce((a, p) => a + p.n, 0),
-          repos: passesData.length,
-        }
-      : null;
-
-  const unclosedData = perRepo
-    .map((r) => r.unclosed)
-    .filter((u): u is NonNullable<ReviewLoopStats['unclosed']> => u !== null);
-  const unclosed =
-    unclosedData.length > 0
-      ? {
-          count: unclosedData.reduce((a, u) => a + u.count, 0),
-          n: unclosedData.reduce((a, u) => a + u.n, 0),
-          repos: unclosedData.length,
-        }
-      : null;
-
-  const openData = perRepo
-    .map((r) => r.open)
-    .filter((o): o is NonNullable<ReviewLoopStats['open']> => o !== null);
-  const open =
-    openData.length > 0
-      ? {
-          sum: openData.reduce((a, o) => a + o.sum, 0),
-          median: median(openData.map((o) => o.median)) as number,
-          n: openData.reduce((a, o) => a + o.n, 0),
-          repos: openData.length,
-        }
-      : null;
-
-  return {
-    repos: perRepo.length,
-    passes,
-    capped: aggregateRate(perRepo.map((r) => r.capped)),
-    induced: aggregateRate(perRepo.map((r) => r.induced)),
-    redesigned: aggregateRate(perRepo.map((r) => r.redesigned)),
-    unclosed,
-    open,
-    firstPassFindings: {
-      premortem: aggregateArm(perRepo.map((r) => r.firstPassFindings.premortem)),
-      compliance: aggregateArm(perRepo.map((r) => r.firstPassFindings.compliance)),
-      baseline05: aggregateArm(perRepo.map((r) => r.firstPassFindings.baseline05)),
-    },
-  };
 }

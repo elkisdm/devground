@@ -1,5 +1,17 @@
 import { existsSync, readFileSync } from 'node:fs';
-import { median } from './stats.js';
+import type {
+  SpecFlowEvent,
+  SpecFlowReview,
+  ReviewEvent,
+  ReversalEvent,
+} from './spec-flow-types.js';
+
+export type {
+  SpecFlowEvent,
+  SpecFlowReview,
+  ReviewEvent,
+  ReversalEvent,
+} from './spec-flow-types.js';
 
 /**
  * Reader for spec-flow's per-change telemetry (`<repo>/.spec-flow/events.jsonl`).
@@ -16,113 +28,12 @@ import { median } from './stats.js';
  *
  * The file is written by an agent, so we parse defensively: blank and malformed
  * lines are skipped, not fatal.
+ *
+ * This module is the PARSER only (spec-flow-v06 ADR-0037, L-1..L-11 rewrite):
+ * it normalizes raw JSONL into typed events. All cross-change aggregation
+ * (joining specs to reviews, the review-loop stats) lives in
+ * `./spec-flow-review-loop.js`.
  */
-
-export interface SpecFlowEvent {
-  /** ISO-8601 timestamp with timezone. */
-  ts: string;
-  /** YYYY-MM-DD of the change. */
-  date: string;
-  /** kebab-case change name. */
-  change: string;
-  /** 0..3 ceremony tier. */
-  tier: number;
-  /** Conventional-commit type. */
-  type: string;
-  size: string;
-  risk: string;
-  uncertainty: string;
-  /** Paths the change declared touching. */
-  files: string[];
-  /** Friction gauge — should be ~0 under the Prime Directive. `undefined` when absent/malformed (never `0` by default). */
-  questionsAsked?: number;
-  /** `"inline"` or a path to the persisted brief. */
-  brief: string;
-  /** Whether Step 0 found and read a code map. */
-  codemapUsed: boolean;
-  specFlowVersion: string;
-  /** DoD compliance for tests: "verified"|"added"|"updated"|"n/a"|"deferred". Optional, backward-compatible. */
-  tests?: string;
-  /**
-   * Inline review carried by the spec event itself — the spec-flow 0.5 shape,
-   * kept as the baseline the 0.6 numbers are compared against. 0.6 events
-   * write the closing review as a SEPARATE `"review"` event (see `ReviewEvent`)
-   * instead.
-   */
-  review?: SpecFlowReview;
-  /**
-   * Pre-mortem outcome (0.6, Tier 2+ Step 3). `{}` means the section was
-   * written but no usable `na` count came with it (or `premortem:true`,
-   * the legacy shape). `{na}` is the count of rows answered `n/a` (0-5).
-   * `undefined` for absent/`"n/a"` (Tier 0-1, or an older event).
-   */
-  premortem?: { na?: number };
-  /** `true` when the spec event explicitly recorded `premortem:false` — the section was skipped. */
-  premortemSkipped?: boolean;
-  /** Design-gate outcome (0.6, Tier 2+ Step 3.6). `undefined` for absent/`"n/a"`/no readable counts. */
-  specReview?: { gapsFound?: number; gapsAdopted?: number };
-}
-
-export interface SpecFlowReview {
-  level: string;
-  /** Findings from review pass 1 (comparable across changes). `undefined` when missing/malformed. */
-  findings?: number;
-  /** Total findings closed across all passes. `undefined` when missing/malformed. */
-  resolved?: number;
-  /** How many review passes ran before the change closed. */
-  passes?: number;
-  /** True when pass 1 hit the reviewer's finding cap — `findings` is "at least", not exact. */
-  findingsCapped?: boolean;
-  /** Findings in a later pass whose `file:line` falls inside an earlier pass's fix diff. */
-  induced?: number;
-  /** Whether an induced finding sent the change back to the spec for a redesign. */
-  redesigned?: boolean;
-}
-
-/**
- * The closing review event (spec-flow 0.6, ADR-0037). Written when the review
- * loop closes, committed with the last fix commit, and joined to its `spec`
- * event by `change`. `level` is `undefined` both when the field is absent and
- * when it is the literal `"n/a"` — either way, no review applied, and this
- * event must NOT count as "reviewed" in any aggregate.
- */
-export interface ReviewEvent {
-  ts: string;
-  date: string;
-  change: string;
-  level?: string;
-  /** Pass-1 findings — the number comparable across changes. `undefined` when missing/malformed. */
-  findings?: number;
-  /** True when pass 1 hit the reviewer's cap — `findings` is a floor, not exact. */
-  findingsCapped?: boolean;
-  /** Findings across ALL passes. */
-  foundTotal?: number;
-  /** How many passes completed (a dead pass does not count). */
-  passes?: number;
-  /** Pass ≥2 findings whose defect did not exist before the earlier fixes. */
-  induced?: number;
-  /** Findings fixed. */
-  resolved?: number;
-  /** Debt: deferred or still unresolved at close. */
-  open?: number;
-  /** Whether an induced finding triggered the stop rule's redesign. */
-  redesigned?: boolean;
-  /** DoD compliance for tests. */
-  tests?: string;
-  specFlowVersion: string;
-}
-
-/** The quality counter-signal: an inferred assumption that turned out wrong. */
-export interface ReversalEvent {
-  ts: string;
-  date: string;
-  /** Same `change` as the spec event it corrects. */
-  change: string;
-  assumption?: string;
-  cost?: string;
-  /** Optional: the model-orchestrator task id whose inference was reversed. */
-  taskId?: number;
-}
 
 interface RawEvent {
   event?: unknown;
@@ -140,6 +51,7 @@ interface RawEvent {
   codemap_used?: unknown;
   spec_flow_version?: unknown;
   tests?: unknown;
+  assumptions?: unknown;
   review?: unknown;
   premortem?: unknown;
   spec_review?: unknown;
@@ -163,10 +75,6 @@ function str(v: unknown, fallback = ''): string {
   return typeof v === 'string' ? v : fallback;
 }
 
-function num(v: unknown, fallback = 0): number {
-  return typeof v === 'number' && Number.isFinite(v) ? v : fallback;
-}
-
 /**
  * Strict count parse for fields where `0` is not a safe fallback — a censored
  * or omitted count must not silently read as zero, and dirty data (a negative,
@@ -176,6 +84,12 @@ function num(v: unknown, fallback = 0): number {
  */
 function count(v: unknown): number | undefined {
   return typeof v === 'number' && Number.isSafeInteger(v) && v >= 0 ? v : undefined;
+}
+
+/** `passes` (L-2): a valid pass count is ≥ 1 — `0` is not a completed pass, it is unknown. */
+function passesCount(v: unknown): number | undefined {
+  const c = count(v);
+  return c !== undefined && c >= 1 ? c : undefined;
 }
 
 function optBool(v: unknown): boolean | undefined {
@@ -193,9 +107,9 @@ function isPlainObject(v: unknown): v is Record<string, unknown> {
  * object. Anything else is treated as absent rather than crashing the parse —
  * one malformed line must never take down a whole metrics run.
  *
- * `findings`/`resolved`/etc. use `count`, not `num`: a real event from
- * Capitalacademy carries `"findings":"pending"`, which used to silently become
- * `0` (ADR-0036's bug) and must instead read as "unknown", not "zero findings".
+ * `findings`/`resolved`/etc. use `count`, not a loose numeric parse: a real
+ * event from Capitalacademy carries `"findings":"pending"`, which must read as
+ * "unknown", not "zero findings".
  * Never emits a key with an explicit `undefined` value.
  */
 function normalizeReview(v: unknown): SpecFlowReview | undefined {
@@ -204,7 +118,7 @@ function normalizeReview(v: unknown): SpecFlowReview | undefined {
   if (level === '') return undefined;
   const findings = count(v.findings);
   const resolved = count(v.resolved);
-  const passes = count(v.passes);
+  const passes = passesCount(v.passes);
   const findingsCapped = optBool(v.findings_capped);
   const induced = count(v.induced);
   const redesigned = optBool(v.redesigned);
@@ -262,14 +176,15 @@ function normalizeSpec(raw: RawEvent): SpecFlowEvent | null {
     : [];
   const questionsAsked = count(raw.questions_asked);
   const tests = str(raw.tests) || undefined;
+  const assumptions = count(raw.assumptions);
   const review = normalizeReview(raw.review);
   const { premortem, premortemSkipped } = normalizePremortem(raw.premortem);
   const specReview = normalizeSpecReview(raw.spec_review);
+  const tier = count(raw.tier);
   return {
     ts: str(raw.ts, date),
     date,
     change: str(raw.change),
-    tier: num(raw.tier),
     type: str(raw.type, 'other'),
     size: str(raw.size),
     risk: str(raw.risk),
@@ -278,8 +193,10 @@ function normalizeSpec(raw: RawEvent): SpecFlowEvent | null {
     brief: str(raw.brief),
     codemapUsed: raw.codemap_used === true,
     specFlowVersion: str(raw.spec_flow_version),
+    ...(tier !== undefined ? { tier } : {}),
     ...(questionsAsked !== undefined ? { questionsAsked } : {}),
     ...(tests !== undefined ? { tests } : {}),
+    ...(assumptions !== undefined ? { assumptions } : {}),
     ...(review !== undefined ? { review } : {}),
     ...(premortem !== undefined ? { premortem } : {}),
     ...(premortemSkipped !== undefined ? { premortemSkipped } : {}),
@@ -297,7 +214,7 @@ function normalizeReviewEvent(raw: RawEvent): ReviewEvent | null {
   if (date === '') return null;
   const rawLevel = str(raw.level);
   const level = rawLevel === '' || rawLevel === 'n/a' ? undefined : rawLevel;
-  const passes = count(raw.passes);
+  const passes = passesCount(raw.passes);
   const findings = count(raw.findings);
   const findingsCapped = optBool(raw.findings_capped);
   const foundTotal = count(raw.found_total);
@@ -425,26 +342,31 @@ export function rolloutDate(events: readonly SpecFlowEvent[]): string | null {
   return min;
 }
 
-/** Mean `questionsAsked` per tier — the friction gauge, segmented by ceremony. Events without a valid count are excluded, never treated as 0. */
-export function frictionByTier(events: readonly SpecFlowEvent[]): Record<number, number> {
+/** Mean `questionsAsked` and sample size `n`, per tier — the friction gauge, segmented by ceremony. */
+export interface TierFriction {
+  mean: number;
+  n: number;
+}
+
+/**
+ * Events without a valid `questionsAsked` are excluded, never treated as 0.
+ * Events without a valid `tier` (L-2: unparseable, never 0) are excluded from
+ * the whole table — they must never render as a false "T0" row.
+ */
+export function frictionByTier(events: readonly SpecFlowEvent[]): Record<number, TierFriction> {
   const sum: Record<number, number> = {};
   const n: Record<number, number> = {};
   for (const e of events) {
-    if (e.questionsAsked === undefined) continue;
+    if (e.tier === undefined || e.questionsAsked === undefined) continue;
     sum[e.tier] = (sum[e.tier] ?? 0) + e.questionsAsked;
     n[e.tier] = (n[e.tier] ?? 0) + 1;
   }
-  const out: Record<number, number> = {};
+  const out: Record<number, TierFriction> = {};
   for (const tier of Object.keys(n)) {
     const t = Number(tier);
-    out[t] = sum[t] / n[t];
+    out[t] = { mean: sum[t]! / n[t]!, n: n[t]! };
   }
   return out;
-}
-
-/** Mean of a numeric series, or `null` when empty. */
-function mean(xs: readonly number[]): number | null {
-  return xs.length === 0 ? null : xs.reduce((a, b) => a + b, 0) / xs.length;
 }
 
 /**
@@ -464,175 +386,4 @@ export function versionAtLeast(v: string | undefined, min: string): boolean {
     if (a !== b) return a > b;
   }
   return true; // equal
-}
-
-/** Picks, per `change`, the review event with the latest `ts` (ties keep the later one seen). */
-function latestReviewByChange(reviews: readonly ReviewEvent[]): Map<string, ReviewEvent> {
-  const map = new Map<string, ReviewEvent>();
-  for (const r of reviews) {
-    const prev = map.get(r.change);
-    if (!prev) {
-      map.set(r.change, r);
-      continue;
-    }
-    const prevTime = Date.parse(prev.ts);
-    const curTime = Date.parse(r.ts);
-    const preferCurrent =
-      Number.isNaN(prevTime) || Number.isNaN(curTime) ? r.ts >= prev.ts : curTime >= prevTime;
-    if (preferCurrent) map.set(r.change, r);
-  }
-  return map;
-}
-
-export interface RateMetric {
-  rate: number;
-  n: number;
-}
-
-export interface FirstPassArm {
-  /** Mean of NON-censored pass-1 findings only. */
-  mean: number;
-  /** Total samples in the arm (censored + non-censored). */
-  n: number;
-  /** Share of the arm's samples that were censored (capped). `null` when the cap status is unknown (the 0.5 baseline). */
-  cappedShare: number | null;
-}
-
-export interface ReviewLoopStats {
-  /** Review passes to close, and the share closing at ≤2 (the cap ADR-0037 sets). */
-  passes: { median: number; sharePassesAtMost2: number; n: number } | null;
-  /** Share of reviews whose pass 1 hit the reviewer's finding cap. */
-  capped: RateMetric | null;
-  /** Share of reviews reporting `induced > 0`. */
-  induced: RateMetric | null;
-  /** Share of reviews reporting `redesigned: true`. */
-  redesigned: RateMetric | null;
-  /** Reviews that never closed: `n` = eligible 0.6 specs (Tier ≥ 1); `count` = those without a joined review, plus reviews missing `findings`. */
-  unclosed: { count: number; n: number } | null;
-  /** Debt left open at close. */
-  open: { sum: number; median: number; n: number } | null;
-  /** Pass-1 findings, in three arms with their own n and censoring share. */
-  firstPassFindings: {
-    premortem: FirstPassArm | null;
-    compliance: FirstPassArm | null;
-    baseline05: FirstPassArm | null;
-  };
-}
-
-function rateMetric(items: readonly boolean[]): RateMetric | null {
-  return items.length > 0
-    ? { rate: items.filter(Boolean).length / items.length, n: items.length }
-    : null;
-}
-
-/** Joins `specsInArm` to their latest review by `change` and computes the arm's stats. */
-function firstPassArm(
-  specsInArm: readonly SpecFlowEvent[],
-  byChange: ReadonlyMap<string, ReviewEvent>,
-): FirstPassArm | null {
-  const samples: { findings: number; capped: boolean }[] = [];
-  for (const s of specsInArm) {
-    const r = byChange.get(s.change);
-    if (!r || r.findings === undefined) continue;
-    samples.push({ findings: r.findings, capped: r.findingsCapped === true });
-  }
-  if (samples.length === 0) return null;
-  const nonCensored = samples.filter((s) => !s.capped).map((s) => s.findings);
-  if (nonCensored.length === 0) return null; // nothing usable for a mean
-  const cappedCount = samples.length - nonCensored.length;
-  return {
-    mean: mean(nonCensored) as number,
-    n: samples.length,
-    cappedShare: cappedCount / samples.length,
-  };
-}
-
-/** The 0.5 baseline arm: inline `review.findings` on the spec event — the tope was unknown, so `cappedShare` stays `null`. */
-function baseline05Arm(specs: readonly SpecFlowEvent[]): FirstPassArm | null {
-  const values = specs
-    .filter((s) => !versionAtLeast(s.specFlowVersion, '0.6') && s.review?.findings !== undefined)
-    .map((s) => s.review!.findings as number);
-  if (values.length === 0) return null;
-  return { mean: mean(values) as number, n: values.length, cappedShare: null };
-}
-
-/**
- * Aggregates the spec-flow 0.6 review-loop signals (ADR-0037): whether the
- * cap on passes is holding, how often the reviewer's cap censors pass-1
- * findings, how often a closing pass induces new findings, and whether a
- * pre-mortem lowers pass-1 findings vs. the 0.5 baseline.
- *
- * Unit = the change. Specs and reviews are joined by `change` (the latest
- * review by `ts` when several exist). EVERY metric below has its OWN
- * denominator — only the events that report the relevant field — never a
- * shared `withReview` count. An event without the field contributes to
- * NEITHER the numerator NOR the denominator of that metric.
- */
-export function reviewLoopStats(
-  specs: readonly SpecFlowEvent[],
-  reviews: readonly ReviewEvent[],
-): ReviewLoopStats {
-  const byChange = latestReviewByChange(reviews);
-
-  const passReviews = reviews.filter((r) => r.passes !== undefined && r.level !== undefined);
-  const passesArr = passReviews.map((r) => r.passes as number);
-  const passes =
-    passesArr.length > 0
-      ? {
-          median: median(passesArr) as number,
-          sharePassesAtMost2: passesArr.filter((p) => p <= 2).length / passesArr.length,
-          n: passesArr.length,
-        }
-      : null;
-
-  const capped = rateMetric(
-    reviews.filter((r) => r.findingsCapped !== undefined).map((r) => r.findingsCapped === true),
-  );
-  const induced = rateMetric(
-    reviews.filter((r) => r.induced !== undefined).map((r) => (r.induced as number) > 0),
-  );
-  const redesigned = rateMetric(
-    reviews.filter((r) => r.redesigned !== undefined).map((r) => r.redesigned === true),
-  );
-
-  const specs06 = specs.filter((s) => versionAtLeast(s.specFlowVersion, '0.6') && s.tier >= 1);
-  const unclosedSpecsWithoutReview = specs06.filter((s) => !byChange.has(s.change)).length;
-  const reviewsMissingFindings = reviews.filter((r) => r.findings === undefined).length;
-  const unclosed =
-    specs06.length > 0
-      ? { count: unclosedSpecsWithoutReview + reviewsMissingFindings, n: specs06.length }
-      : null;
-
-  const openValues = reviews.filter((r) => r.open !== undefined).map((r) => r.open as number);
-  const open =
-    openValues.length > 0
-      ? {
-          sum: openValues.reduce((a, b) => a + b, 0),
-          median: median(openValues) as number,
-          n: openValues.length,
-        }
-      : null;
-
-  const premortemSpecs = specs06.filter(
-    (s) => s.premortem !== undefined && (s.premortem.na === undefined || s.premortem.na <= 3),
-  );
-  const complianceSpecs = specs06.filter(
-    (s) =>
-      (s.premortem !== undefined && s.premortem.na !== undefined && s.premortem.na >= 4) ||
-      s.premortemSkipped === true,
-  );
-
-  return {
-    passes,
-    capped,
-    induced,
-    redesigned,
-    unclosed,
-    open,
-    firstPassFindings: {
-      premortem: firstPassArm(premortemSpecs, byChange),
-      compliance: firstPassArm(complianceSpecs, byChange),
-      baseline05: baseline05Arm(specs),
-    },
-  };
 }

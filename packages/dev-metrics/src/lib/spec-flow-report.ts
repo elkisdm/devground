@@ -1,14 +1,13 @@
-import type {
-  RepoImpact,
-  MetricDelta,
-  ImpactMetricKey,
-  AggregatedReviewLoop,
-} from './spec-flow-segment.js';
+import type { RepoImpact, MetricDelta, ImpactMetricKey } from './spec-flow-segment.js';
+import type { TierFriction } from './spec-flow-events.js';
+import type { AggregatedReviewLoop, AggregatedFirstPassArm } from './spec-flow-review-loop.js';
 
 /**
  * Renders the spec-flow impact comparison as markdown. The report is honest by
  * construction: it shows per-repo n's and windows, never pools raw counts, and
- * lists repos with no usable baseline instead of silently dropping them.
+ * lists repos with no usable baseline instead of silently dropping them. Pure —
+ * nothing here writes to stdout (L-11); the caller decides what to do with the
+ * returned string.
  */
 
 function pctStr(rate: number): string {
@@ -37,25 +36,8 @@ const METRIC_LABEL: Record<ImpactMetricKey, string> = {
   netGrossRatio: 'survival (net/gross)',
 };
 
-/** One decimal, no trailing float noise — for the review-loop's mean findings. */
-function fmtMean(value: number): string {
-  return value.toFixed(1);
-}
-
-export function renderSpecFlowImpact(
-  impacts: readonly RepoImpact[],
-  aggregate: readonly MetricDelta[],
-  frictionByTier: Record<number, number>,
-  reviewLoop?: AggregatedReviewLoop,
-  discardedWorktrees?: readonly { path: string; keptAs: string }[],
-): string {
+function renderPerRepo(impacts: readonly RepoImpact[]): string[] {
   const lines: string[] = [];
-  lines.push('# spec-flow impact');
-  lines.push('');
-  lines.push('_Baseline-relative · density-normalized · strict detectors — see ADR-0014._');
-  lines.push('');
-
-  // Per-repo
   lines.push('## Per-repo (spec-flow vs same-repo pre-rollout control)');
   lines.push('');
   lines.push(
@@ -74,8 +56,11 @@ export function renderSpecFlowImpact(
     );
   }
   lines.push('');
+  return lines;
+}
 
-  // Aggregate
+function renderAggregate(aggregate: readonly MetricDelta[]): string[] {
+  const lines: string[] = [];
   const repos = aggregate[0]?.repos ?? 0;
   lines.push(`## Aggregate (median of per-repo deltas — ${repos} comparable repos)`);
   lines.push('');
@@ -88,8 +73,12 @@ export function renderSpecFlowImpact(
     );
   }
   lines.push('');
+  return lines;
+}
 
-  // Friction
+/** L-2/L-11: tiers with no valid `tier` never appear here — never a false T0 row. */
+function renderFriction(frictionByTier: Record<number, TierFriction>): string[] {
+  const lines: string[] = [];
   lines.push('## Friction (mean questions_asked by tier — all spec-flow events)');
   lines.push('');
   lines.push('| tier | mean questions |');
@@ -97,107 +86,161 @@ export function renderSpecFlowImpact(
   for (const tier of Object.keys(frictionByTier)
     .map(Number)
     .sort((a, b) => a - b)) {
-    lines.push(`| T${tier} | ${frictionByTier[tier].toFixed(2)} |`);
+    const f = frictionByTier[tier]!;
+    lines.push(`| T${tier} | ${f.mean.toFixed(2)} (n=${f.n}) |`);
   }
   lines.push('');
-
-  // Review loop (spec-flow 0.6, ADR-0037) — every line carries its OWN n; a
-  // line whose metric has no data is omitted rather than shown as 0/—.
-  const hasAnyReviewLoopData =
-    reviewLoop !== undefined &&
-    (reviewLoop.passes !== null ||
-      reviewLoop.capped !== null ||
-      reviewLoop.induced !== null ||
-      reviewLoop.redesigned !== null ||
-      reviewLoop.unclosed !== null ||
-      reviewLoop.open !== null ||
-      reviewLoop.firstPassFindings.premortem !== null ||
-      reviewLoop.firstPassFindings.compliance !== null ||
-      reviewLoop.firstPassFindings.baseline05 !== null);
-
-  if (reviewLoop && hasAnyReviewLoopData) {
-    lines.push(`## Review loop (mediana entre ${reviewLoop.repos} repos)`);
-    lines.push('');
-
-    if (reviewLoop.passes) {
-      lines.push(
-        `- pasadas: mediana ${reviewLoop.passes.median} · ≤2: ${pctStr(reviewLoop.passes.sharePassesAtMost2)} (n=${reviewLoop.passes.n})`,
-      );
-    }
-    if (reviewLoop.capped) {
-      lines.push(
-        `- tope alcanzado en la 1ª pasada: ${pctStr(reviewLoop.capped.rate)} (n=${reviewLoop.capped.n} que lo reportan)`,
-      );
-    }
-    if (reviewLoop.induced || reviewLoop.redesigned) {
-      const parts: string[] = [];
-      if (reviewLoop.induced) {
-        parts.push(
-          `hallazgos inducidos: ${pctStr(reviewLoop.induced.rate)} (n=${reviewLoop.induced.n})`,
-        );
-      }
-      if (reviewLoop.redesigned) {
-        parts.push(
-          `rediseños: ${pctStr(reviewLoop.redesigned.rate)} (n=${reviewLoop.redesigned.n})`,
-        );
-      }
-      lines.push(`- ${parts.join(' · ')}`);
-    }
-    if (reviewLoop.unclosed) {
-      lines.push(
-        `- reviews sin cierre: ${reviewLoop.unclosed.count} de ${reviewLoop.unclosed.n} specs 0.6`,
-      );
-    }
-    if (reviewLoop.open) {
-      lines.push(
-        `- deuda abierta: ${reviewLoop.open.sum} en total · mediana ${reviewLoop.open.median} (n=${reviewLoop.open.n})`,
-      );
-    }
-
-    const { premortem, compliance, baseline05 } = reviewLoop.firstPassFindings;
-    if (premortem || compliance || baseline05) {
-      const parts: string[] = [];
-      parts.push(`con pre-mortem ${fmtArm(premortem)}`);
-      parts.push(`pre-mortem de cumplimiento ${fmtArm(compliance)}`);
-      parts.push(
-        baseline05
-          ? `línea base 0.5 ${fmtMean(baseline05.mean)} (n=${baseline05.n}; contaba todas las pasadas, tope desconocido)`
-          : 'línea base 0.5 —',
-      );
-      lines.push(`- hallazgos 1ª pasada (sin censurados): ${parts.join(' · ')}`);
-    }
-    lines.push('');
-  }
-
-  // Discarded worktrees (causa C #8) — never silently double-count a repo.
-  if (discardedWorktrees && discardedWorktrees.length > 0) {
-    lines.push('## Worktrees descartados (mismo repo, no cuentan dos veces)');
-    lines.push('');
-    for (const d of discardedWorktrees) {
-      lines.push(`- ${d.path} → ya contado como ${d.keptAs}`);
-    }
-    lines.push('');
-  }
-
-  // Honesty footer
-  const notComparable = impacts.filter((i) => !i.comparable);
-  if (notComparable.length > 0) {
-    lines.push(
-      '## Not comparable (insufficient pre-rollout control — NOT dropped, just unrankable)',
-    );
-    lines.push('');
-    for (const i of notComparable) {
-      lines.push(`- ${i.repo} (n_control=${i.control.commits}, rollout=${i.rolloutDate ?? 'n/a'})`);
-    }
-    lines.push('');
-  }
-
-  return lines.join('\n');
+  return lines;
 }
 
-/** Renders a `FirstPassArm`-shaped bucket, or `—` when the arm has no data. */
-function fmtArm(arm: { mean: number; n: number; cappedShare: number | null } | null): string {
-  if (arm === null) return '—';
+function hasAnyReviewLoopData(r: AggregatedReviewLoop): boolean {
+  return (
+    r.passes !== null ||
+    r.capped !== null ||
+    r.induced !== null ||
+    r.redesigned !== null ||
+    r.unclosed !== null ||
+    r.open !== null ||
+    r.firstPassFindings.premortem !== null ||
+    r.firstPassFindings.compliance !== null ||
+    r.firstPassFindings.undeclared !== null ||
+    r.firstPassFindings.baseline05 !== null ||
+    r.reversalRate !== null ||
+    r.gateAdoption !== null ||
+    r.verifiedShare !== null ||
+    r.resolvedShare !== null
+  );
+}
+
+/** L-3: renders one arm, `—` (with n=0) when it has no data — never a bare 0. */
+function fmtArm(label: string, arm: AggregatedFirstPassArm | null): string {
+  if (arm === null) return `${label} — (n=0)`;
+  const mean = arm.meanExact === null ? '—' : arm.meanExact.toFixed(1);
   const capped = arm.cappedShare !== null ? `, ${pctStr(arm.cappedShare)} censurados` : '';
-  return `${fmtMean(arm.mean)} (n=${arm.n}${capped})`;
+  return `${label} ${mean} (n=${arm.nTotal}${capped})`;
+}
+
+function renderFirstPassFindings(loop: AggregatedReviewLoop): string[] {
+  const { premortem, compliance, undeclared, baseline05 } = loop.firstPassFindings;
+  if (!premortem && !compliance && !undeclared && !baseline05) return [];
+  const parts = [
+    fmtArm('con pre-mortem', premortem),
+    fmtArm('cumplimiento', compliance),
+    fmtArm('sin declarar', undeclared),
+    baseline05
+      ? `línea base 0.5 ${baseline05.meanExact === null ? '—' : baseline05.meanExact.toFixed(1)} (n=${baseline05.nTotal}; contaba todas las pasadas, sin flag)`
+      : 'línea base 0.5 — (n=0)',
+  ];
+  return [`- hallazgos 1ª pasada (media solo de exactos): ${parts.join(' · ')}`];
+}
+
+/** L-10: the fields written by the parser but never read before this rewrite. */
+function renderInferenceQuality(loop: AggregatedReviewLoop): string[] {
+  const parts: string[] = [];
+  if (loop.reversalRate) {
+    parts.push(
+      `reversiones ${loop.reversalRate.ratio.toFixed(2)} por supuesto (n=${loop.reversalRate.n} cambios)`,
+    );
+  }
+  if (loop.gateAdoption) {
+    parts.push(
+      `gate: ${pctStr(loop.gateAdoption.ratio)} de huecos adoptados (n=${loop.gateAdoption.n})`,
+    );
+  }
+  const lines = parts.length > 0 ? [`- calidad de inferencia: ${parts.join(' · ')}`] : [];
+
+  const t2parts: string[] = [];
+  if (loop.verifiedShare) {
+    t2parts.push(
+      `tests verificados en T2+: ${pctStr(loop.verifiedShare.rate)} (n=${loop.verifiedShare.n})`,
+    );
+  }
+  if (loop.resolvedShare) {
+    t2parts.push(
+      `resueltos/encontrados: ${pctStr(loop.resolvedShare.ratio)} (n=${loop.resolvedShare.n})`,
+    );
+  }
+  if (t2parts.length > 0) lines.push(`- ${t2parts.join(' · ')}`);
+  return lines;
+}
+
+/** L-1..L-11: the review-loop block, omitted entirely when there is no reviewed data at all. */
+function renderReviewLoop(loop: AggregatedReviewLoop | undefined): string[] {
+  if (!loop || !hasAnyReviewLoopData(loop)) return [];
+  const lines: string[] = [];
+  lines.push(`## Review loop (mediana entre ${loop.repos} repos)`);
+  lines.push('');
+
+  if (loop.passes) {
+    lines.push(
+      `- pasadas: mediana ${loop.passes.median} · ≤2: ${pctStr(loop.passes.sharePassesAtMost2)} (n=${loop.passes.n})`,
+    );
+  }
+  if (loop.capped) {
+    lines.push(
+      `- tope en la 1ª pasada: ${pctStr(loop.capped.rate)} (n=${loop.capped.n} declaran el flag)`,
+    );
+  }
+  const parts: string[] = [];
+  if (loop.induced) parts.push(`inducidos: ${pctStr(loop.induced.rate)} (n=${loop.induced.n})`);
+  if (loop.redesigned)
+    parts.push(`rediseños: ${pctStr(loop.redesigned.rate)} (n=${loop.redesigned.n})`);
+  if (loop.open)
+    parts.push(
+      `deuda abierta: ${loop.open.sum} en total, mediana ${loop.open.median} (n=${loop.open.n})`,
+    );
+  if (parts.length > 0) lines.push(`- ${parts.join(' · ')}`);
+  if (loop.unclosed)
+    lines.push(`- sin cierre: ${loop.unclosed.count} de ${loop.unclosed.n} cambios`);
+
+  lines.push(...renderFirstPassFindings(loop));
+  lines.push(...renderInferenceQuality(loop));
+  lines.push('');
+  return lines;
+}
+
+function renderDiscardedWorktrees(
+  discardedWorktrees: readonly { path: string; keptAs: string }[] | undefined,
+): string[] {
+  if (!discardedWorktrees || discardedWorktrees.length === 0) return [];
+  const lines: string[] = ['## Worktrees descartados (mismo repo, no cuentan dos veces)', ''];
+  for (const d of discardedWorktrees) lines.push(`- ${d.path} → ya contado como ${d.keptAs}`);
+  lines.push('');
+  return lines;
+}
+
+function renderNotComparable(impacts: readonly RepoImpact[]): string[] {
+  const notComparable = impacts.filter((i) => !i.comparable);
+  if (notComparable.length === 0) return [];
+  const lines: string[] = [
+    '## Not comparable (insufficient pre-rollout control — NOT dropped, just unrankable)',
+    '',
+  ];
+  for (const i of notComparable) {
+    lines.push(`- ${i.repo} (n_control=${i.control.commits}, rollout=${i.rolloutDate ?? 'n/a'})`);
+  }
+  lines.push('');
+  return lines;
+}
+
+export function renderSpecFlowImpact(
+  impacts: readonly RepoImpact[],
+  aggregate: readonly MetricDelta[],
+  frictionByTier: Record<number, TierFriction>,
+  reviewLoop?: AggregatedReviewLoop,
+  discardedWorktrees?: readonly { path: string; keptAs: string }[],
+): string {
+  const lines: string[] = [
+    '# spec-flow impact',
+    '',
+    '_Baseline-relative · density-normalized · strict detectors — see ADR-0014._',
+    '',
+  ];
+  lines.push(...renderPerRepo(impacts));
+  lines.push(...renderAggregate(aggregate));
+  lines.push(...renderFriction(frictionByTier));
+  lines.push(...renderReviewLoop(reviewLoop));
+  lines.push(...renderDiscardedWorktrees(discardedWorktrees));
+  lines.push(...renderNotComparable(impacts));
+  return lines.join('\n');
 }

@@ -1,6 +1,6 @@
-import { existsSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, realpathSync, statSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
-import { join, resolve } from 'node:path';
+import { join } from 'node:path';
 import { homedir } from 'node:os';
 import { defaultRun } from './gh-accounts.js';
 
@@ -114,49 +114,94 @@ export function isLikelyThirdPartyFork(
  * Absolute path of a repo's git COMMON dir — shared by every worktree of the
  * same repository (`git worktree` gives each worktree its own `.git` file
  * pointing at a private gitdir, but `--git-common-dir` resolves back to the
- * shared one). Returns `null` when it cannot be determined (not a repo, git
- * missing, etc.) — callers should treat that as "can't judge, keep it".
+ * shared one). Runs ONLY after `isGitRepo` (L-7: never shell out on a path
+ * that isn't a repo), discards stderr, and canonicalizes the result with
+ * `realpathSync` — two paths to the same repo through a symlink must resolve
+ * to the same key, or they double-count that repo's history. Returns `null`
+ * when it cannot be determined — callers should treat that as "can't judge,
+ * keep it".
  */
 export function gitCommonDir(repoPath: string): string | null {
+  if (!isGitRepo(repoPath)) return null;
   let out: string;
   try {
-    out = execFileSync('git', ['-C', repoPath, 'rev-parse', '--git-common-dir'], {
-      encoding: 'utf-8',
-    }).trim();
+    out = execFileSync(
+      'git',
+      ['-C', repoPath, 'rev-parse', '--path-format=absolute', '--git-common-dir'],
+      { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'] },
+    ).trim();
   } catch {
     return null;
   }
   if (out === '') return null;
-  return resolve(repoPath, out);
+  try {
+    return realpathSync(out);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * True when `repoPath` IS the main worktree of `commonDir` — i.e. its own
+ * `.git` (canonicalized) resolves to the common dir itself, rather than to a
+ * `.git` file pointing at a linked worktree's private gitdir.
+ */
+function isMainWorktreeOf(repoPath: string, commonDir: string): boolean {
+  try {
+    return realpathSync(join(repoPath, '.git')) === commonDir;
+  } catch {
+    return false;
+  }
 }
 
 /**
  * Collapses repo paths that are worktrees of the SAME repository (same git
- * common dir) to the first one seen. A `.spec-flow/events.jsonl` read from
- * two worktrees of one repo would otherwise count that repo's history twice
- * in any aggregate. `commonDirOf` is injectable for testing without shelling
- * to git; defaults to `gitCommonDir`.
+ * common dir) to the MAIN worktree (L-7) — the one whose git dir IS the
+ * common dir — falling back to the first one seen when none of the group is
+ * the main worktree (both injectable functions can't judge). A
+ * `.spec-flow/events.jsonl` read from two worktrees of one repo would
+ * otherwise count that repo's history twice in any aggregate. `commonDirOf`
+ * and `isMainWorktree` are injectable for testing without shelling to git.
  */
 export function dedupeWorktrees(
   repoPaths: readonly string[],
   commonDirOf: (repoPath: string) => string | null = gitCommonDir,
+  isMainWorktree: (repoPath: string, commonDir: string) => boolean = isMainWorktreeOf,
 ): { kept: string[]; discarded: { path: string; keptAs: string }[] } {
-  const seenCommonDir = new Map<string, string>(); // common dir -> the repo path kept for it
+  const commonOf = new Map<string, string | null>();
+  for (const p of repoPaths) commonOf.set(p, commonDirOf(p));
+
+  const groupOrder: string[] = [];
+  const groups = new Map<string, string[]>();
+  for (const p of repoPaths) {
+    const common = commonOf.get(p) ?? null;
+    if (common === null) continue;
+    const group = groups.get(common);
+    if (group) group.push(p);
+    else {
+      groups.set(common, [p]);
+      groupOrder.push(common);
+    }
+  }
+
+  const chosenFor = new Map<string, string>();
+  for (const common of groupOrder) {
+    const paths = groups.get(common)!;
+    const main = paths.find((p) => isMainWorktree(p, common));
+    chosenFor.set(common, main ?? paths[0]!);
+  }
+
   const kept: string[] = [];
   const discarded: { path: string; keptAs: string }[] = [];
-  for (const repoPath of repoPaths) {
-    const common = commonDirOf(repoPath);
+  for (const p of repoPaths) {
+    const common = commonOf.get(p) ?? null;
     if (common === null) {
-      kept.push(repoPath); // can't judge -> keep it
+      kept.push(p); // can't judge -> keep it
       continue;
     }
-    const existing = seenCommonDir.get(common);
-    if (existing === undefined) {
-      seenCommonDir.set(common, repoPath);
-      kept.push(repoPath);
-    } else {
-      discarded.push({ path: repoPath, keptAs: existing });
-    }
+    const chosen = chosenFor.get(common)!;
+    if (p === chosen) kept.push(p);
+    else discarded.push({ path: p, keptAs: chosen });
   }
   return { kept, discarded };
 }

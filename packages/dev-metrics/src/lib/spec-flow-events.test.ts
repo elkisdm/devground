@@ -4,7 +4,6 @@ import {
   parseSpecFlowLog,
   rolloutDate,
   frictionByTier,
-  reviewLoopStats,
   versionAtLeast,
 } from './spec-flow-events.js';
 
@@ -173,8 +172,8 @@ describe('frictionByTier', () => {
       ].join('\n'),
     );
     const f = frictionByTier(events);
-    expect(f[1]).toBe(0);
-    expect(f[3]).toBe(3);
+    expect(f[1]).toEqual({ mean: 0, n: 1 });
+    expect(f[3]).toEqual({ mean: 3, n: 2 });
   });
 
   it('ignora eventos sin questionsAsked valido en vez de tratarlos como 0', () => {
@@ -184,7 +183,19 @@ describe('frictionByTier', () => {
         LINE(ev({ tier: 1, questions_asked: 2 })),
       ].join('\n'),
     );
-    expect(frictionByTier(events)[1]).toBe(2); // no (0+2)/2 = 1
+    expect(frictionByTier(events)[1]).toEqual({ mean: 2, n: 1 }); // no (0+2)/2 = 1
+  });
+
+  it('L-2: un tier no parseable queda excluido de la tabla, nunca una fila T0 falsa', () => {
+    const events = parseSpecFlowEvents(
+      [
+        LINE(ev({ tier: 'dos', questions_asked: 3 })),
+        LINE(ev({ tier: 2, questions_asked: 1 })),
+      ].join('\n'),
+    );
+    const f = frictionByTier(events);
+    expect(f[0]).toBeUndefined();
+    expect(f[2]).toEqual({ mean: 1, n: 1 });
   });
 });
 
@@ -350,181 +361,6 @@ describe('spec-flow 0.6: evento review separado (ADR-0037)', () => {
       open: 2,
       redesigned: false,
       tests: 'verified',
-    });
-  });
-});
-
-describe('reviewLoopStats', () => {
-  it('(f) cada metrica usa su propio denominador, con un corpus donde todos difieren', () => {
-    const lines = [
-      // change a: 0.6 tier2, premortem arm (na<=3), review no censurado
-      LINE({
-        event: 'spec',
-        date: '2026-09-14',
-        change: 'a',
-        tier: 2,
-        spec_flow_version: '0.6',
-        premortem: { na: 2 },
-      }),
-      LINE({
-        event: 'review',
-        date: '2026-09-14',
-        change: 'a',
-        level: 'high',
-        passes: 2,
-        findings: 5,
-        findings_capped: false,
-        induced: 0,
-        resolved: 5,
-        open: 0,
-        redesigned: false,
-        tests: 'verified',
-      }),
-      // change b: 0.6 tier2, compliance arm (na>=4), review censurado, induced>0, redesigned
-      LINE({
-        event: 'spec',
-        date: '2026-09-14',
-        change: 'b',
-        tier: 2,
-        spec_flow_version: '0.6',
-        premortem: { na: 5 },
-      }),
-      LINE({
-        event: 'review',
-        date: '2026-09-14',
-        change: 'b',
-        level: 'high',
-        passes: 3,
-        findings: 9,
-        findings_capped: true,
-        induced: 2,
-        resolved: 7,
-        open: 3,
-        redesigned: true,
-      }),
-      // change c: 0.6 tier2, premortemSkipped (compliance arm), level "n/a" -> excluido de passes
-      LINE({
-        event: 'spec',
-        date: '2026-09-14',
-        change: 'c',
-        tier: 2,
-        spec_flow_version: '0.6',
-        premortem: false,
-      }),
-      LINE({
-        event: 'review',
-        date: '2026-09-14',
-        change: 'c',
-        level: 'n/a',
-        passes: 1,
-        findings: 4,
-        induced: 0,
-        resolved: 4,
-        open: 1,
-      }),
-      // change d: 0.6 tier2, premortem {} (na ausente -> arm premortem), SIN review -> unclosed
-      LINE({
-        event: 'spec',
-        date: '2026-09-14',
-        change: 'd',
-        tier: 2,
-        spec_flow_version: '0.6',
-        premortem: {},
-      }),
-      // change e: 0.6 tier1, sin premortem, SIN review -> unclosed (cuenta en n pero no en los arms)
-      LINE({ event: 'spec', date: '2026-09-14', change: 'e', tier: 1, spec_flow_version: '0.6' }),
-      // change f: 0.5 baseline, review inline (findings=9), excluido de specs06
-      LINE({
-        event: 'spec',
-        date: '2026-09-14',
-        change: 'f',
-        tier: 2,
-        spec_flow_version: '0.5',
-        review: { level: 'high', findings: 9 },
-      }),
-      // change g: 0.6 tier2, premortem arm, findings censurado
-      LINE({
-        event: 'spec',
-        date: '2026-09-14',
-        change: 'g',
-        tier: 2,
-        spec_flow_version: '0.6',
-        premortem: { na: 1 },
-      }),
-      LINE({
-        event: 'review',
-        date: '2026-09-14',
-        change: 'g',
-        level: 'high',
-        passes: 2,
-        findings: 20,
-        findings_capped: true,
-      }),
-      // change h: 0.6 tier2, compliance arm (na>=4), findings no censurado, sin findings_capped reportado
-      LINE({
-        event: 'spec',
-        date: '2026-09-14',
-        change: 'h',
-        tier: 2,
-        spec_flow_version: '0.6',
-        premortem: { na: 6 },
-      }),
-      LINE({
-        event: 'review',
-        date: '2026-09-14',
-        change: 'h',
-        level: 'high',
-        passes: 2,
-        findings: 7,
-      }),
-      // change i: 0.6 tier2, na=3 exacto -> arm premortem, NUNCA compliance (guarda contra el mutante na>=3)
-      LINE({
-        event: 'spec',
-        date: '2026-09-14',
-        change: 'i',
-        tier: 2,
-        spec_flow_version: '0.6',
-        premortem: { na: 3 },
-      }),
-      LINE({ event: 'review', date: '2026-09-14', change: 'i', level: 'high', findings: 6 }),
-      // un reversal, no afecta reviewLoopStats
-      LINE({
-        event: 'assumption_reversed',
-        date: '2026-09-14',
-        change: 'a',
-        assumption: 'x',
-        cost: 'trivial',
-      }),
-    ].join('\n');
-
-    const { specs, reviews } = parseSpecFlowLog(lines);
-    const stats = reviewLoopStats(specs, reviews);
-
-    expect(stats).toStrictEqual({
-      passes: { median: 2, sharePassesAtMost2: 0.75, n: 4 },
-      capped: { rate: 2 / 3, n: 3 },
-      induced: { rate: 1 / 3, n: 3 },
-      redesigned: { rate: 0.5, n: 2 },
-      unclosed: { count: 2, n: 8 },
-      open: { sum: 4, median: 1, n: 3 },
-      firstPassFindings: {
-        premortem: { mean: 5.5, n: 3, cappedShare: 1 / 3 },
-        compliance: { mean: 5.5, n: 3, cappedShare: 1 / 3 },
-        baseline05: { mean: 9, n: 1, cappedShare: null },
-      },
-    });
-  });
-
-  it('sin specs ni reviews, todo queda null', () => {
-    const stats = reviewLoopStats([], []);
-    expect(stats).toStrictEqual({
-      passes: null,
-      capped: null,
-      induced: null,
-      redesigned: null,
-      unclosed: null,
-      open: null,
-      firstPassFindings: { premortem: null, compliance: null, baseline05: null },
     });
   });
 });
