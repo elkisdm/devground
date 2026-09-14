@@ -1,5 +1,6 @@
 import { existsSync, readdirSync, statSync } from 'node:fs';
-import { join } from 'node:path';
+import { execFileSync } from 'node:child_process';
+import { join, resolve } from 'node:path';
 import { homedir } from 'node:os';
 import { defaultRun } from './gh-accounts.js';
 
@@ -107,6 +108,57 @@ export function isLikelyThirdPartyFork(
   const owner = parseRemoteOwner(url);
   if (owner === null) return false; // unparseable -> keep
   return !ownUsernames.has(owner.toLowerCase());
+}
+
+/**
+ * Absolute path of a repo's git COMMON dir — shared by every worktree of the
+ * same repository (`git worktree` gives each worktree its own `.git` file
+ * pointing at a private gitdir, but `--git-common-dir` resolves back to the
+ * shared one). Returns `null` when it cannot be determined (not a repo, git
+ * missing, etc.) — callers should treat that as "can't judge, keep it".
+ */
+export function gitCommonDir(repoPath: string): string | null {
+  let out: string;
+  try {
+    out = execFileSync('git', ['-C', repoPath, 'rev-parse', '--git-common-dir'], {
+      encoding: 'utf-8',
+    }).trim();
+  } catch {
+    return null;
+  }
+  if (out === '') return null;
+  return resolve(repoPath, out);
+}
+
+/**
+ * Collapses repo paths that are worktrees of the SAME repository (same git
+ * common dir) to the first one seen. A `.spec-flow/events.jsonl` read from
+ * two worktrees of one repo would otherwise count that repo's history twice
+ * in any aggregate. `commonDirOf` is injectable for testing without shelling
+ * to git; defaults to `gitCommonDir`.
+ */
+export function dedupeWorktrees(
+  repoPaths: readonly string[],
+  commonDirOf: (repoPath: string) => string | null = gitCommonDir,
+): { kept: string[]; discarded: { path: string; keptAs: string }[] } {
+  const seenCommonDir = new Map<string, string>(); // common dir -> the repo path kept for it
+  const kept: string[] = [];
+  const discarded: { path: string; keptAs: string }[] = [];
+  for (const repoPath of repoPaths) {
+    const common = commonDirOf(repoPath);
+    if (common === null) {
+      kept.push(repoPath); // can't judge -> keep it
+      continue;
+    }
+    const existing = seenCommonDir.get(common);
+    if (existing === undefined) {
+      seenCommonDir.set(common, repoPath);
+      kept.push(repoPath);
+    } else {
+      discarded.push({ path: repoPath, keptAs: existing });
+    }
+  }
+  return { kept, discarded };
 }
 
 /**

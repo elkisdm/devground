@@ -69,9 +69,11 @@ ADR-0036:
 
 2. **Step 3.6 — Design gate, desde Tier 2**, antes de la primera edición. En Tier 2 es una
    autocomprobación del main loop contra la checklist de
-   `references/premortem-and-review-loop.md`. En Tier 3 se **propone** delegar a `planner`
-   (solo lectura, Opus) con el brief y el code map; sigue siendo opt-in por ADR-0030, y si el
-   usuario lo rechaza se hace como en Tier 2. Cada hueco aceptado se convierte en escenario
+   `references/premortem-and-review-loop.md`. En Tier 3 se **propone** delegar a
+   `planner-deep` (el planificador de Tier 3, solo lectura, Opus) con el brief, el code map y
+   la checklist, pidiéndole que abra su plan con una sección "Huecos de la spec" — esa sección
+   es lo que se cuenta; sigue siendo opt-in por ADR-0030, y si el usuario lo rechaza se hace
+   como en Tier 2. Cada hueco aceptado se convierte en escenario
    Given/When/Then o invariante antes de implementar.
 
 3. **DoD de tests "verificado en ambos sentidos" y "fakes con contrato"** (Step 4). Un test que
@@ -83,23 +85,40 @@ ADR-0036:
 4. **Review como puerta con cota** (Step 4, reescrito). Pasada 1 al nivel del tier sobre el diff
    completo: antes de tocar código, agrupar los hallazgos por causa raíz y corregir por clase,
    no uno por uno. Cerrar todo — arreglado con su test en ambos sentidos, diferido con motivo, o
-   refutado con motivo — y escribir el **ledger** en la conversación, que hereda la pasada
-   siguiente. Pasada 2 con alcance por tier: Tier 2 revisa el diff de los arreglos más sus
-   callers, Tier 3 revisa la rama completa. Regla de parada: un hallazgo de la pasada 2 cuyo
-   `file:line` cae dentro del diff de los arreglos de la pasada 1 es **inducido**; si los hay, no
-   se corrigen en línea — se vuelve al brief, se escribe el invariante que faltó, se rediseña la
-   pieza y se corre la **pasada 3, la última**. Sin inducidos, se cierra lo que queda y se
-   termina. Lo que sigue abierto tras la pasada 3 se registra como deuda visible, no se persigue.
+   refutado con motivo, **un motivo por ítem** — y escribir el **ledger**. La pasada 2 corre
+   **solo si la pasada 1 dejó un diff de arreglos**; una pasada 1 limpia cierra en `passes: 1`.
+   Alcance por tier: Tier 1–2 revisan el diff de los arreglos más sus callers, Tier 3 revisa la
+   rama completa. El ledger llega al revisor por herencia de contexto cuando es `/code-review`
+   (corre como fork), y pegado en el prompt cuando no hereda (deepcheck, sesión nueva). Una
+   pasada muerta por watchdog o límite de uso no cuenta como pasada. Regla de parada: un
+   hallazgo de la pasada 2 es **inducido** cuando el defecto **no existía antes de los arreglos**
+   (se decide leyendo la versión previa de esas líneas, no por si cae dentro de un hunk: un bug
+   que el tope escondió en una función que el arreglo también tocó es preexistente y se corrige
+   en línea); si hay inducidos, no se corrigen en línea — se vuelve al brief, se escribe el
+   invariante que faltó, se rediseña la pieza y se corre la **pasada 3, la última**. Sin
+   inducidos, se cierra lo que queda y se termina. Lo que sigue abierto al cierre se registra
+   como `open` en el evento de review, cada ítem con su motivo: deuda visible, no perseguida.
    **Cero hallazgos no es la meta**; la meta medible es una pasada 1 baja y que la pasada 2 sea
    la última.
 
-5. **Telemetría nueva** (Step 6): `premortem` (`true|false|"n/a"`), `spec_review`
-   (`{gaps_found, gaps_adopted}` o `"n/a"`), y `review` gana `passes`, `findings_capped`,
-   `induced` y `redesigned` junto a los campos existentes de ADR-0036. `findings` pasa a
-   significar explícitamente los hallazgos de la **primera pasada**, para que sea comparable
-   entre cambios. `dev-metrics` reporta mediana de `passes`, porcentaje de cambios con
-   `passes ≤ 2`, tasa de `findings_capped`, tasa de `induced > 0`, y `findings` de la pasada 1
-   segmentado por si hubo `premortem` — esta última es la que dice si v0.6 funcionó.
+5. **Telemetría nueva** (Step 6), en **dos eventos** porque se conocen en momentos distintos y
+   viajan en commits distintos: el evento `spec` (tras el design gate, commiteado con el cambio)
+   gana `premortem` (`{"na": <filas respondidas n/a>}` si se escribió, `false` si se omitió,
+   `"n/a"` en Tier 1) y `spec_review` (`{gaps_found, gaps_adopted}` o `"n/a"`); y un evento
+   `review` nuevo (al cerrar el bucle, commiteado con los arreglos, unido por `change`) con
+   `level`, `passes`, `findings` (**solo la primera pasada**, el número comparable),
+   `findings_capped`, `found_total`, `induced`, `resolved`, `open` (la deuda, explícita),
+   `redesigned` y `tests`. Un `spec` sin `review` es una revisión que nunca cerró — lo que en
+   0.5 obligaba a escribir `"findings":"pending"` en una línea que después no se podía tocar.
+   Los eventos 0.5 con `review` inline siguen parseando y son la línea base.
+   `dev-metrics` reporta, **con el n de cada métrica y calculado por repo** (mediana entre
+   repos, nunca un pool crudo): mediana de `passes` y porcentaje con `passes ≤ 2`, proporción de
+   `findings_capped` entre los eventos que lo reportan, tasa de `induced > 0`, reviews sin
+   cierre, deuda `open`, y `findings` de la pasada 1 **no censurados** en tres brazos — 0.6 con
+   pre-mortem real (`na ≤ 3`), 0.6 con pre-mortem de cumplimiento (`na ≥ 4`) u omitido, y
+   línea base 0.5 (etiquetada como tal, porque ahí `findings` contaba todas las pasadas y no
+   conocía el tope). El brazo con pre-mortem contra la línea base es la que dice si v0.6
+   funcionó.
 
 `/code-review` (skill nativa) **no se modifica**: ni su tope de hallazgos ni sus 11 ángulos. Lo
 que cambia es cómo spec-flow lo invoca (alcance por pasada) y cómo interpreta su salida
@@ -128,10 +147,15 @@ que cambia es cómo spec-flow lo invoca (alcance por pasada) y cómo interpreta 
   reporte con honestidad — el mismo trade-off ya aceptado en ADR-0029 y ADR-0036, sin
   enforcement mecánico nuevo.
 - Un agente puede llenar las cinco filas del pre-mortem con `n/a` para saltárselo sin violar el
-  formato; esto queda detectable en telemetría (`premortem:true` con cinco `n/a`), pero no
-  bloqueado.
-- La cota deja deuda visible (`findings > resolved` tras la pasada 3) en vez de perseguirla
-  hasta cero; es una decisión deliberada, no un descuido.
+  formato; el evento lo registra (`premortem.na`) y el reporte lo separa en su propio brazo,
+  pero no lo bloquea.
+- La cota deja deuda visible (`open` en el evento de review, con motivo por ítem) en vez de
+  perseguirla hasta cero; es una decisión deliberada, no un descuido.
+- La comparación central tiene un grupo de control imperfecto: la línea base 0.5 medía
+  `findings` como total de pasadas y sin noción de tope, así que sesga a favor de 0.6. Se
+  acepta porque un control contemporáneo (`premortem:false` en Tier 2+) solo existiría cuando
+  un agente rompe el contrato, un sesgo peor y silencioso; la etiqueta explícita es el
+  mitigador.
 - Limitación preexistente que este cambio no resuelve: `setup.js` de `@devground/sdd` copia con
   guarda y nunca pisa archivos existentes, así que los proyectos con una copia local de
   `.claude/skills/spec-flow/` no reciben v0.6 al reinstalar.
@@ -147,23 +171,27 @@ que cambia es cómo spec-flow lo invoca (alcance por pasada) y cómo interpreta 
    Tier 0-1 son el ancla anti-fricción de toda la skill; agregar ceremonia ahí rompe esa promesa
    sin evidencia que lo justifique.
 3. **Un agente nuevo "spec-reviewer"**: descartado — sería superficie sin consumidor, justo lo
-   que ADR-0032 acaba de congelar. `planner` ya existe, es de solo lectura, corre en Opus
-   (juicio → Opus, ADR-0031) y es opt-in (ADR-0030); no hace falta duplicarlo.
+   que ADR-0032 acaba de congelar. `planner-deep` ya existe para Tier 3, es de solo lectura,
+   corre en Opus (juicio → Opus, ADR-0031) y es opt-in (ADR-0030); basta con pedirle que abra su
+   plan con los huecos de la spec.
 4. **Subir o quitar el tope de `/code-review`**: descartado — no es una decisión de spec-flow,
    es de la skill nativa. Además, un tope más alto no cambia que los hallazgos de pasadas
    tardías sean mayormente inducidos por arreglos previos, no hallazgos nuevos genuinos.
 5. **Automatizar la detección de "inducido" con tooling**: descartado por prematuro sin medir
-   primero. En v0.6 la detección la hace el main loop cruzando `file:line` contra el diff de los
-   arreglos de la pasada anterior; automatizarlo puede revisarse después con datos reales.
+   primero. En v0.6 la detección la hace el main loop leyendo la versión pre-arreglo de las
+   líneas señaladas (`git show <pre-fix>:<archivo>`); automatizarlo puede revisarse después con
+   datos reales.
 6. **Seguir iterando hasta cero hallazgos**: descartado — los datos muestran que desde la pasada
    3 en adelante la mayoría de los hallazgos son inducidos por las correcciones previas, no
    defectos nuevos. Seguir es cambiar deuda visible por riesgo invisible.
 
 ## Medición
 
-- **Hallazgos de la pasada 1 con pre-mortem vs. sin él**: si v0.6 funciona, los cambios con
-  `premortem:true` deben mostrar menos `findings` en la pasada 1 que los que no lo tienen. Esta
-  es la pregunta causal central del cambio.
+- **Hallazgos de la pasada 1 con pre-mortem vs. línea base**: si v0.6 funciona, los cambios
+  0.6 con pre-mortem real (`na ≤ 3`) deben mostrar menos `findings` no censurados en la pasada
+  1 que la línea base 0.5 y que el brazo de pre-mortem de cumplimiento. Esta es la pregunta
+  causal central del cambio, y la lectura lleva siempre el n y la proporción de censurados de
+  cada brazo.
 - **Mediana de `passes` ≤ 2**: si la mediana de pasadas por cambio no baja hacia 2, la cota está
   produciendo rediseños en vez de cierres, o el pre-mortem no está capturando lo que el revisor
   encuentra.

@@ -7,7 +7,8 @@ que el orquestador consuma las tareas **machine-readable** sin parsear la prosa 
 
 En `~/.claude/skills/spec-flow/SKILL.md`, entre el final del **Step 3** (la línea
 `...forward motion with visible reasoning, not an interview.`) y el inicio del
-**Step 4 — Implement and verify**.
+**Step 3.6** (Design gate); en un SKILL.md anterior a 0.6, antes del **Step 4 — Implement
+and verify**.
 
 ## Bloque a insertar
 
@@ -25,16 +26,17 @@ es inline), conforme al contrato
 `~/.claude/skills/model-orchestrator/references/tasks-input.schema.json`:
 
 {
-  "change": "<kebab>", "spec_flow_tier": 2,
-  "tasks": [
-    { "id": 1, "title": "<tarea>", "kind": "decision|feat|fix|refactor|perf|test|docs|chore|spike|...",
-      "size": "small|medium|large",
-      "signals": { "type": "feat", "tier": 2, "risk": "med", "breaking": false },
-      "depends_on": [] }
-  ]
+"change": "<kebab>", "spec_flow_tier": 2,
+"tasks": [
+{ "id": 1, "title": "<tarea>", "kind": "decision|feat|fix|refactor|perf|test|docs|chore|spike|...",
+"size": "small|medium|large",
+"signals": { "type": "feat", "tier": 2, "risk": "med", "breaking": false },
+"depends_on": [] }
+]
 }
 
 Reglas para llenarlo (lo infieres del brief que ya escribiste, sin preguntar):
+
 - kind por tarea = su naturaleza (una "decisión de arquitectura" es decision,
   "implementar endpoint" es feat, "actualizar README" es docs). El orquestador rutea
   por kind, así que es el campo que más importa.

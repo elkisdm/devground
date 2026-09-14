@@ -6,9 +6,10 @@
 > Revisión 2026-07-24 (spec-flow v0.4): se añade la señal `tests` al evento spec (DoD de
 > tests por tier).
 > Revisión 2026-09-14 (spec-flow v0.6): pre-mortem en la spec, design gate y cota al ciclo de
-> revisión (ADR-0037). El evento gana `premortem`, `spec_review` y
-> `review.{passes, findings_capped, induced, redesigned}`; `findings` pasa a significar
-> hallazgos de la PRIMERA pasada. Ver §4, §5.
+> revisión (ADR-0037). El evento `spec` gana `premortem` y `spec_review`; el cierre del
+> review se emite como un SEGUNDO evento `review` (`passes, findings, findings_capped,
+> found_total, induced, resolved, open, redesigned, tests`) que se une por `change`;
+> `findings` pasa a significar hallazgos de la PRIMERA pasada. Ver §4, §5.
 > Cuando spec-flow se empaquete como `@devground/sdd`, este doc se promueve a un ADR
 > formal en devground.
 
@@ -37,7 +38,7 @@ mejorando solo. Por lo tanto:
 > developer. Correlación ≠ causalidad. **Rechazado como diseño primario.**
 
 **Diseño elegido: segmentación CONCURRENTE (within-subject, mismo período).** Dentro de la
-misma ventana temporal, comparar cambios _con_ spec-flow vs _sin_ spec-flow. Mismo dev,
+misma ventana temporal, comparar cambios *con* spec-flow vs *sin* spec-flow. Mismo dev,
 mismo período → se controla el crecimiento personal y las tendencias temporales. Es la
 evidencia más creíble sin randomización.
 
@@ -46,44 +47,61 @@ prueba.
 
 ## 4. Unidad de análisis y etiquetado
 
-**Unidad:** el _cambio_ (un commit o grupo de commits ligado a una petición).
+**Unidad:** el *cambio* (un commit o grupo de commits ligado a una petición).
 
 **Etiquetado (la pieza que falta).** dev-metrics necesita saber qué cambios pasaron por
 spec-flow. spec-flow **emite un evento** por corrida:
 
 ```jsonc
 {
-  "event": "spec", // discriminador; ausente en eventos viejos ⇒ "spec"
+  "event": "spec",              // discriminador; ausente en eventos viejos ⇒ "spec"
   "ts": "2026-06-03T14:22:00-04:00",
   "change": "agregar-login-email",
-  "tier": 1, // 1..3 (Tier 0 NO emite: rompería su "no artifacts")
-  "type": "feat", // feat|fix|refactor|perf|...
-  "size": "small",
-  "risk": "low",
+  "tier": 1,                    // 1..3 (Tier 0 NO emite: rompería su "no artifacts")
+  "type": "feat",               // feat|fix|refactor|perf|...
+  "size": "small", "risk": "low",
   "files": ["src/app/login/page.tsx", "src/auth/session.ts"],
-  "assumptions": 2, // # de supuestos inferidos y declarados en el brief
-  "questions_asked": 0, // fricción — SIEMPRE leído contra assumptions y reversiones
-  "brief": "inline", // inline | docs/specs/<change>.md
-  "tests": "verified|added|updated|n/a|deferred", // cumplimiento del DoD de tests; 'deferred' = lógica sin test (contrapeso honesto)
-  "premortem": true, // Tier 2+: se escribió el pre-mortem (n/a en Tier 1)
-  "spec_review": { "gaps_found": 3, "gaps_adopted": 2 }, // design gate antes de codificar
-  "review": {
-    "level": "high",
-    "passes": 2,
-    "findings": 10,
-    "findings_capped": true,
-    "induced": 0,
-    "resolved": 12,
-    "redesigned": false,
-  },
+  "assumptions": 2,             // # de supuestos inferidos y declarados en el brief
+  "questions_asked": 0,         // fricción — SIEMPRE leído contra assumptions y reversiones
+  "brief": "inline",            // inline | docs/specs/<change>.md
+  "premortem": "n/a",           // Tier 2+: {"na": <filas respondidas n/a>} o false si se omitió; "n/a" en Tier 1
+  "spec_review": "n/a"          // Tier 2+: {"gaps_found": 3, "gaps_adopted": 2}; "n/a" en Tier 1
+}
+```
+
+(En 0.4–0.5 este mismo evento llevaba `tests` y, desde 0.5, `review` inline; siguen
+parseando y son la línea base contra la que se comparan los eventos 0.6.)
+
+**Evento de cierre del review (v0.6).** Se escribe cuando el bucle cierra, en el commit de
+los arreglos, y se une al evento `spec` por `change`. Un `spec` sin `review` es una revisión
+que nunca cerró — dato, no error:
+
+```jsonc
+{
+  "event": "review",
+  "ts": "2026-09-14T18:40:00-03:00", "date": "2026-09-14",
+  "change": "agregar-login-email",
+  "level": "high",               // medium|high|max|deepcheck; "n/a" = no aplicó review
+  "passes": 2,                   // pasadas COMPLETAS (una muerta por watchdog/429 no cuenta)
+  "findings": 10,                // SOLO la pasada 1: el número comparable entre cambios
+  "findings_capped": true,       // la pasada 1 llegó al tope del revisor → findings es un piso
+  "found_total": 13,             // hallazgos de todas las pasadas
+  "induced": 0,                  // hallazgos de pasada ≥2 que NO existían antes de los arreglos
+  "resolved": 11,                // arreglados
+  "open": 2,                     // deuda: diferidos o sin resolver al cierre, cada uno con motivo en el ledger
+  "redesigned": false,           // la regla de parada disparó (hubo pasada 3)
+  "tests": "verified"            // verified|added|updated|n/a|deferred — 'verified' es el único que cumple el DoD en Tier 2+
 }
 ```
 
 `findings_capped` marca cuando la pasada 1 llegó al tope del revisor nativo (15, o 10 vía
-ReportFindings): en ese caso `findings` es "al menos N", no el conteo real, y las
-comparaciones entre cambios con y sin `findings_capped` no son homologables. `induced` cuenta
-hallazgos de una pasada ≥2 cuyo `file:line` cae dentro del diff de los arreglos de la pasada
-anterior — la señal de que una corrección generó un problema nuevo en vez de cerrarlo.
+ReportFindings): en ese caso `findings` es "al menos N", no el conteo real. Los valores
+censurados **se reportan aparte** y nunca entran en una media junto a conteos exactos.
+`induced` cuenta hallazgos de una pasada ≥2 cuyo defecto no existía antes de los arreglos
+de la pasada anterior (se decide leyendo la versión pre-arreglo, no por la ubicación en el
+diff) — la señal de que una corrección generó un problema nuevo en vez de cerrarlo. La
+deuda es `open`, explícita; `findings > resolved` dejó de significar algo cuando `findings`
+pasó a ser solo la pasada 1.
 
 **Evento de reversión (el contrapeso de calidad).** `questions_asked` mide fricción, pero
 por sí solo premia no-preguntar → Goodhart: inferir a lo loco puntúa perfecto. El segundo
@@ -94,10 +112,10 @@ corrige, o el rework lo prueba), se anexa otra línea al mismo `change`:
 {
   "event": "assumption_reversed",
   "ts": "2026-06-30T10:00:00-04:00",
-  "change": "agregar-login-email", // mismo change que el evento spec
-  "task_id": 2, // opcional: id de la tarea (si pasó por model-orchestrator)
+  "change": "agregar-login-email",      // mismo change que el evento spec
+  "task_id": 2,                          // opcional: id de la tarea (si pasó por model-orchestrator)
   "assumption": "<el supuesto inferido que falló>",
-  "cost": "trivial|rework|redesign", // qué tan caro salió equivocarse
+  "cost": "trivial|rework|redesign"     // qué tan caro salió equivocarse
 }
 ```
 
@@ -108,8 +126,8 @@ Una corrida es buena solo si AMBOS lados están sanos: poca fricción Y pocas re
 modelo, `task_id` liga la reversión a la tarea concreta del `decisions.jsonl` del
 orquestador (ambos logs llavean por `change`; `task_id` fija la tarea). El orquestador
 reconcilia **costo** real vs estimado pero NO mide retrabajo; este evento es esa pieza
-faltante. Con el join, dev-metrics responde lo que ninguno de los dos mide solo: _¿bajar una
-tarea a un modelo más barato sube su tasa de reversión?_ — el riesgo central del orquestador
+faltante. Con el join, dev-metrics responde lo que ninguno de los dos mide solo: *¿bajar una
+tarea a un modelo más barato sube su tasa de reversión?* — el riesgo central del orquestador
 ("desescalar puede costar un retrabajo caro"), hoy sin instrumentar.
 
 Destino: **`<repo>/.spec-flow/events.jsonl`** (JSONL append-only, versionado). **Decisión
@@ -118,11 +136,10 @@ mismo commit toca `events.jsonl` y el código), no heurístico. Esto supera el m
 ventana+overlap del diseño original.
 
 dev-metrics liga **evento → commit** así:
-
 1. **Primario (directo):** el commit que introduce la línea del evento en `events.jsonl`
    ES el commit del cambio. Linkage casi exacto.
 2. **Fallback:** si el evento y el código quedaron en commits distintos, ventana temporal
-   - overlap de archivos (`files` del evento ∩ archivos del commit).
+   + overlap de archivos (`files` del evento ∩ archivos del commit).
 
 Un cambio sin evento se etiqueta `not-used`. Se reporta la tasa de matching como métrica
 de confianza. Nota: los eventos son labels benignos (nombre, tier, paths) — NO contenido
@@ -131,21 +148,28 @@ dev-metrics, que sí son PII y quedan locales).
 
 ## 5. Métricas (definición operacional)
 
-| Métrica                     | Definición computable                                                                                                                             | Dirección esperada                    | Atribuible a                                             |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- | -------------------------------------------------------- |
-| **Supervivencia de código** | % de líneas introducidas por el cambio aún vivas tras N commits/días (dev-metrics ya lo computa)                                                  | ↑ con spec-flow                       | calidad del plan                                         |
-| **One-shot rate**           | cambio que llega a "done" sin commits de corrección (`fix` inmediato sobre los mismos archivos en X tiempo, o sin loops de edición en transcript) | ↑ del 60%                             | brief upfront                                            |
-| **Eficiencia**              | output tokens del transcript atribuibles al cambio ÷ líneas sobrevivientes                                                                        | **ambigua** (suma spec, resta rework) | efecto neto                                              |
-| **Costo de orientación**    | tokens/tiempo entre el inicio del cambio y el **primer Edit** (lecturas/greps previos en el transcript)                                           | ↓ conforme el codemap madura          | **codemap (la más limpia)**                              |
-| **Velocidad**               | cambios o commits por unidad de tiempo                                                                                                            | plana o ↑                             | anti-fricción                                            |
-| **Fricción**                | `questions_asked` por cambio, leído junto a `assumptions`                                                                                         | bajo _para el riesgo_ (no →0 ciego)   | Prime Directive                                          |
-| **Calidad de inferencia**   | `assumption_reversed` ÷ `assumptions` totales (tasa de reversión)                                                                                 | ↓ pocas reversiones                   | contrapeso al Goodhart de fricción                       |
-| **Pasadas de review**       | mediana de `review.passes`                                                                                                                        | ↓ hacia ≤2                            | la cota + el ledger                                      |
-| **Hallazgos de 1ª pasada**  | media de `review.findings`, segmentada por `premortem`                                                                                            | ↓ con pre-mortem                      | el pre-mortem — es la medición que puede refutar v0.6    |
-| **Hallazgos inducidos**     | proporción de cambios con `review.induced > 0`                                                                                                    | ↓                                     | la regla de parada + tests verificados en ambos sentidos |
+| Métrica | Definición computable | Dirección esperada | Atribuible a |
+|---|---|---|---|
+| **Supervivencia de código** | % de líneas introducidas por el cambio aún vivas tras N commits/días (dev-metrics ya lo computa) | ↑ con spec-flow | calidad del plan |
+| **One-shot rate** | cambio que llega a "done" sin commits de corrección (`fix` inmediato sobre los mismos archivos en X tiempo, o sin loops de edición en transcript) | ↑ del 60% | brief upfront |
+| **Eficiencia** | output tokens del transcript atribuibles al cambio ÷ líneas sobrevivientes | **ambigua** (suma spec, resta rework) | efecto neto |
+| **Costo de orientación** | tokens/tiempo entre el inicio del cambio y el **primer Edit** (lecturas/greps previos en el transcript) | ↓ conforme el codemap madura | **codemap (la más limpia)** |
+| **Velocidad** | cambios o commits por unidad de tiempo | plana o ↑ | anti-fricción |
+| **Fricción** | `questions_asked` por cambio, leído junto a `assumptions` | bajo *para el riesgo* (no →0 ciego) | Prime Directive |
+| **Calidad de inferencia** | `assumption_reversed` ÷ `assumptions` totales (tasa de reversión) | ↓ pocas reversiones | contrapeso al Goodhart de fricción |
+| **Pasadas de review** | mediana de `passes` (evento `review`), con su n | ↓ hacia ≤2 | la cota + el ledger |
+| **Hallazgos de 1ª pasada** | media de `findings` NO censurados, en tres brazos con su n cada uno: 0.6 con pre-mortem (`premortem.na ≤ 3`), 0.6 con pre-mortem de cumplimiento (`na ≥ 4`) o sin él, y **línea base 0.5** (inline `review.findings`, que contaba todas las pasadas y no conocía el tope — se etiqueta, no se esconde); proporción de censurados por brazo | ↓ en el brazo con pre-mortem respecto de la línea base | el pre-mortem — es la medición que puede refutar v0.6 |
+| **Hallazgos inducidos** | proporción de eventos `review` que reportan `induced` con `induced > 0`; `redesigned` aparte | ↓ | la regla de parada + tests verificados en ambos sentidos |
+| **Reviews sin cierre** | eventos `spec` 0.6 Tier 1+ sin evento `review` | ↓ | la cota: un bucle que se abandona deja rastro |
+| **Deuda visible** | suma y mediana de `open` | baja y estable | el ledger con motivo por ítem |
 
-La fila _orientación_ es la joya para el codemap (señal limpia, pocos confounds). La fila
-_calidad de inferencia_ es la joya para el Prime Directive: es la única que castiga el
+Regla de agregación para todas las filas nuevas: **cada métrica usa como denominador solo los
+eventos que reportan su campo**, se calcula **por repo** y se combina entre repos con la
+misma mediana-de-repos del resto del reporte (nunca un pool crudo, que deja que un repo con
+worktrees cuente la misma historia varias veces). Cada número sale con su n.
+
+La fila *orientación* es la joya para el codemap (señal limpia, pocos confounds). La fila
+*calidad de inferencia* es la joya para el Prime Directive: es la única que castiga el
 fallo opuesto a la fricción —inferir con confianza y equivocarse— y sin ella el sistema se
 optimiza a no preguntar aunque deba.
 
@@ -183,12 +207,12 @@ muestra, tasa de matching evento→commit). Nunca un número desnudo.
 
 ## 9. Alternativas consideradas
 
-| Alternativa                                   | Veredicto                                                                                                                                      |
-| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| Before/after puro                             | ❌ confundido por el crecimiento propio del dev                                                                                                |
+| Alternativa | Veredicto |
+|---|---|
+| Before/after puro | ❌ confundido por el crecimiento propio del dev |
 | RCT — randomizar saltarse spec-flow en Tier-1 | ❌ agrega fricción (saltar a propósito) y contradice el valor anti-fricción. Si algún día se quiere rigor extra, existe el skill `ab-testing`. |
-| Self-report / encuesta subjetiva              | ❌ sesgado, débil                                                                                                                              |
-| **Segmentación concurrente + tier-matched**   | ✅ **elegido** — mejor evidencia sin fricción                                                                                                  |
+| Self-report / encuesta subjetiva | ❌ sesgado, débil |
+| **Segmentación concurrente + tier-matched** | ✅ **elegido** — mejor evidencia sin fricción |
 
 ## 10. Riesgos
 
@@ -208,8 +232,8 @@ muestra, tasa de matching evento→commit). Nunca un número desnudo.
 - **v0 — instrumentación:** ✅ EN MARCHA (2026-06-03). spec-flow emite el evento (§4) a
   `.spec-flow/events.jsonl` versionado (SKILL.md Step 6). Pendiente: registrar el hito de
   rollout como `EventAnnotation {date:"2026-06-03", label:"spec-flow rollout"}` en el
-  events file de dev-metrics de cada proyecto cuando corra la medición. _Nada se concluye
-  todavía, solo se captura._
+  events file de dev-metrics de cada proyecto cuando corra la medición. *Nada se concluye
+  todavía, solo se captura.*
 - **v1 — reporte:** comando/segmentación en dev-metrics que produce las comparaciones del
   §6.
 - **v2 — cron background:** el §7 automatizado.

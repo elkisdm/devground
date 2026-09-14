@@ -39,6 +39,8 @@ por CLI y dejar que las identidades vengan del config o de la auto-detección.
 
 ### `dev-metrics.config.json` (versionable)
 
+<!-- Este bloque se copia a mano: Prettier le agregaría una coma final que JSON.parse rechaza. -->
+<!-- prettier-ignore -->
 ```jsonc
 {
   "repos": ["/ruta/repoA", "/ruta/repoB"], // 1..N (nunca un número fijo)
@@ -46,7 +48,7 @@ por CLI y dejar que las identidades vengan del config o de la auto-detección.
   "candidateIdentities": ["colega@empresa.cl"], // ambiguas: revísalas y promuévelas a mano
   "baseDir": "/Users/tu/Documents", // carpeta a escanear por `init`
   "excludes": ["vendor", "legacy"], // fragmentos de ruta a excluir
-  "events": [{ "date": "2026-05-14", "label": "adopté eslint" }], // opcional
+  "events": [{ "date": "2026-05-14", "label": "adopté eslint" }] // opcional
 }
 ```
 
@@ -178,17 +180,45 @@ dev-metrics spec-flow-impact                 # usa repos/identidades del config
 dev-metrics spec-flow-impact --repos ~/a,~/b --emails me@x.com
 ```
 
-**Señales de spec-flow 0.6 (ADR-0037)**: el reporte suma un bloque "Review loop" con
-las señales del pre-mortem y la cota al ciclo de revisión. `findings` es el conteo
-de hallazgos de la **primera** pasada de review (no el total acumulado); es la cifra
-que se compara entre cambios. `findings_capped` avisa cuando esa lista llegó al tope
-del revisor (10 o 15 hallazgos): en ese caso `findings` es "al menos", no "exactamente".
-`passes` dice en cuántas pasadas cerró el cambio (la meta es ≤2); `induced` cuenta
-hallazgos de una pasada posterior que caen dentro del diff de los arreglos de la
-pasada anterior — si hay, la pieza se rediseña en vez de parchearse en línea, y
-`redesigned` lo registra. `premortem` segmenta los hallazgos de la primera pasada
-entre cambios que sí escribieron el pre-mortem del Step 3 y los que no, para
-responder si el pre-mortem efectivamente baja esa cifra.
+**Señales de spec-flow 0.6 (ADR-0037)**: spec-flow escribe DOS eventos por cambio a
+`.spec-flow/events.jsonl` (`event:"spec"` y `event:"review"`), porque se conocen en
+momentos distintos y viajan en commits distintos — la telemetría de 0.5 forzaba
+placeholders como `"findings":"pending"` cuando el review todavía no cerraba. Un
+tercer tipo, `event:"assumption_reversed"`, es la reversión de un supuesto y NUNCA
+cuenta como un cambio Tier 0-3 (antes de 0.6 el parser ignoraba `event` y esas líneas
+se contaban como specs Tier 0 falsos — 185 repos tenían una fila `T0` inflada por
+esto). El evento `spec` lleva `premortem`/`spec_review` (Step 3/3.6); el evento
+`review` lleva el cierre del bucle: `passes`, `findings`, `findings_capped`,
+`found_total`, `induced`, `resolved`, `open`, `redesigned`, `tests`. Ambos se unen
+por `change` (el `review` más reciente por `ts` cuando hay varios).
+
+El reporte suma un bloque "Review loop" con estas señales. Cada línea lleva **su
+propio n** — nunca un n global compartido entre métricas distintas: `findings_capped`
+solo cuenta reviews que reportan ese campo, `induced` solo los que reportan
+`induced`, etc. Una línea sin datos se omite en vez de mostrarse en 0% o `—`.
+`findings` es el conteo de hallazgos de la **primera** pasada de review (no el
+total acumulado); es la cifra que se compara entre cambios, y `findings_capped`
+avisa cuando esa lista llegó al tope del revisor (10 o 15 hallazgos), en cuyo caso
+`findings` es "al menos", no "exactamente" — un valor censurado nunca entra en una
+media junto a valores exactos, así que la media de hallazgos de la 1ª pasada se
+calcula **solo sobre los no censurados**, y la proporción de censurados se reporta
+aparte (`cappedShare`). `passes` dice en cuántas pasadas cerró el cambio (la meta es
+≤2); `induced` cuenta hallazgos de una pasada posterior cuyo defecto no existía antes
+de los arreglos de la pasada anterior — si hay, la pieza se rediseña en vez de
+parchearse en línea, y `redesigned` lo registra. Los hallazgos de la 1ª pasada se
+comparan en tres brazos con su propio n y su propio `cappedShare`: `con pre-mortem`
+(specs 0.6 con `premortem.na ≤ 3`), `pre-mortem de cumplimiento` (`na ≥ 4` o
+`premortem` omitido) y `línea base 0.5` (el `review` inline de antes de 0.6, que
+contaba todas las pasadas y no conocía el tope — por eso su `cappedShare` es
+siempre desconocido). Comparar el primer brazo contra la línea base es lo que dice
+si el pre-mortem realmente funciona.
+
+Por repo se calcula su propio `ReviewLoopStats`; entre repos se combina con la
+MISMA regla que el resto del reporte (mediana de valores por-repo, nunca un pool
+crudo de eventos — un repo con más cambios no debe dominar el promedio). Dos rutas
+de repo que resultan ser worktrees del mismo repositorio (mismo `git
+rev-parse --git-common-dir`) se deduplican antes de agregar, y la ruta descartada
+se lista en el reporte para que no cuente dos veces.
 
 ### `orientation`
 

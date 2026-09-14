@@ -1,5 +1,9 @@
-import type { RepoImpact, MetricDelta, ImpactMetricKey } from './spec-flow-segment.js';
-import type { ReviewLoopStats } from './spec-flow-events.js';
+import type {
+  RepoImpact,
+  MetricDelta,
+  ImpactMetricKey,
+  AggregatedReviewLoop,
+} from './spec-flow-segment.js';
 
 /**
  * Renders the spec-flow impact comparison as markdown. The report is honest by
@@ -42,7 +46,8 @@ export function renderSpecFlowImpact(
   impacts: readonly RepoImpact[],
   aggregate: readonly MetricDelta[],
   frictionByTier: Record<number, number>,
-  reviewLoop?: ReviewLoopStats,
+  reviewLoop?: AggregatedReviewLoop,
+  discardedWorktrees?: readonly { path: string; keptAs: string }[],
 ): string {
   const lines: string[] = [];
   lines.push('# spec-flow impact');
@@ -96,29 +101,80 @@ export function renderSpecFlowImpact(
   }
   lines.push('');
 
-  // Review loop (spec-flow 0.6, ADR-0037) — only when there is at least one reviewed event.
-  if (reviewLoop && reviewLoop.withReview > 0) {
-    lines.push(`## Review loop (n=${reviewLoop.withReview} con review)`);
+  // Review loop (spec-flow 0.6, ADR-0037) — every line carries its OWN n; a
+  // line whose metric has no data is omitted rather than shown as 0/—.
+  const hasAnyReviewLoopData =
+    reviewLoop !== undefined &&
+    (reviewLoop.passes !== null ||
+      reviewLoop.capped !== null ||
+      reviewLoop.induced !== null ||
+      reviewLoop.redesigned !== null ||
+      reviewLoop.unclosed !== null ||
+      reviewLoop.open !== null ||
+      reviewLoop.firstPassFindings.premortem !== null ||
+      reviewLoop.firstPassFindings.compliance !== null ||
+      reviewLoop.firstPassFindings.baseline05 !== null);
+
+  if (reviewLoop && hasAnyReviewLoopData) {
+    lines.push(`## Review loop (mediana entre ${reviewLoop.repos} repos)`);
     lines.push('');
-    if (reviewLoop.medianPasses !== null && reviewLoop.sharePassesAtMost2 !== null) {
+
+    if (reviewLoop.passes) {
       lines.push(
-        `- pasadas: mediana ${reviewLoop.medianPasses} · ≤2 pasadas: ${pctStr(reviewLoop.sharePassesAtMost2)}`,
+        `- pasadas: mediana ${reviewLoop.passes.median} · ≤2: ${pctStr(reviewLoop.passes.sharePassesAtMost2)} (n=${reviewLoop.passes.n})`,
       );
     }
-    if (reviewLoop.cappedRate !== null) {
+    if (reviewLoop.capped) {
       lines.push(
-        `- tope alcanzado en la 1ª pasada (findings censurados): ${pctStr(reviewLoop.cappedRate)}`,
+        `- tope alcanzado en la 1ª pasada: ${pctStr(reviewLoop.capped.rate)} (n=${reviewLoop.capped.n} que lo reportan)`,
       );
     }
-    if (reviewLoop.inducedRate !== null) {
-      lines.push(`- cambios con hallazgos inducidos: ${pctStr(reviewLoop.inducedRate)}`);
-    }
-    const { withPremortem, withoutPremortem } = reviewLoop.firstPassFindings;
-    if (withPremortem !== null || withoutPremortem !== null) {
+    if (reviewLoop.induced || reviewLoop.redesigned) {
       const parts: string[] = [];
-      if (withPremortem !== null) parts.push(`con pre-mortem ${fmtMean(withPremortem)}`);
-      if (withoutPremortem !== null) parts.push(`sin pre-mortem ${fmtMean(withoutPremortem)}`);
-      lines.push(`- hallazgos 1ª pasada: ${parts.join(' · ')}`);
+      if (reviewLoop.induced) {
+        parts.push(
+          `hallazgos inducidos: ${pctStr(reviewLoop.induced.rate)} (n=${reviewLoop.induced.n})`,
+        );
+      }
+      if (reviewLoop.redesigned) {
+        parts.push(
+          `rediseños: ${pctStr(reviewLoop.redesigned.rate)} (n=${reviewLoop.redesigned.n})`,
+        );
+      }
+      lines.push(`- ${parts.join(' · ')}`);
+    }
+    if (reviewLoop.unclosed) {
+      lines.push(
+        `- reviews sin cierre: ${reviewLoop.unclosed.count} de ${reviewLoop.unclosed.n} specs 0.6`,
+      );
+    }
+    if (reviewLoop.open) {
+      lines.push(
+        `- deuda abierta: ${reviewLoop.open.sum} en total · mediana ${reviewLoop.open.median} (n=${reviewLoop.open.n})`,
+      );
+    }
+
+    const { premortem, compliance, baseline05 } = reviewLoop.firstPassFindings;
+    if (premortem || compliance || baseline05) {
+      const parts: string[] = [];
+      parts.push(`con pre-mortem ${fmtArm(premortem)}`);
+      parts.push(`pre-mortem de cumplimiento ${fmtArm(compliance)}`);
+      parts.push(
+        baseline05
+          ? `línea base 0.5 ${fmtMean(baseline05.mean)} (n=${baseline05.n}; contaba todas las pasadas, tope desconocido)`
+          : 'línea base 0.5 —',
+      );
+      lines.push(`- hallazgos 1ª pasada (sin censurados): ${parts.join(' · ')}`);
+    }
+    lines.push('');
+  }
+
+  // Discarded worktrees (causa C #8) — never silently double-count a repo.
+  if (discardedWorktrees && discardedWorktrees.length > 0) {
+    lines.push('## Worktrees descartados (mismo repo, no cuentan dos veces)');
+    lines.push('');
+    for (const d of discardedWorktrees) {
+      lines.push(`- ${d.path} → ya contado como ${d.keptAs}`);
     }
     lines.push('');
   }
@@ -137,4 +193,11 @@ export function renderSpecFlowImpact(
   }
 
   return lines.join('\n');
+}
+
+/** Renders a `FirstPassArm`-shaped bucket, or `—` when the arm has no data. */
+function fmtArm(arm: { mean: number; n: number; cappedShare: number | null } | null): string {
+  if (arm === null) return '—';
+  const capped = arm.cappedShare !== null ? `, ${pctStr(arm.cappedShare)} censurados` : '';
+  return `${fmtMean(arm.mean)} (n=${arm.n}${capped})`;
 }

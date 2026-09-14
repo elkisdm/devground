@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { parseCommitType } from './conventional.js';
 import { netGrossRatio, round, median } from './stats.js';
 import { isTestFile, isAdrOrSpecFile } from './detectors.js';
+import type { ReviewLoopStats, RateMetric, FirstPassArm } from './spec-flow-events.js';
 
 export { median };
 
@@ -85,7 +86,12 @@ export function specFlowHashes(repoPath: string): Set<string> {
     ['-C', repoPath, 'log', '--no-merges', '--format=%H', '--', '.spec-flow/events.jsonl'],
     16 * 1024 * 1024,
   );
-  return new Set(out.split('\n').map((l) => l.trim()).filter((l) => l !== ''));
+  return new Set(
+    out
+      .split('\n')
+      .map((l) => l.trim())
+      .filter((l) => l !== ''),
+  );
 }
 
 /** Collects per-commit detail (files + churn) for the given authors. */
@@ -183,7 +189,10 @@ export function selectControl(
 
 /** Calendar span (days) covered by a set of commits, minimum 1. */
 export function spanDays(commits: readonly CommitDetail[]): number {
-  const days = commits.map((c) => c.day).filter((d) => d !== '').sort();
+  const days = commits
+    .map((c) => c.day)
+    .filter((d) => d !== '')
+    .sort();
   if (days.length === 0) return 1;
   return Math.max(daysBetween(days[0]!, days[days.length - 1]!) + 1, 1);
 }
@@ -200,7 +209,10 @@ export function classifyCommit(
 }
 
 /** Computes segment metrics over a window of `windowDays` calendar days. */
-export function segmentMetrics(commits: readonly CommitDetail[], windowDays: number): SegmentMetrics {
+export function segmentMetrics(
+  commits: readonly CommitDetail[],
+  windowDays: number,
+): SegmentMetrics {
   const n = commits.length;
   if (n === 0) {
     return {
@@ -325,4 +337,119 @@ export function aggregateImpact(impacts: readonly RepoImpact[]): MetricDelta[] {
       repos: comparable.length,
     };
   });
+}
+
+// ---------------------------------------------------------------------------
+// review-loop cross-repo aggregation (ADR-0037, causa C #8/#12)
+// ---------------------------------------------------------------------------
+
+export interface AggregatedRate extends RateMetric {
+  /** Repos that reported this metric at all (out of the repos passed in). */
+  repos: number;
+}
+
+export interface AggregatedFirstPassArm extends FirstPassArm {
+  repos: number;
+}
+
+export interface AggregatedReviewLoop {
+  /** Repos with any spec-flow review-loop data at all. */
+  repos: number;
+  passes: { median: number; sharePassesAtMost2: number; n: number; repos: number } | null;
+  capped: AggregatedRate | null;
+  induced: AggregatedRate | null;
+  redesigned: AggregatedRate | null;
+  unclosed: { count: number; n: number; repos: number } | null;
+  open: { sum: number; median: number; n: number; repos: number } | null;
+  firstPassFindings: {
+    premortem: AggregatedFirstPassArm | null;
+    compliance: AggregatedFirstPassArm | null;
+    baseline05: AggregatedFirstPassArm | null;
+  };
+}
+
+function aggregateRate(items: readonly (RateMetric | null)[]): AggregatedRate | null {
+  const withData = items.filter((i): i is RateMetric => i !== null);
+  if (withData.length === 0) return null;
+  return {
+    rate: median(withData.map((i) => i.rate)) as number,
+    n: withData.reduce((a, i) => a + i.n, 0),
+    repos: withData.length,
+  };
+}
+
+function aggregateArm(items: readonly (FirstPassArm | null)[]): AggregatedFirstPassArm | null {
+  const withData = items.filter((i): i is FirstPassArm => i !== null);
+  if (withData.length === 0) return null;
+  const cappedShares = withData.map((i) => i.cappedShare).filter((c): c is number => c !== null);
+  return {
+    mean: median(withData.map((i) => i.mean)) as number,
+    n: withData.reduce((a, i) => a + i.n, 0),
+    cappedShare: cappedShares.length > 0 ? median(cappedShares) : null,
+    repos: withData.length,
+  };
+}
+
+/**
+ * Combines per-repo `ReviewLoopStats` (ADR-0037) the BASELINE-RELATIVE way,
+ * same rule as `aggregateImpact`: the cross-repo value is the MEDIAN of
+ * per-repo values, never a pooled count (a repo with worktree duplicates or
+ * simply more changes would otherwise dominate). Each metric's `n` IS a sum
+ * across repos (it is a sample-size count, not a rate to median), and each
+ * metric also reports how many repos actually had data for it — never a
+ * shared denominator across unrelated metrics.
+ */
+export function aggregateReviewLoop(perRepo: readonly ReviewLoopStats[]): AggregatedReviewLoop {
+  const passesData = perRepo
+    .map((r) => r.passes)
+    .filter((p): p is NonNullable<ReviewLoopStats['passes']> => p !== null);
+  const passes =
+    passesData.length > 0
+      ? {
+          median: median(passesData.map((p) => p.median)) as number,
+          sharePassesAtMost2: median(passesData.map((p) => p.sharePassesAtMost2)) as number,
+          n: passesData.reduce((a, p) => a + p.n, 0),
+          repos: passesData.length,
+        }
+      : null;
+
+  const unclosedData = perRepo
+    .map((r) => r.unclosed)
+    .filter((u): u is NonNullable<ReviewLoopStats['unclosed']> => u !== null);
+  const unclosed =
+    unclosedData.length > 0
+      ? {
+          count: unclosedData.reduce((a, u) => a + u.count, 0),
+          n: unclosedData.reduce((a, u) => a + u.n, 0),
+          repos: unclosedData.length,
+        }
+      : null;
+
+  const openData = perRepo
+    .map((r) => r.open)
+    .filter((o): o is NonNullable<ReviewLoopStats['open']> => o !== null);
+  const open =
+    openData.length > 0
+      ? {
+          sum: openData.reduce((a, o) => a + o.sum, 0),
+          median: median(openData.map((o) => o.median)) as number,
+          n: openData.reduce((a, o) => a + o.n, 0),
+          repos: openData.length,
+        }
+      : null;
+
+  return {
+    repos: perRepo.length,
+    passes,
+    capped: aggregateRate(perRepo.map((r) => r.capped)),
+    induced: aggregateRate(perRepo.map((r) => r.induced)),
+    redesigned: aggregateRate(perRepo.map((r) => r.redesigned)),
+    unclosed,
+    open,
+    firstPassFindings: {
+      premortem: aggregateArm(perRepo.map((r) => r.firstPassFindings.premortem)),
+      compliance: aggregateArm(perRepo.map((r) => r.firstPassFindings.compliance)),
+      baseline05: aggregateArm(perRepo.map((r) => r.firstPassFindings.baseline05)),
+    },
+  };
 }

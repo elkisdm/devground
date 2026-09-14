@@ -35,7 +35,8 @@ y un ledger en vez de ser un bucle abierto. Y que se pueda **medir** si funcion�
 2. El pre-mortem es obligatorio **solo desde Tier 2**. Tier 1 no cambia: 3 de 116 reversiones
    fueron Tier 1 y la fricción en Tier 0-1 es el ancla de la skill.
 3. La "revisión de la spec" (design gate) en Tier 2 es una autocomprobación del main loop con
-   la misma checklist; en Tier 3 la hace un agente de solo lectura (`planner`, Opus, ya existe)
+   la misma checklist; en Tier 3 la hace un agente de solo lectura (`planner-deep`, Opus, ya
+   existe; se le pide abrir su plan con los huecos de la spec)
    con el brief y el code map. Delegar sigue siendo opt-in (ADR-0030): el gate de Tier 3 se
    **propone** al usuario, y si lo rechaza se hace como en Tier 2.
 4. La cota es **2 pasadas por defecto, 3 como máximo**, y la tercera solo existe después de
@@ -60,7 +61,7 @@ y un ledger en vez de ser un bucle abierto. Y que se pueda **medir** si funcion�
       con motivo, refutados con motivo, inducidos) y el flujo se detiene en 2 pasadas salvo
       rediseño documentado; nunca pasa de 3.
 - [ ] El evento `spec` emite `review.{level,passes,findings,findings_capped,induced,resolved,
-    redesigned}` y `premortem`, y `dev-metrics` los parsea (tolerando ausentes y valores
+  redesigned}` y `premortem`, y `dev-metrics` los parsea (tolerando ausentes y valores
       malformados como `"pending"`) y los reporta.
 - [ ] Un evento v0.5 o anterior sigue parseando exactamente igual (test de regresión).
 - [ ] Tier 0 y Tier 1 no ganan ninguna sección ni paso obligatorio nuevo.
@@ -108,13 +109,27 @@ Referencias externas a numeración de pasos que **no** se rompen: `tools/model-o
 
 ## Review (ledger, se llena al implementar)
 
-| Pasada | Alcance                                       | Nivel | Hallazgos | Cerrados | Diferidos (motivo) | Refutados (motivo) | Inducidos |
-| ------ | --------------------------------------------- | ----- | --------- | -------- | ------------------ | ------------------ | --------- |
-| 1      | rama completa                                 | max   |           |          |                    |                    |           |
-| 2      | diff de los arreglos de la pasada 1 + callers | max   |           |          |                    |                    |           |
+**Pasada 1** — `/code-review max` sobre `2db5dff..061966b` (rama completa). Una corrida
+murió por límite de uso (no cuenta); la segunda completó: **15 hallazgos confirmados, tope
+alcanzado** (`findings_capped: true`), 3 recortados por el tope, 1 refutado. Agrupados por
+causa raíz:
 
-Regla: si la pasada 2 trae inducidos, no se corrige en línea; se vuelve a este brief, se
-escribe el invariante que faltó y se rediseña la pieza. Pasada 3 = última.
+| Causa                                          | Hallazgos                                                                                                                                                                                                              | Cierre                                                                                                                                                                          |
+| ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A. Telemetría definida sin definir cómo se lee | #1 momento de emisión, #2 deuda `findings > resolved`, #3 sin grupo de control ni detección de cinco `n/a`, #14 `tests:"added"` cumple en T2+, recorte (c) ejemplo T1 inconsistente                                    | **Rediseño** (ver Technical › Telemetría): segundo evento `review`, campo `open`, `premortem:{na}`, línea base 0.5 como control, `verified` único cumplimiento en T2+           |
+| B. Protocolo del bucle con huecos              | #6 inducido por ubicación, #7 T1 con pasada 2 obligatoria y sin parada en limpio, #13 deepcheck no hereda y `planner` devuelve plan, recorte (b) `retry` faltante                                                      | **Rediseño**: inducido por causa (`git show` pre-fix), pasada 2 solo con diff de arreglos, alcance T1–T2 = diff + callers, ledger pegado cuando no hay herencia, `planner-deep` |
+| C. Agregación de dev-metrics                   | #4 denominador de `cappedRate`, #5 censurados en la media, #8 pool sin `--until` ni dedupe de worktrees, #11 `level:"n/a"`/`"pending"` cuentan como review, #12 sin n por métrica, #15 test (f) sobrevive a 7 mutantes | Arreglo por clase en `reviewLoopStats` + test con mutantes                                                                                                                      |
+| D. Parser sin discriminador                    | #9 reversiones cuentan como spec Tier 0 (185 repos con fila T0 falsa)                                                                                                                                                  | Filtrar por `event`                                                                                                                                                             |
+| E. Prettier reescribe el espejo y los docs     | #10 comas finales en JSON, codemap ×3, espejo ≠ canónica                                                                                                                                                               | `.prettierignore` para espejos y codemap; restaurar codemap compacto                                                                                                            |
+| F. Convenciones                                | recorte (a) trailers de atribución en los commits                                                                                                                                                                      | Reescribir mensajes (aprobado por el usuario)                                                                                                                                   |
+| Refutado                                       | `sharePassesAtMost2` ignorando `redesigned`                                                                                                                                                                            | Coincide con el ADR; `redesigned` se reporta aparte                                                                                                                             |
+| Refutado (convenciones, confianza baja)        | reformateo de tablas/cursivas en codemap, README y TS                                                                                                                                                                  | Lo forzó el hook de lint-staged, no una edición manual; la parte dañina es la causa E                                                                                           |
+
+Las causas A y B son hallazgos **de la spec**, no del código: el pre-mortem original no tenía
+la fila que los atrapa (ver Invariantes, abajo). Por eso el cierre empieza por este brief, la
+skill y el ADR, y recién después por dev-metrics. Los arreglos van en un commit aparte.
+
+**Pasada 2** — rama completa (Tier 3), con este ledger en contexto: pendiente.
 
 ## Out of scope
 
@@ -184,18 +199,29 @@ gaps_adopted}` a telemetría.
 
 ### Telemetría (Step 6)
 
+Dos eventos, porque se conocen en momentos distintos y viajan en commits distintos (la
+versión de un solo evento obligaba a placeholders como `"findings":"pending"` o a reescribir
+una línea de un log append-only — hallazgo #1 de la pasada 1):
+
 ```jsonc
-"premortem": true | false | "n/a",              // n/a en Tier 1
-"spec_review": {"gaps_found": 3, "gaps_adopted": 2} | "n/a",
-"tests": "verified|added|updated|n/a|deferred",
-"review": {"level":"high", "passes":2, "findings":10, "findings_capped":true,
-           "induced":0, "resolved":12, "redesigned":false} | "n/a"
+// evento spec — tras el design gate, commiteado con el cambio
+{"event":"spec", ..., "premortem": {"na": 1},          // {na} escrito · false omitido · "n/a" en Tier 1
+ "spec_review": {"gaps_found": 3, "gaps_adopted": 2}}  // "n/a" en Tier 1
+// evento review — al cerrar el bucle, commiteado con los arreglos, unido por change
+{"event":"review", "change": "...", "level":"high", "passes":2,
+ "findings":10, "findings_capped":true, "found_total":13,
+ "induced":0, "resolved":11, "open":2, "redesigned":false, "tests":"verified"}
 ```
 
-`findings` = hallazgos de la **pasada 1** (comparable entre cambios; antes era ambiguo).
-`resolved` = total cerrado en todas las pasadas. `dev-metrics` reporta: mediana de `passes`,
-% con `passes ≤ 2`, tasa de `findings_capped`, tasa de `induced > 0`, y `findings` de pasada 1
-segmentado por `premortem` — esa última es la que dice si v0.6 funcionó.
+`findings` = solo la **pasada 1** (comparable). `found_total` = todas las pasadas. `open` =
+la deuda, explícita (`findings > resolved` dejó de significar algo al partir los conteos).
+Un `spec` sin `review` = revisión sin cierre. `tests:"verified"` es el único valor que
+cumple el DoD en Tier 2+. `dev-metrics` reporta con el n de cada métrica, por repo y con
+mediana entre repos: `passes` (mediana, % ≤ 2), `findings_capped` entre quienes lo
+reportan, `induced > 0`, reviews sin cierre, `open`, y `findings` de pasada 1 **no
+censurados** en tres brazos — 0.6 con pre-mortem real (`na ≤ 3`), 0.6 de cumplimiento
+(`na ≥ 4`) u omitido, y línea base 0.5 (etiquetada: contaba todas las pasadas, sin tope).
+El brazo con pre-mortem contra la línea base es la que dice si v0.6 funcionó.
 
 ## Spec (Given/When/Then)
 
@@ -277,10 +303,17 @@ del diff solo cuatro tienen sentido (caminos, fallas, invariantes, reutilizació
 en Opus (juicio → Opus, ADR-0031) y opt-in (ADR-0030). Un agente nuevo sería superficie sin
 consumidor, justo lo que ADR-0032 acaba de congelar.
 
-**Por qué la pasada 2 tiene alcance distinto por tier**: en Tier 2 la rama completa a `high`
-cuesta ~US$200 y re-marca lo diferido; el riesgo que la pasada 2 persigue (inducidos) vive en
-el diff de los arreglos. En Tier 3 la puerta final tiene que ver el todo, porque el cambio
-cruza módulos.
+**Por qué la pasada 2 tiene alcance distinto por tier, y por qué es condicional**: en Tier
+1–2 la rama completa re-marca lo diferido y cuesta lo mismo que la primera; el riesgo que la
+pasada 2 persigue (inducidos) vive en el diff de los arreglos. En Tier 3 la puerta final tiene
+que ver el todo, porque el cambio cruza módulos. Y si la pasada 1 no dejó diff de arreglos, no
+hay nada que pueda haberse inducido: el bucle cierra en `passes: 1` (antes la pasada 2 era
+incondicional, lo que imponía a Tier 1 una segunda revisión sin alcance definido).
+
+**Por qué "inducido" se decide por causa y no por ubicación**: con la pasada 2 acotada al diff
+de los arreglos, todo hallazgo cae "dentro del diff" por construcción; un bug preexistente que
+el tope escondió en una función que el arreglo tocó se habría clasificado como inducido y
+forzado un rediseño de código que el arreglo no rompió. La prueba es leer la versión pre-fix.
 
 **Por qué 3 como máximo duro**: los datos muestran que desde la pasada 3 en adelante la
 mayoría de hallazgos son inducidos. Seguir es cambiar deuda visible por riesgo invisible.
@@ -291,13 +324,13 @@ dev-metrics viejo no rompen nada (los ignora).
 
 ## Pre-mortem (de este cambio)
 
-| Fila              | Respuesta                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Caminos**       | La skill llega por tres vías: (1) canónica `~/.claude/skills` → todas las sesiones de esta máquina, se cubre editando ahí; (2) `packages/sdd/skill` → npm → `npx @devground/sdd` en otros proyectos, se cubre con `sync` + changeset; (3) copias locales en `.claude/skills/spec-flow/` de proyectos → **no se actualizan** por la guarda de `setup.js` (fuera, anotado en ADR). Los eventos llegan a dev-metrics desde 36 repos con formatos 0.2-0.6 mezclados → cubierto por tests de compatibilidad. |
-| **Fallas**        | Parser: valores no numéricos (`"pending"`), `review` parcial (`passes` sin `findings`), `premortem` con tipos raros → `num()` devuelve `undefined`, nunca 0; ningún campo nuevo es requerido. Skill: el agente puede llenar el pre-mortem con `n/a` en todas las filas para saltárselo → el design gate lo revisa y `premortem:true` con cinco `n/a` es detectable en telemetría. Revisor forkeado que muere (watchdog/429, pasó 3 veces en atlas): una pasada muerta **no cuenta** como pasada.        |
-| **Invariantes**   | (1) Tier 0-1 no ganan ceremonia → test: Example A/B de `examples.md` sin cambios y evento Tier 1 con `premortem:"n/a"`. (2) Eventos ≤0.5 parsean igual → test (a)(b). (3) `findings` = pasada 1 siempre → documentado en Step 6 y en el ledger. (4) SKILL.md ≤ ~620 líneas → `wc -l` en la revisión.                                                                                                                                                                                                    |
-| **Simetrías**     | Si el spec event gana `spec_review`, el reversal event no necesita campo nuevo: un hueco que el gate no vio y el review sí, ya es `assumption_reversed`. Pasada 2 con alcance por tier es una asimetría deliberada (arriba). `tests:"verified"` aplica igual a tests añadidos y actualizados.                                                                                                                                                                                                           |
-| **Reutilización** | `planner` para el gate; `aud-premortem` de deepcheck como origen del enfoque; los 11 ángulos del revisor como espejo de las filas; `normalizeReview` existente se extiende, no se duplica.                                                                                                                                                                                                                                                                                                              |
+| Fila              | Respuesta                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Caminos**       | La skill llega por tres vías: (1) canónica `~/.claude/skills` → todas las sesiones de esta máquina, se cubre editando ahí; (2) `packages/sdd/skill` → npm → `npx @devground/sdd` en otros proyectos, se cubre con `sync` + changeset; (3) copias locales en `.claude/skills/spec-flow/` de proyectos → **no se actualizan** por la guarda de `setup.js` (fuera, anotado en ADR). Los eventos llegan a dev-metrics desde 36 repos con formatos 0.2-0.6 mezclados → cubierto por tests de compatibilidad.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| **Fallas**        | Parser: valores no numéricos (`"pending"`), `review` parcial (`passes` sin `findings`), `premortem` con tipos raros → `num()` devuelve `undefined`, nunca 0; ningún campo nuevo es requerido. Skill: el agente puede llenar el pre-mortem con `n/a` en todas las filas para saltárselo → el design gate lo revisa y `premortem:true` con cinco `n/a` es detectable en telemetría. Revisor forkeado que muere (watchdog/429, pasó 3 veces en atlas): una pasada muerta **no cuenta** como pasada.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| **Invariantes**   | (1) Tier 0-1 no ganan ceremonia → test: Example A/B de `examples.md` sin cambios y evento Tier 1 con `premortem:"n/a"`. (2) Eventos ≤0.5 parsean igual → test (a)(b). (3) `findings` = pasada 1 siempre → documentado en Step 6 y en el ledger. (4) SKILL.md ≤ ~620 líneas → `wc -l` en la revisión. **Añadidas tras la pasada 1** (las que faltaban): (5) toda comparación que el reporte imprime tiene un grupo de control **no vacío bajo el protocolo cumplido** → test con un corpus 0.6 conforme (T2+ con pre-mortem, T1 n/a) y eventos 0.5: los tres brazos tienen n. (6) cada métrica del bloque lleva su propio n y su denominador son solo los eventos que reportan el campo → test: ausente nunca cuenta como cero ni como falso. (7) todo campo de telemetría que se escribe se lee en algún reporte → test: quitar cualquier campo del parser cambia la salida. (8) cada valor del evento tiene un momento de emisión en el que ya se conoce y un commit al que pertenece → dos eventos. (9) la deuda es un campo, no una resta → `open`. |
+| **Simetrías**     | Si el spec event gana `spec_review`, el reversal event no necesita campo nuevo: un hueco que el gate no vio y el review sí, ya es `assumption_reversed`. Pasada 2 con alcance por tier es una asimetría deliberada (arriba). `tests:"verified"` aplica igual a tests añadidos y actualizados.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| **Reutilización** | `planner-deep` para el gate; `aud-premortem` de deepcheck como origen del enfoque; los 11 ángulos del revisor como espejo de las filas; `normalizeReview` existente se extiende, no se duplica.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 
 ## Tasks
 

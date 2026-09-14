@@ -11,16 +11,23 @@ import {
   computeRepoImpact,
   median,
   aggregateImpact,
+  aggregateReviewLoop,
   MIN_CONTROL_COMMITS,
   MIN_SPECFLOW_COMMITS,
   type CommitDetail,
   type RepoImpact,
 } from './spec-flow-segment.js';
+import type { ReviewLoopStats } from './spec-flow-events.js';
 
 const REC = '\x1e';
 const SEP = '\x1f';
 
-function rawCommit(hash: string, day: string, subject: string, numstat: Array<[string, string, string]>): string {
+function rawCommit(
+  hash: string,
+  day: string,
+  subject: string,
+  numstat: Array<[string, string, string]>,
+): string {
   const header = `${REC}${SEP}${hash}${SEP}${day}${SEP}${subject}`;
   const body = numstat.map(([a, d, f]) => `${a}\t${d}\t${f}`).join('\n');
   return body ? `${header}\n${body}` : header;
@@ -120,13 +127,19 @@ describe('classifyCommit', () => {
     expect(classifyCommit(commit({ hash: 'sfhash' }), sf, rollout)).toBe('spec-flow');
   });
   it('tags pre-rollout code commits as control', () => {
-    expect(classifyCommit(commit({ hash: 'x', day: '2026-05-30', subject: 'feat: a' }), sf, rollout)).toBe('control');
+    expect(
+      classifyCommit(commit({ hash: 'x', day: '2026-05-30', subject: 'feat: a' }), sf, rollout),
+    ).toBe('control');
   });
   it('does not treat pre-rollout docs as control', () => {
-    expect(classifyCommit(commit({ hash: 'x', day: '2026-05-30', subject: 'docs: a' }), sf, rollout)).toBe('other');
+    expect(
+      classifyCommit(commit({ hash: 'x', day: '2026-05-30', subject: 'docs: a' }), sf, rollout),
+    ).toBe('other');
   });
   it('tags post-rollout non-spec-flow as other', () => {
-    expect(classifyCommit(commit({ hash: 'x', day: '2026-06-10', subject: 'feat: a' }), sf, rollout)).toBe('other');
+    expect(
+      classifyCommit(commit({ hash: 'x', day: '2026-06-10', subject: 'feat: a' }), sf, rollout),
+    ).toBe('other');
   });
 });
 
@@ -168,7 +181,13 @@ describe('computeRepoImpact', () => {
       commit({ hash: 'c2', day: '2026-06-03', subject: 'fix: d' }),
       commit({ hash: 'old', day: '2026-04-01', subject: 'feat: e' }), // now KEPT (recency, no window starve)
     ];
-    const impact = computeRepoImpact({ repo: 'demo', commits, sfHashes, rolloutDate: rollout, frictionByTier: { 2: 0 } });
+    const impact = computeRepoImpact({
+      repo: 'demo',
+      commits,
+      sfHashes,
+      rolloutDate: rollout,
+      frictionByTier: { 2: 0 },
+    });
     expect(impact.specFlow.commits).toBe(2);
     expect(impact.control.commits).toBe(3); // c1, c2, old — no longer starved by a calendar window
     expect(impact.comparable).toBe(false); // n_sf (2) < MIN_SPECFLOW_COMMITS
@@ -186,7 +205,13 @@ describe('computeRepoImpact', () => {
     for (let i = 0; i < MIN_CONTROL_COMMITS; i++) {
       commits.push(commit({ hash: `c${i}`, day: '2026-06-10', subject: 'feat: x' }));
     }
-    const impact = computeRepoImpact({ repo: 'r', commits, sfHashes, rolloutDate: rollout, frictionByTier: {} });
+    const impact = computeRepoImpact({
+      repo: 'r',
+      commits,
+      sfHashes,
+      rolloutDate: rollout,
+      frictionByTier: {},
+    });
     expect(impact.specFlow.commits).toBe(MIN_SPECFLOW_COMMITS);
     expect(impact.control.commits).toBe(MIN_CONTROL_COMMITS);
     expect(impact.comparable).toBe(true);
@@ -206,8 +231,26 @@ describe('aggregateImpact', () => {
     const mk = (sfAdr: number, ctrlAdr: number, comparable: boolean): RepoImpact => ({
       repo: 'r',
       rolloutDate: '2026-06-01',
-      specFlow: { commits: 5, filesPerCommit: 4, churnPerCommit: 100, netGrossRatio: 0.8, testCouplingRate: 0, adrCouplingRate: sfAdr, windowDays: 10, commitsPerWindowDay: 0.5 },
-      control: { commits: 10, filesPerCommit: 7, churnPerCommit: 200, netGrossRatio: 0.6, testCouplingRate: 0, adrCouplingRate: ctrlAdr, windowDays: 10, commitsPerWindowDay: 1 },
+      specFlow: {
+        commits: 5,
+        filesPerCommit: 4,
+        churnPerCommit: 100,
+        netGrossRatio: 0.8,
+        testCouplingRate: 0,
+        adrCouplingRate: sfAdr,
+        windowDays: 10,
+        commitsPerWindowDay: 0.5,
+      },
+      control: {
+        commits: 10,
+        filesPerCommit: 7,
+        churnPerCommit: 200,
+        netGrossRatio: 0.6,
+        testCouplingRate: 0,
+        adrCouplingRate: ctrlAdr,
+        windowDays: 10,
+        commitsPerWindowDay: 1,
+      },
       comparable,
       frictionByTier: {},
     });
@@ -216,5 +259,69 @@ describe('aggregateImpact', () => {
     const adr = agg.find((a) => a.metric === 'adrCouplingRate')!;
     expect(adr.repos).toBe(2);
     expect(adr.medianDelta).toBeCloseTo(0.14, 5); // median of [0.16, 0.12]
+  });
+});
+
+describe('aggregateReviewLoop (ADR-0037, causa C #8/#12)', () => {
+  it('combina per-repo con la mediana-de-repos y suma los n, nunca pooling crudo', () => {
+    const repoA: ReviewLoopStats = {
+      passes: { median: 2, sharePassesAtMost2: 0.8, n: 5 },
+      capped: { rate: 0.4, n: 5 },
+      induced: { rate: 0.2, n: 5 },
+      redesigned: { rate: 0.1, n: 5 },
+      unclosed: { count: 1, n: 6 },
+      open: { sum: 3, median: 1, n: 5 },
+      firstPassFindings: {
+        premortem: { mean: 3, n: 4, cappedShare: 0.25 },
+        compliance: null,
+        baseline05: { mean: 9, n: 20, cappedShare: null },
+      },
+    };
+    const repoB: ReviewLoopStats = {
+      passes: { median: 4, sharePassesAtMost2: 0.6, n: 3 },
+      capped: { rate: 0.6, n: 3 },
+      induced: null, // este repo no reporta induced en absoluto
+      redesigned: { rate: 0.3, n: 3 },
+      unclosed: { count: 0, n: 4 },
+      open: { sum: 1, median: 0, n: 3 },
+      firstPassFindings: {
+        premortem: { mean: 5, n: 4, cappedShare: 0.5 },
+        compliance: null,
+        baseline05: { mean: 11, n: 20, cappedShare: null },
+      },
+    };
+
+    const agg = aggregateReviewLoop([repoA, repoB]);
+
+    expect(agg.repos).toBe(2);
+    expect(agg.passes).toEqual({ median: 3, sharePassesAtMost2: 0.7, n: 8, repos: 2 });
+    expect(agg.capped).toEqual({ rate: 0.5, n: 8, repos: 2 });
+    // induced solo lo reporta un repo -> repos:1, sin pooling con el que no lo tiene
+    expect(agg.induced).toEqual({ rate: 0.2, n: 5, repos: 1 });
+    expect(agg.redesigned).toEqual({ rate: 0.2, n: 8, repos: 2 });
+    expect(agg.unclosed).toEqual({ count: 1, n: 10, repos: 2 });
+    expect(agg.open).toEqual({ sum: 4, median: 0.5, n: 8, repos: 2 });
+    expect(agg.firstPassFindings.premortem).toEqual({
+      mean: 4,
+      n: 8,
+      cappedShare: 0.375,
+      repos: 2,
+    });
+    // ningun repo aporta compliance -> null, no cero
+    expect(agg.firstPassFindings.compliance).toBeNull();
+    expect(agg.firstPassFindings.baseline05).toEqual({
+      mean: 10,
+      n: 40,
+      cappedShare: null,
+      repos: 2,
+    });
+  });
+
+  it('sin ningun repo con datos, todo queda null', () => {
+    const agg = aggregateReviewLoop([]);
+    expect(agg.repos).toBe(0);
+    expect(agg.passes).toBeNull();
+    expect(agg.capped).toBeNull();
+    expect(agg.firstPassFindings).toEqual({ premortem: null, compliance: null, baseline05: null });
   });
 });
