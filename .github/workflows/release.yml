@@ -21,12 +21,13 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: 20
+          # Node 20 llegó a fin de vida en abril de 2026; los runners lo deprecan.
+          node-version: 22
           cache: pnpm
 
       - name: Install dependencies
@@ -36,15 +37,18 @@ jobs:
         run: pnpm build
 
       - name: Create Release Pull Request or Publish
-        uses: changesets/action@v1
+        # v2 no publica un tag flotante `v2`: hay que fijar la versión exacta.
+        # Rupturas respecto de v1, todas aplicadas aquí: los inputs se renombraron
+        # (publish → publish-script, commit → commit-message, title → pr-title),
+        # el token va por el input `github-token` (la variable de entorno ya no
+        # se lee) y los commits/tags se empujan vía API de GitHub, con lo que
+        # los hooks de husky no intervienen en el commit del bot.
+        uses: changesets/action@v2.1.2
         with:
-          publish: pnpm publish-packages
-          # El repo consume su propio commitlint (PR #84); el mensaje por defecto
-          # del bot ("Version Packages") no es convencional y el hook commit-msg
-          # lo rechaza en CI. Se le da un mensaje que pase el gate en vez de
-          # apagar los hooks.
-          commit: 'chore(release): version packages'
-          title: 'chore(release): version packages'
+          publish-script: pnpm publish-packages
+          # Mensaje convencional: el repo consume su propio commitlint (PR #84).
+          commit-message: 'chore(release): version packages'
+          pr-title: 'chore(release): version packages'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
