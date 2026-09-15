@@ -1,6 +1,7 @@
 import type { RepoImpact, MetricDelta, ImpactMetricKey } from './spec-flow-segment.js';
 import type { TierFriction } from './spec-flow-events.js';
 import type { AggregatedReviewLoop, AggregatedFirstPassArm } from './spec-flow-review-loop.js';
+import type { DiscardedRepo } from './repo-discovery.js';
 
 /**
  * Renders the spec-flow impact comparison as markdown. The report is honest by
@@ -191,7 +192,10 @@ function renderReviewLoop(loop: AggregatedReviewLoop | undefined): string[] {
     );
   if (parts.length > 0) lines.push(`- ${parts.join(' · ')}`);
   if (loop.unclosed)
-    lines.push(`- sin cierre: ${loop.unclosed.count} de ${loop.unclosed.n} cambios`);
+    lines.push(
+      `- sin cierre: mediana ${pctStr(loop.unclosed.rate)} entre ${loop.unclosed.repos} repos ` +
+        `(${loop.unclosed.count} de ${loop.unclosed.n} cambios en total)`,
+    );
 
   lines.push(...renderFirstPassFindings(loop));
   lines.push(...renderInferenceQuality(loop));
@@ -200,11 +204,17 @@ function renderReviewLoop(loop: AggregatedReviewLoop | undefined): string[] {
 }
 
 function renderDiscardedWorktrees(
-  discardedWorktrees: readonly { path: string; keptAs: string }[] | undefined,
+  discardedWorktrees: readonly DiscardedRepo[] | undefined,
 ): string[] {
   if (!discardedWorktrees || discardedWorktrees.length === 0) return [];
   const lines: string[] = ['## Worktrees descartados (mismo repo, no cuentan dos veces)', ''];
-  for (const d of discardedWorktrees) lines.push(`- ${d.path} → ya contado como ${d.keptAs}`);
+  for (const d of discardedWorktrees) {
+    const reason =
+      d.reason === 'orphaned-worktree'
+        ? 'worktree huérfano (gitdir inexistente)'
+        : `mismo repositorio que ${d.keptAs}; solo se cuenta una copia (la telemetría de ramas sin fusionar entra al fusionarse)`;
+    lines.push(`- ${d.path} → ${reason}`);
+  }
   lines.push('');
   return lines;
 }
@@ -228,7 +238,7 @@ export function renderSpecFlowImpact(
   aggregate: readonly MetricDelta[],
   frictionByTier: Record<number, TierFriction>,
   reviewLoop?: AggregatedReviewLoop,
-  discardedWorktrees?: readonly { path: string; keptAs: string }[],
+  discardedWorktrees?: readonly DiscardedRepo[],
 ): string {
   const lines: string[] = [
     '# spec-flow impact',

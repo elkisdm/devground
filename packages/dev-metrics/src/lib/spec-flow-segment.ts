@@ -88,11 +88,11 @@ export interface SpecFlowCommitClassification {
 }
 
 /** Parses one JSON object line, or `null` if it isn't a parseable plain object. */
-function tryParseEventLine(line: string): { event?: unknown } | null {
+function tryParseEventLine(line: string): Record<string, unknown> | null {
   try {
     const v: unknown = JSON.parse(line);
     return v !== null && typeof v === 'object' && !Array.isArray(v)
-      ? (v as { event?: unknown })
+      ? (v as Record<string, unknown>)
       : null;
   } catch {
     return null;
@@ -100,46 +100,82 @@ function tryParseEventLine(line: string): { event?: unknown } | null {
 }
 
 /**
- * L-9: the spec-flow segment must not change population when a change's
+ * F1: is this parsed `.spec-flow/events.jsonl` line a spec (or discriminator-
+ * absent, pre-0.6) line, as opposed to a `review`/`assumption_reversed` line?
+ */
+function isSpecLine(parsed: Record<string, unknown>): boolean {
+  return parsed.event === undefined || parsed.event === 'spec';
+}
+
+/**
+ * L-9/F1: the spec-flow segment must not change population when a change's
  * follow-up commits (a `review` line committed with the fix, or an
- * `assumption_reversed` line) land later. Classifies each commit that touches
- * `.spec-flow/events.jsonl` by the lines it ADDS: ≥1 line with `event` absent
- * or `"spec"` → spec-flow; only `review`/`assumption_reversed` lines added →
- * follow-up (neither spec-flow nor control).
+ * `assumption_reversed` line) land later — nor when a `spec` line is later
+ * REWRITTEN in place (same `change`, edited fields): a rewrite is a follow-up,
+ * not a second spec-flow commit.
+ *
+ * Makes exactly ONE `git log -p` call for the whole repo (never one `git show`
+ * per commit — that was minutes on a large history) and classifies each
+ * commit by the lines it adds vs. removes in the SAME diff:
+ *  - spec-flow: adds ≥1 parseable line that is a spec (or discriminator-
+ *    absent) line whose `change` does NOT also appear on a REMOVED line in
+ *    the same commit (a rewrite removes and re-adds the same `change`).
+ *  - follow-up: not spec-flow, but adds ≥1 parseable line at all (a review, a
+ *    reversal, or a rewritten spec).
+ *  - neither (`other`): adds nothing parseable (a delete-only commit, or git
+ *    failed) — never silently defaulted to spec-flow.
  */
 export function specFlowHashes(repoPath: string): SpecFlowCommitClassification {
   const specFlow = new Set<string>();
   const followUp = new Set<string>();
-  const hashesOut = safeGit(
-    ['-C', repoPath, 'log', '--no-merges', '--format=%H', '--', SPEC_FLOW_EVENTS_PATH],
-    16 * 1024 * 1024,
+  const out = safeGit(
+    [
+      '-C',
+      repoPath,
+      'log',
+      '--no-merges',
+      '-p',
+      '--no-color',
+      '--no-ext-diff',
+      '--no-textconv',
+      `--format=${REC}%H`,
+      '--',
+      SPEC_FLOW_EVENTS_PATH,
+    ],
+    64 * 1024 * 1024,
   );
-  const hashes = hashesOut
-    .split('\n')
-    .map((l) => l.trim())
-    .filter((l) => l !== '');
 
-  for (const hash of hashes) {
-    const diff = safeGit(
-      ['-C', repoPath, 'show', hash, '--', SPEC_FLOW_EVENTS_PATH],
-      16 * 1024 * 1024,
-    );
-    let addsSpec = false;
-    let addsAny = false;
-    for (const line of diff.split('\n')) {
-      if (!line.startsWith('+') || line.startsWith('+++')) continue;
-      const content = line.slice(1).trim();
-      if (content === '') continue;
-      const parsed = tryParseEventLine(content);
-      if (parsed === null) continue;
-      addsAny = true;
-      if (parsed.event === undefined || parsed.event === 'spec') {
-        addsSpec = true;
-        break;
+  for (const record of out.split(REC)) {
+    if (record.trim() === '') continue;
+    const nlIdx = record.indexOf('\n');
+    const hash = (nlIdx === -1 ? record : record.slice(0, nlIdx)).trim();
+    if (hash === '') continue;
+    const body = nlIdx === -1 ? '' : record.slice(nlIdx + 1);
+
+    const addedLines: Record<string, unknown>[] = [];
+    const removedChanges = new Set<string>();
+    for (const line of body.split('\n')) {
+      if (line.startsWith('+++') || line.startsWith('---')) continue;
+      if (line.startsWith('+')) {
+        const parsed = tryParseEventLine(line.slice(1).trim());
+        if (parsed !== null) addedLines.push(parsed);
+      } else if (line.startsWith('-')) {
+        const parsed = tryParseEventLine(line.slice(1).trim());
+        if (parsed !== null && typeof parsed.change === 'string') {
+          removedChanges.add(parsed.change);
+        }
       }
     }
-    if (addsSpec || !addsAny) specFlow.add(hash);
-    else followUp.add(hash);
+
+    const isSpecFlow = addedLines.some((p) => {
+      if (!isSpecLine(p)) return false;
+      const change = typeof p.change === 'string' ? p.change : undefined;
+      return change === undefined || !removedChanges.has(change);
+    });
+
+    if (isSpecFlow) specFlow.add(hash);
+    else if (addedLines.length > 0) followUp.add(hash);
+    // else: nothing parseable was added (delete-only, or git failed) -> `other`.
   }
   return { specFlow, followUp };
 }

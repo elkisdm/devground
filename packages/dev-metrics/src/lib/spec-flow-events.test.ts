@@ -43,6 +43,12 @@ describe('parseSpecFlowEvents', () => {
     expect(parseSpecFlowEvents(text)).toHaveLength(2);
   });
 
+  it('F9: a `null`/array/primitive line does not crash the parse', () => {
+    const text = [LINE(ev()), 'null', '[1]', '"x"', ''].join('\n');
+    expect(() => parseSpecFlowEvents(text)).not.toThrow();
+    expect(parseSpecFlowEvents(text)).toHaveLength(1);
+  });
+
   it('drops a line with no date (unusable for segmentation)', () => {
     const text = [LINE(ev({ date: undefined })), LINE(ev())].join('\n');
     expect(parseSpecFlowEvents(text)).toHaveLength(1);
@@ -227,8 +233,8 @@ describe('campo review inline (spec-flow 0.5, ADR-0036)', () => {
     expect(parseOne('').review).toBeUndefined();
   });
 
-  it('trata "n/a" como ausencia, no como objeto', () => {
-    expect(parseOne(',"review":"n/a"').review).toBeUndefined();
+  it('F5: el string inline "n/a" es un ReviewRecord no aplicable, no una ausencia', () => {
+    expect(parseOne(',"review":"n/a"').review).toStrictEqual({ level: 'n/a' });
   });
 
   it('un review malformado no rompe el parseo de la linea', () => {

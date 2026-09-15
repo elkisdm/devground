@@ -60,9 +60,11 @@ y un ledger en vez de ser un bucle abierto. Y que se pueda **medir** si funcion�
 - [ ] La sección `### Review` es un ledger por pasada (alcance, hallazgos, cerrados, diferidos
       con motivo, refutados con motivo, inducidos) y el flujo se detiene en 2 pasadas salvo
       rediseño documentado; nunca pasa de 3.
-- [ ] El evento `spec` emite `review.{level,passes,findings,findings_capped,induced,resolved,
-  redesigned}` y `premortem`, y `dev-metrics` los parsea (tolerando ausentes y valores
-      malformados como `"pending"`) y los reporta.
+- [ ] El evento `spec` emite `premortem` y `spec_review`; el evento `review` emite
+      `level, passes, findings, findings_capped, found_total, induced, resolved, open,
+    redesigned, tests`; `dev-metrics` los parsea (tolerando ausentes y valores malformados
+      como `"pending"`, que cuentan como "sin cierre") y los reporta según el modelo de datos
+      de "Design › Lectura de la telemetría".
 - [ ] Un evento v0.5 o anterior sigue parseando exactamente igual (test de regresión).
 - [ ] Tier 0 y Tier 1 no ganan ninguna sección ni paso obligatorio nuevo.
 - [ ] `SKILL.md` crece como máximo ~120 líneas netas; el detalle vive en
@@ -129,7 +131,43 @@ Las causas A y B son hallazgos **de la spec**, no del código: el pre-mortem ori
 la fila que los atrapa (ver Invariantes, abajo). Por eso el cierre empieza por este brief, la
 skill y el ADR, y recién después por dev-metrics. Los arreglos van en un commit aparte.
 
-**Pasada 2** — rama completa (Tier 3), con este ledger en contexto: pendiente.
+**Pasada 2** — `/code-review max` sobre `72b38e0..888abbd` (rama completa, Tier 3), ledger en
+contexto: **15 hallazgos confirmados, tope alcanzado**, 29 candidatos sin refutar. **13 son
+inducidos** (el defecto no existe en `913aeef`: viven en `reviewLoopStats`, el join por
+`change`, `dedupeWorktrees` y el filtro `--until`, todo escrito en `888abbd`); 2 son restos
+de la pasada 1 cerrados a medias (#12 `"pending"` no cuenta como "sin cierre"; #14 campos
+parseados sin consumidor). **Regla de parada disparada**: no se corrige en línea. La pieza
+"lectura de la telemetría" se rediseña con invariantes explícitas (Design, abajo) y va a la
+**pasada 3, la última**.
+
+| #   | Hallazgo (pasada 2)                                                                              | Inducido            | Invariante que faltaba |
+| --- | ------------------------------------------------------------------------------------------------ | ------------------- | ---------------------- |
+| 1   | `specFlowHashes` cuenta el commit del evento `review` como un cambio spec-flow más               | sí (diseño A)       | L-9                    |
+| 2   | `unclosed` ignora el `review` inline de un spec 0.6 (contrato intermedio ya usado en atlas/core) | sí                  | L-6                    |
+| 3   | `level` n/a solo excluido de `passes`, no del resto                                              | sí                  | L-2                    |
+| 4   | métricas por línea, no por cambio (varias líneas `review` del mismo change)                      | sí                  | L-1                    |
+| 5   | `unclosed.count` puede superar `n`                                                               | sí                  | L-1, L-4               |
+| 6   | specs no colapsados por `change`                                                                 | sí                  | L-1                    |
+| 7   | `gitCommonDir` sin canonicalizar (symlink `trabajo/Claudia IA` → doble conteo)                   | sí                  | L-7                    |
+| 8   | `--until` con dos intérpretes (lexicográfico vs approxidate)                                     | sí                  | L-8                    |
+| 9   | dedupe conserva el primero, no el worktree principal                                             | sí                  | L-7                    |
+| 10  | `na` ausente entra al brazo "real"; `"n/a"`/ausente en T2+ no entra a ninguno                    | sí                  | L-5                    |
+| 11  | `findings_capped` ausente = "no censurado" en los brazos                                         | sí                  | L-3                    |
+| 12  | `"pending"` en 0.5 no cuenta como "sin cierre"                                                   | no (resto pasada 1) | L-4                    |
+| 13  | brazo totalmente censurado devuelve `null` y pierde su n                                         | sí                  | L-3                    |
+| 14  | reversiones, `assumptions`, `spec_review`, `found_total`, `resolved`, `tests` sin consumidor     | no (resto pasada 1) | L-10                   |
+| 15  | encabezado "mediana entre N repos" cuenta repos sin datos                                        | sí                  | L-11                   |
+
+Recortados por el tope (se cierran en la misma pasada 3 porque caen en las mismas
+invariantes): `passes:0` cuenta como bucle acotado (L-2: conteo válido ≥ 1); `tier` vía
+`num()` puede dar T0 falso (L-2); `change` ausente colapsa líneas (L-1); `unclosed` agrupado
+entre repos (L-11); `gitCommonDir` filtra stderr de git y corre antes de `isGitRepo` (L-7);
+`warn()` escribe en stdout dentro del render (L-11); fricción sin n (L-11); `max-lines`
+superado en `spec-flow-events.ts` (se parte el módulo). **Diferidos con motivo**: `collect`
+también duplica worktrees (comando distinto, misma utilidad reutilizable; se anota como
+seguimiento); SKILL.md duplica ~20 líneas de la referencia (deliberado: la regla operativa se
+carga siempre, el detalle bajo demanda); `sync` no versiona `evals/` (decisión documentada en
+el script).
 
 ## Out of scope
 
@@ -321,6 +359,82 @@ mayoría de hallazgos son inducidos. Seguir es cambiar deuda visible por riesgo 
 **Rollback**: la skill es texto versionado; revertir = `git revert` + `sync`. Los campos de
 telemetría son aditivos y el parser tolera su ausencia, así que eventos 0.6 leídos por un
 dev-metrics viejo no rompen nada (los ignora).
+
+**Pasada 3 (última)** — `/code-review max` sobre `72b38e0..d75867a` (rama completa), ledger en
+contexto: **15 hallazgos confirmados, tope alcanzado**, 19 votos sin refutar. Ninguno es de
+diseño ni inducido de la clase anterior: son bordes de la implementación de L-1…L-11. Por
+protocolo no hay pasada 4. **Se cierran 11** con test verificado en ambos sentidos (F1–F11 en
+el commit de cierre): `specFlowHashes` reescrito en una sola llamada `git log -p` y con spec
+reescrita = seguimiento (#1, #10); `verifiedShare` solo 0.6 T2+ sin `n/a` (#3); `resolvedShare`
+sobre aplicables (#12); `reversalRate` con el máximo de `assumptions` por cambio (#6); inline
+`"review":"n/a"` = `level:"n/a"` (#7); inline review con el mismo normalizador que el evento
+(#8); `unclosed`/`open` como mediana entre repos (#9); join por `date` cuando `ts` es fallback
+(#11); `null` no tumba el parser (#13); identidad de repo por root commit, huérfanos excluidos,
+rutas idénticas deduplicadas (#4, #5, #14); `findings_capped:false` sin `findings` no es exacto
+(recorte). **Quedan abiertos (`open: 4`), con motivo:**
+
+| #   | Abierto                                                                                                                         | Motivo                                                                                                                                                                                                                                          |
+| --- | ------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2   | La telemetría de una rama sin fusionar que solo vive en un worktree descartado no se cuenta                                     | Decisión deliberada: un repo se lee una vez, desde su worktree principal; lo que está en una rama entra cuando se fusiona. Contarlo hoy exigiría unir eventos entre worktrees y atribuir commits a dos HEADs. El texto del descarte ya lo dice. |
+| —   | La tabla de fricción sigue siendo un pool crudo entre repos                                                                     | Preexistente a v0.6; cambiarla altera una serie que dev-metrics viene publicando. Se anota para la siguiente versión con su propio ADR de ruptura.                                                                                              |
+| 15  | `--until` compara fecha de committer (git) contra fecha del evento (autor); un rebase posterior al corte separa commit y evento | Preexistente; el `T23:59:59` corrige el borde del día, que era el defecto de esta versión. Unificar el reloj requiere `--date=format-local` y `%ad` vs `%cd`, un cambio de `collect` también.                                                   |
+| —   | `spec-flow-review-loop.ts` supera `max-lines` (≈457)                                                                            | Partirlo es cosmético y abre otra ronda; se deja el warning visible.                                                                                                                                                                            |
+
+### Lectura de la telemetría (rediseño tras la pasada 2)
+
+La pieza se especifica como modelo de datos con invariantes, no como lista de métricas.
+`dev-metrics` la implementa en un módulo propio (`lib/spec-flow-review-loop.ts`) y cada
+invariante tiene su test.
+
+**Entidades.** `SpecEvent`, `ReviewRecord` (un evento `review`, o el `review` inline de un
+spec — misma forma normalizada, mismo normalizador), `Reversal`. Un `ReviewRecord` con `level`
+ausente o `"n/a"` es **"no aplicó"**.
+
+- **L-1 Unidad = cambio.** Los specs se colapsan por `change` conservando el último por `ts`;
+  un spec sin `change` válido se descarta (no se agrupa con otros). El review de un cambio es
+  el último `ReviewRecord` con el mismo `change` y `ts ≥ ts` del spec (evento), o el inline de
+  ese spec; si no hay ninguno, el cambio está **abierto**. Por construcción, ningún conteo de
+  cambios supera su n.
+- **L-2 Ausente = desconocido, nunca cero ni falso.** Todo campo pasa por `count()` (entero
+  seguro ≥ 0) o por booleano estricto; `tier` también (un tier no parseable es desconocido, no
+  0). `passes` válido es ≥ 1. Un review "no aplicó" excluye al cambio de **todas** las
+  métricas de review, incluida "sin cierre".
+- **L-3 Censura tripartita.** Por cambio, `findings` es exacto (`findings_capped === false`),
+  censurado (`=== true`) o desconocido (ausente). Las medias usan solo exactos; cada brazo y
+  cada tasa reporta `n_total`, `n_exactos`, y `cappedShare` sobre los que declaran el flag. Un
+  brazo con n_total > 0 **nunca** es `null` aunque su media lo sea.
+- **L-4 Sin cierre.** Universo: cambios con spec Tier ≥ 1 que **o** son 0.6 **o** traen review
+  inline. Sin cierre = sin review aplicable, o review con `findings` no numérico
+  (`"pending"`). Aplica a 0.5 y 0.6 por igual; `count ≤ n`.
+- **L-5 Brazos exhaustivos y excluyentes** sobre cambios 0.6 Tier ≥ 2 con review aplicable:
+  `premortem` (`na ≤ 3`), `compliance` (`na ≥ 4` o `premortem:false`), `undeclared` (ausente,
+  `"n/a"`, `true` legado del contrato intermedio, o valor sucio). `baseline05` = cambios < 0.6
+  con review inline. Los cuatro se reportan con su n; ninguno se omite en silencio.
+- **L-6 El contrato intermedio se lee.** Un spec 0.6 con `review` inline (formato que ya
+  existe en atlas/core) se trata exactamente como un evento `review` con el mismo `ts`.
+- **L-7 Dedupe de repos por identidad real.** Clave = `realpath` del `--git-common-dir`
+  (`git rev-parse --path-format=absolute`), calculada solo tras `isGitRepo`, con stderr
+  descartado. Se conserva el **worktree principal** (aquel cuyo git dir es el common dir), no
+  el primero; el descarte se reporta una sola vez, en el reporte, no por stdout.
+- **L-8 Un solo reloj para `--until`.** Se valida `YYYY-MM-DD` (error claro si no); eventos
+  por `date ≤ until`; git con `--until=<until>T23:59:59` para que ambos incluyan el día
+  completo.
+- **L-9 El segmento spec-flow no cambia de población.** Un commit que solo añade líneas
+  `review`/`assumption_reversed` a `events.jsonl` es un **seguimiento** del cambio: no cuenta
+  como commit spec-flow ni como control (se excluye de ambos segmentos). Solo los commits que
+  añaden una línea `spec` definen el segmento, igual que en 0.5.
+- **L-10 Todo campo escrito se lee.** El reporte muestra además: tasa de reversión
+  (`reversals ÷ Σ assumptions`, la fila "Calidad de inferencia" de measurement-design §5),
+  adopción del gate (`Σ gaps_adopted ÷ Σ gaps_found`), proporción de `tests:"verified"` en
+  Tier 2+ y `resolved ÷ found_total`. Test: quitar cualquier campo del parser cambia la
+  salida.
+- **L-11 Cada número con su n, y el encabezado con los repos que aportan.** `repos` = repos
+  con al menos una métrica no nula; la fricción también lleva n; nada escribe en stdout desde
+  el render.
+
+Estas once son la fila **Invariantes** que el pre-mortem de este brief debió tener para la
+pieza de lectura, y son la razón de que la pasada 2 trajera 13 inducidos: la pieza se escribió
+sin ellas.
 
 ## Pre-mortem (de este cambio)
 

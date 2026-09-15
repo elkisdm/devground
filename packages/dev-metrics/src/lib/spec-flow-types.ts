@@ -66,6 +66,12 @@ export interface SpecFlowReview {
   induced?: number;
   /** Whether an induced finding sent the change back to the spec for a redesign. */
   redesigned?: boolean;
+  /** Total findings found across all passes (F6: same field the separate `review` event carries). */
+  foundTotal?: number;
+  /** Debt: deferred or still unresolved at close (F6). */
+  open?: number;
+  /** DoD compliance for tests (F6). */
+  tests?: string;
 }
 
 /**

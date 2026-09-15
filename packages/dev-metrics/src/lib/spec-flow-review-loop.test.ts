@@ -72,6 +72,8 @@ describe('L-1: joinChanges', () => {
     expect(changes[0]!.review).toBeNull();
   });
 
+  // F8: see spec-flow-review-loop-fixes.test.ts
+
   it('count() <= n en cualquier metrica derivada (ejemplo: unclosed)', () => {
     const { specs, reviews } = parseSpecFlowLog(
       [specLine({ change: 'a' }), specLine({ change: 'b' })].join('\n'),
@@ -145,6 +147,8 @@ describe('L-3: censura tripartita', () => {
     expect(arm.nUnknownCap).toBe(1);
     expect(arm.cappedShare).toBeNull(); // denominador (exact+censored) es 0
   });
+
+  // F11: see spec-flow-review-loop-fixes.test.ts
 });
 
 // ---------------------------------------------------------------------------
@@ -256,8 +260,11 @@ describe('L-6: contrato intermedio (review inline en un spec 0.6, atlas/core)', 
     expect(stats.passes).toEqual({ median: 2, sharePassesAtMost2: 1, n: 1 });
     expect(stats.induced!.n).toBe(1);
     expect(stats.firstPassFindings.undeclared!.nTotal).toBe(1);
-    expect(stats.unclosed).toEqual({ count: 0, n: 1 }); // tiene review aplicable con findings -> no sin cierre
+    // tiene review aplicable con findings -> no sin cierre (per-repo shape, sin `rate` aun)
+    expect(stats.unclosed).toEqual({ count: 0, n: 1 });
   });
+
+  // F6: see spec-flow-review-loop-fixes.test.ts
 });
 
 // ---------------------------------------------------------------------------
@@ -357,6 +364,9 @@ describe('L-10: assumptions/gate/tests/resolved tienen consumidor', () => {
   });
 });
 
+// F2/F3/F4/F6: moved to `spec-flow-review-loop-fixes.test.ts` to keep this
+// file under `max-lines`.
+
 // ---------------------------------------------------------------------------
 // L-11: aggregation reports only repos with data, n is a real sum
 // ---------------------------------------------------------------------------
@@ -380,15 +390,11 @@ describe('L-11: cada numero con su n, repos solo con datos', () => {
     expect(agg.passes!.n).toBe(2);
     expect(agg.passes!.median).toBe(3); // median of the two per-repo medians (2, 4)
   });
+
+  // F7: see spec-flow-review-loop-fixes.test.ts
 });
 
-function toParsed(
-  lines: string[],
-): [
-  ReturnType<typeof parseSpecFlowLog>['specs'],
-  ReturnType<typeof parseSpecFlowLog>['reviews'],
-  ReturnType<typeof parseSpecFlowLog>['reversals'],
-] {
+function toParsed(lines: string[]) {
   const { specs, reviews, reversals } = parseSpecFlowLog(lines.join('\n'));
-  return [specs, reviews, reversals];
+  return [specs, reviews, reversals] as const;
 }

@@ -206,7 +206,10 @@ modelo de datos con once invariantes (L-1..L-11, cada una con su test en
   los exactos, y cada brazo reporta los tres conteos y su `cappedShare` aparte
   — un brazo con datos nunca es `null` aunque su media lo sea.
 - **L-4** "sin cierre" cubre cambios Tier ≥ 1 que son 0.6 o traen review
-  inline, sin review aplicable o con `findings` no numérico (`"pending"`).
+  inline, sin review aplicable o con `findings` no numérico (`"pending"`); el
+  agregado entre repos es la **mediana** del ratio `count/n` de cada repo
+  (nunca `count`/`n` agrupados de golpe), con `count`/`n` totales aparte, solo
+  para contexto.
 - **L-5** los hallazgos de 1ª pasada se comparan en brazos exhaustivos y
   excluyentes sobre cambios 0.6 Tier ≥ 2: `con pre-mortem` (`na ≤ 3`),
   `pre-mortem de cumplimiento` (`na ≥ 4` o `premortem:false`), `sin declarar`
@@ -214,17 +217,31 @@ modelo de datos con once invariantes (L-1..L-11, cada una con su test en
   anterior a 0.6, que no conocía el tope de hallazgos).
 - **L-6** el contrato intermedio — un spec 0.6 con `review` inline, como el
   que ya circula en producción — se lee igual que un evento `review` propio.
-- **L-7** dos rutas de repo que son worktrees del mismo repositorio (mismo
-  `git rev-parse --git-common-dir`, canonicalizado con `realpath`) se
-  deduplican quedándose con el **worktree principal**, no el primero visto;
-  la descartada se lista una sola vez en el reporte.
+- **L-7** la IDENTIDAD de un repo es su **root commit** (`git rev-list
+--max-parents=0 HEAD`), no el `git-common-dir` — dos clones independientes
+  del mismo repositorio (dos `.git` distintos, misma historia) se reconocen
+  como uno solo. `git-common-dir` (canonicalizado con `realpath`) se usa
+  DESPUÉS, solo para elegir el **worktree principal** dentro de un grupo ya
+  identificado por root commit; sin ganador claro, gana el primero visto. Un
+  path cuyo gitdir no se puede resolver (worktree huérfano) se **descarta**,
+  nunca se conserva — no hay root commit al que atribuirle su historia.
 - **L-8** `--until` se valida como `YYYY-MM-DD` real y usa un solo reloj:
   eventos por `date ≤ until`, git con `--until=<until>T23:59:59`.
-- **L-9** un commit que solo agrega líneas `review`/`assumption_reversed` es
-  un **seguimiento** del cambio, no un commit spec-flow ni de control.
-- **L-10** también se leen `assumptions` (tasa de reversión de supuestos),
-  `spec_review` (adopción del gate), `tests` (verificados en Tier 2+) y
-  `resolved`/`found_total` (resueltos sobre encontrados).
+- **L-9** una sola llamada a `git log -p` clasifica cada commit por las
+  líneas que AGREGA en el mismo diff: agrega ≥1 línea spec (o sin
+  discriminador) cuyo `change` no aparece también en una línea borrada del
+  mismo commit → spec-flow; si no, pero agrega algo parseable (un `review`,
+  una reversión, o un `spec` REESCRITO — mismo `change` borrado y re-agregado)
+  → **seguimiento** (ni spec-flow ni control); si no agrega nada parseable
+  (borra solo, o git falla) → ninguno de los dos, nunca spec-flow por
+  defecto.
+- **L-10** también se leen `assumptions` (tasa de reversión de supuestos,
+  dividida por el MÁXIMO `assumptions` declarado entre todas las líneas spec
+  del cambio, no solo la última si el spec se re-emitió con un número menor),
+  `spec_review` (adopción del gate), `tests` (verificados en Tier 2+, solo
+  cambios 0.6 con review aplicable y un valor real de `tests`, nunca `"n/a"`
+  ni la baseline 0.5) y `resolved`/`found_total` (resueltos sobre
+  encontrados, solo sobre cambios con review aplicable).
 - **L-11** cada número del reporte lleva su `n`; `repos` en el encabezado
   cuenta solo los repos con al menos un dato; el render es puro (no escribe
   en stdout).

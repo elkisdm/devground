@@ -56,7 +56,7 @@ const FULL_REVIEW_LOOP: AggregatedReviewLoop = {
   capped: { rate: 0.33, n: 9, repos: 3 },
   induced: { rate: 0.17, n: 12, repos: 4 },
   redesigned: { rate: 0.08, n: 12, repos: 4 },
-  unclosed: { count: 2, n: 14, repos: 3 },
+  unclosed: { rate: 0.2, count: 2, n: 14, repos: 3 },
   open: { sum: 5, median: 0, n: 12, repos: 4 },
   firstPassFindings: {
     premortem: {
@@ -118,7 +118,7 @@ describe('renderSpecFlowImpact', () => {
     expect(out).toContain('inducidos: 17% (n=12)');
     expect(out).toContain('rediseños: 8% (n=12)');
     expect(out).toContain('deuda abierta: 5 en total, mediana 0 (n=12)');
-    expect(out).toContain('sin cierre: 2 de 14 cambios');
+    expect(out).toContain('sin cierre: mediana 20% entre 3 repos (2 de 14 cambios en total)');
   });
 
   it('renders the first-pass-findings arms and the L-10 inference-quality lines', () => {
@@ -160,9 +160,16 @@ describe('renderSpecFlowImpact', () => {
 
   it('lista los worktrees descartados sin que cuenten dos veces (L-7)', () => {
     const out = renderSpecFlowImpact([impact()], agg, {}, undefined, [
-      { path: '/repos/atlas-wt', keptAs: '/repos/atlas' },
+      { path: '/repos/atlas-wt', reason: 'same-repo', keptAs: '/repos/atlas' },
     ]);
     expect(out).toContain('Worktrees descartados');
-    expect(out).toContain('/repos/atlas-wt → ya contado como /repos/atlas');
+    expect(out).toContain('/repos/atlas-wt → mismo repositorio que /repos/atlas');
+  });
+
+  it('F10(b): un worktree huerfano se lista con su propio motivo, no como "mismo repositorio"', () => {
+    const out = renderSpecFlowImpact([impact()], agg, {}, undefined, [
+      { path: '/repos/orphan', reason: 'orphaned-worktree' },
+    ]);
+    expect(out).toContain('/repos/orphan → worktree huérfano (gitdir inexistente)');
   });
 });

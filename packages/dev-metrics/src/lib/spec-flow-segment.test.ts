@@ -1,4 +1,7 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { mkdtempSync, rmSync, mkdirSync, writeFileSync, appendFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import {
   parseCommitDetails,
   daysBetween,
@@ -11,12 +14,24 @@ import {
   computeRepoImpact,
   median,
   aggregateImpact,
+  specFlowHashes,
   MIN_CONTROL_COMMITS,
   MIN_SPECFLOW_COMMITS,
   untilGitArg,
   type CommitDetail,
   type RepoImpact,
 } from './spec-flow-segment.js';
+
+// F1: `execFileSync` is non-configurable on `node:child_process` in this
+// runtime, so `vi.spyOn` fails with "Cannot redefine property" — mock the
+// module instead, forwarding every call to the real implementation while
+// counting invocations (same pattern as transcript-collect.test.ts).
+const { execFileSyncMock } = vi.hoisted(() => ({ execFileSyncMock: vi.fn() }));
+vi.mock('node:child_process', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('node:child_process')>();
+  execFileSyncMock.mockImplementation(actual.execFileSync);
+  return { ...actual, execFileSync: execFileSyncMock };
+});
 
 const REC = '\x1e';
 const SEP = '\x1f';
@@ -292,5 +307,82 @@ describe('aggregateImpact', () => {
 describe('untilGitArg (L-8)', () => {
   it('includes the full day, matching the event filter date <= until', () => {
     expect(untilGitArg('2026-09-14')).toBe('--until=2026-09-14T23:59:59');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// F1: specFlowHashes — single-git-process rewrite, spec-rewrite, delete-only
+// ---------------------------------------------------------------------------
+
+describe('specFlowHashes (F1)', () => {
+  let root: string;
+
+  function git(args: string[], env: Record<string, string> = {}): void {
+    execFileSyncMock('git', args, { cwd: root, env: { ...process.env, ...env }, stdio: 'pipe' });
+  }
+
+  function commit(message: string, date: string): void {
+    git(['add', '-A']);
+    git(['commit', '-q', '-m', message], { GIT_AUTHOR_DATE: date, GIT_COMMITTER_DATE: date });
+  }
+
+  function appendEvent(obj: Record<string, unknown>): void {
+    mkdirSync(join(root, '.spec-flow'), { recursive: true });
+    appendFileSync(join(root, '.spec-flow', 'events.jsonl'), JSON.stringify(obj) + '\n');
+  }
+
+  beforeEach(() => {
+    root = mkdtempSync(join(tmpdir(), 'devmetrics-sf-hashes-'));
+    git(['init', '-q']);
+    git(['config', 'user.email', 'test@example.com']);
+    git(['config', 'user.name', 'Test']);
+    execFileSyncMock.mockClear();
+  });
+
+  afterEach(() => {
+    rmSync(root, { recursive: true, force: true });
+  });
+
+  it('a spec REWRITTEN in place (same change, edited fields) is a follow-up, not spec-flow again', () => {
+    appendEvent({ event: 'spec', date: '2026-09-14', change: 'x', tier: 1 });
+    commit('feat: a', '2026-09-14T10:00:00');
+
+    // Rewrite the same `change` line (e.g. a later field correction).
+    writeFileSync(
+      join(root, '.spec-flow', 'events.jsonl'),
+      JSON.stringify({ event: 'spec', date: '2026-09-14', change: 'x', tier: 2 }) + '\n',
+    );
+    commit('fix: correct tier', '2026-09-15T10:00:00');
+
+    const { specFlow, followUp } = specFlowHashes(root);
+    expect(specFlow.size).toBe(1);
+    expect(followUp.size).toBe(1);
+  });
+
+  it('a commit that only DELETES lines (no parseable addition) is neither spec-flow nor follow-up', () => {
+    appendEvent({ event: 'spec', date: '2026-09-14', change: 'x', tier: 1 });
+    commit('feat: a', '2026-09-14T10:00:00');
+
+    writeFileSync(join(root, '.spec-flow', 'events.jsonl'), '');
+    commit('chore: wipe telemetry', '2026-09-15T10:00:00');
+
+    const { specFlow, followUp } = specFlowHashes(root);
+    expect(specFlow.size).toBe(1); // only the first commit
+    expect(followUp.size).toBe(0); // the delete-only commit is neither
+  });
+
+  it('makes exactly ONE git process for the whole repo, regardless of commit count', () => {
+    appendEvent({ event: 'spec', date: '2026-09-14', change: 'a', tier: 1 });
+    commit('feat: a', '2026-09-14T10:00:00');
+    appendEvent({ event: 'review', date: '2026-09-15', change: 'a', level: 'high' });
+    commit('fix: b', '2026-09-15T10:00:00');
+    appendEvent({ event: 'spec', date: '2026-09-16', change: 'c', tier: 1 });
+    commit('feat: c', '2026-09-16T10:00:00');
+
+    execFileSyncMock.mockClear();
+    const { specFlow, followUp } = specFlowHashes(root);
+    expect(specFlow.size).toBe(2);
+    expect(followUp.size).toBe(1);
+    expect(execFileSyncMock).toHaveBeenCalledTimes(1);
   });
 });

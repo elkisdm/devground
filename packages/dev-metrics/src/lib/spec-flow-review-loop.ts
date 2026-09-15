@@ -58,7 +58,12 @@ function fromReviewEvent(r: ReviewEvent): ReviewRecord {
   };
 }
 
-/** L-6: the 0.6 inline contract on a spec event, read as a `ReviewRecord` with the spec's own `ts`. */
+/**
+ * L-6/F6: the 0.6 inline contract on a spec event, read as a `ReviewRecord`
+ * with the spec's own `ts` — reads the SAME fields `fromReviewEvent` reads
+ * (`foundTotal`, `open`, `tests`), so an inline review is not missing data a
+ * separate `review` event would have captured.
+ */
 function fromInline(ts: string, r: SpecFlowReview): ReviewRecord {
   return {
     ts,
@@ -69,6 +74,9 @@ function fromInline(ts: string, r: SpecFlowReview): ReviewRecord {
     ...(r.induced !== undefined ? { induced: r.induced } : {}),
     ...(r.resolved !== undefined ? { resolved: r.resolved } : {}),
     ...(r.redesigned !== undefined ? { redesigned: r.redesigned } : {}),
+    ...(r.foundTotal !== undefined ? { foundTotal: r.foundTotal } : {}),
+    ...(r.open !== undefined ? { open: r.open } : {}),
+    ...(r.tests !== undefined ? { tests: r.tests } : {}),
   };
 }
 
@@ -79,6 +87,15 @@ function fromInline(ts: string, r: SpecFlowReview): ReviewRecord {
 export interface Change {
   spec: SpecFlowEvent;
   review: ReviewRecord | null;
+  /**
+   * F4: the max `assumptions` seen across ALL spec lines sharing this
+   * `change`, not just the one that won `laterOrLast` — a change's declared
+   * assumption count can shrink when the spec is re-emitted, and reversals
+   * recorded against the earlier (larger) count must not be divided by the
+   * smaller one. `undefined` when no spec line for this change had a valid
+   * `assumptions` count.
+   */
+  maxAssumptions?: number;
 }
 
 /** Later `ts` wins; a tie (or an unparseable `ts`) keeps whichever was seen LAST in file order. */
@@ -87,6 +104,26 @@ function laterOrLast<T extends { ts: string }>(prev: T, next: T): T {
   const b = Date.parse(next.ts);
   const nextWins = Number.isNaN(a) || Number.isNaN(b) ? next.ts >= prev.ts : b >= a;
   return nextWins ? next : prev;
+}
+
+/**
+ * F8: is `review` eligible to join `spec` (i.e. not clearly BEFORE it)? The
+ * parser falls back to `ts = date` (midnight UTC) when a line has no real
+ * timestamp — detectable as `ts === date`. Comparing a fallback midnight `ts`
+ * against a same-day REAL `ts` (e.g. 09:00) would wrongly read the review as
+ * earlier than the spec, orphaning same-day reviews with no `ts`. When either
+ * side is a fallback (or either `ts` fails to parse), compare by `date`
+ * instead — same-day counts as "applies".
+ */
+function reviewJoinsSpec(review: ReviewEvent, spec: SpecFlowEvent): boolean {
+  const reviewIsFallback = review.ts === review.date;
+  const specIsFallback = spec.ts === spec.date;
+  const rTime = Date.parse(review.ts);
+  const sTime = Date.parse(spec.ts);
+  if (!reviewIsFallback && !specIsFallback && !Number.isNaN(rTime) && !Number.isNaN(sTime)) {
+    return rTime >= sTime;
+  }
+  return review.date >= spec.date;
 }
 
 /**
@@ -101,10 +138,17 @@ export function joinChanges(
   reviews: readonly ReviewEvent[],
 ): Change[] {
   const byChange = new Map<string, SpecFlowEvent>();
+  const maxAssumptionsByChange = new Map<string, number>();
   for (const s of specs) {
     if (s.change === '') continue;
     const prev = byChange.get(s.change);
     byChange.set(s.change, prev ? laterOrLast(prev, s) : s);
+    if (s.assumptions !== undefined) {
+      const currentMax = maxAssumptionsByChange.get(s.change);
+      if (currentMax === undefined || s.assumptions > currentMax) {
+        maxAssumptionsByChange.set(s.change, s.assumptions);
+      }
+    }
   }
 
   const reviewsByChange = new Map<string, ReviewEvent[]>();
@@ -116,18 +160,16 @@ export function joinChanges(
 
   const changes: Change[] = [];
   for (const spec of byChange.values()) {
-    const specTime = Date.parse(spec.ts);
-    const candidates = (reviewsByChange.get(spec.change) ?? []).filter((r) => {
-      const rTime = Date.parse(r.ts);
-      return Number.isNaN(rTime) || Number.isNaN(specTime) ? r.ts >= spec.ts : rTime >= specTime;
-    });
+    const candidates = (reviewsByChange.get(spec.change) ?? []).filter((r) =>
+      reviewJoinsSpec(r, spec),
+    );
     let review: ReviewRecord | null = null;
     if (candidates.length > 0) {
       review = fromReviewEvent(candidates.reduce((best, r) => laterOrLast(best, r)));
     } else if (spec.review) {
       review = fromInline(spec.ts, spec.review);
     }
-    changes.push({ spec, review });
+    changes.push({ spec, review, maxAssumptions: maxAssumptionsByChange.get(spec.change) });
   }
   return changes;
 }
@@ -179,9 +221,12 @@ function sumRatio(pairs: readonly (readonly [number, number])[]): SumRatioMetric
 }
 
 /**
- * L-3: builds one arm from its applicable review records. A `record` with
- * `findingsCapped === false` is exact, `=== true` is censored, absent is
- * unknown-cap. `nTotal > 0` never returns `null`, even when `meanExact` is.
+ * L-3/F11: builds one arm from its applicable review records. A `record` with
+ * `findingsCapped === false` AND a valid `findings` number is exact;
+ * `findingsCapped === true` is censored; anything else — including
+ * `findingsCapped === false` with no numeric `findings` (e.g. `"pending"`) —
+ * is unknown-cap: "not capped" is not the same claim as "we know the exact
+ * count". `nTotal > 0` never returns `null`, even when `meanExact` is.
  */
 function buildArm(records: readonly ReviewRecord[]): FirstPassArm | null {
   if (records.length === 0) return null;
@@ -190,9 +235,9 @@ function buildArm(records: readonly ReviewRecord[]): FirstPassArm | null {
   let nCensored = 0;
   let nUnknownCap = 0;
   for (const r of records) {
-    if (r.findingsCapped === false) {
+    if (r.findingsCapped === false && r.findings !== undefined) {
       nExact++;
-      if (r.findings !== undefined) exactValues.push(r.findings);
+      exactValues.push(r.findings);
     } else if (r.findingsCapped === true) {
       nCensored++;
     } else {
@@ -292,7 +337,12 @@ function testsValueOf(c: Change): string | undefined {
   return c.review?.tests ?? c.spec.tests;
 }
 
-/** `reversals ÷ Σassumptions`; n = changes with `assumptions` defined. */
+/**
+ * `reversals ÷ Σassumptions`; n = changes with `assumptions` defined. F4:
+ * divides by `maxAssumptions` (the max declared across every spec line for
+ * that change), not the collapsed spec's own value — a shrinking re-emission
+ * must not inflate the ratio.
+ */
 function reversalRate(
   changes: readonly Change[],
   reversals: readonly ReversalEvent[],
@@ -301,8 +351,8 @@ function reversalRate(
   for (const r of reversals)
     reversalsByChange.set(r.change, (reversalsByChange.get(r.change) ?? 0) + 1);
   const pairs: [number, number][] = changes
-    .filter((c) => c.spec.assumptions !== undefined)
-    .map((c) => [reversalsByChange.get(c.spec.change) ?? 0, c.spec.assumptions as number]);
+    .filter((c) => c.maxAssumptions !== undefined)
+    .map((c) => [reversalsByChange.get(c.spec.change) ?? 0, c.maxAssumptions as number]);
   return sumRatio(pairs);
 }
 
@@ -317,16 +367,31 @@ function gateAdoption(changes: readonly Change[]): SumRatioMetric | null {
   return sumRatio(pairs);
 }
 
-/** Share of T2+ changes with an applicable review whose `tests === "verified"`; n = those declaring `tests`. */
+/**
+ * F2: share of 0.6, T2+ changes with an applicable review whose `tests`
+ * is a real declared value (`"verified"` or otherwise), never `"n/a"` and
+ * never a pre-0.6 change (where `"added"` already satisfied the old,
+ * unrestricted universe). n = those declaring a real `tests` value.
+ */
 function verifiedShare(changes: readonly Change[]): RateMetric | null {
   const declaring = changes
-    .filter((c) => c.spec.tier !== undefined && c.spec.tier >= 2 && isApplicable(c.review))
+    .filter(
+      (c) =>
+        versionAtLeast(c.spec.specFlowVersion, '0.6') &&
+        c.spec.tier !== undefined &&
+        c.spec.tier >= 2 &&
+        isApplicable(c.review),
+    )
     .map(testsValueOf)
-    .filter((t): t is string => t !== undefined);
+    .filter((t): t is string => t !== undefined && t !== 'n/a');
   return rateMetric(declaring.map((t) => t === 'verified'));
 }
 
-/** `Σresolved ÷ Σfound_total`; n = changes with both. */
+/**
+ * `Σresolved ÷ Σfound_total`; n = changes with both. F3: caller passes only
+ * `applicableChanges` — a `level:"n/a"` review must not enter this ratio even
+ * when it happens to carry `resolved`/`found_total`.
+ */
 function resolvedShare(changes: readonly Change[]): SumRatioMetric | null {
   const pairs: [number, number][] = changes
     .filter((c) => c.review?.resolved !== undefined && c.review.foundTotal !== undefined)
@@ -431,7 +496,7 @@ export function reviewLoopStats(
     reversalRate: reversalRate(changes, reversals),
     gateAdoption: gateAdoption(changes),
     verifiedShare: verifiedShare(changes),
-    resolvedShare: resolvedShare(changes),
+    resolvedShare: resolvedShare(applicableChanges),
   };
 }
 
@@ -459,7 +524,7 @@ export interface AggregatedReviewLoop {
   capped: AggregatedRate | null;
   induced: AggregatedRate | null;
   redesigned: AggregatedRate | null;
-  unclosed: { count: number; n: number; repos: number } | null;
+  unclosed: { rate: number; count: number; n: number; repos: number } | null;
   open: { sum: number; median: number; n: number; repos: number } | null;
   firstPassFindings: {
     premortem: AggregatedFirstPassArm | null;
@@ -549,10 +614,15 @@ export function aggregateReviewLoop(perRepo: readonly ReviewLoopStats[]): Aggreg
         }
       : null;
 
+  // F7: `rate` is the median across repos of each repo's OWN count/n share —
+  // never a pooled count/pooled-n, which lets a large repo's denominator
+  // swamp a small repo's signal. `count`/`n` are still summed, but labeled
+  // as totals, never rendered as if they were the rate.
   const unclosedData = perRepo.map((r) => r.unclosed).filter((u): u is UnclosedStats => u !== null);
   const unclosed =
     unclosedData.length > 0
       ? {
+          rate: median(unclosedData.map((u) => u.count / u.n)) as number,
           count: unclosedData.reduce((a, u) => a + u.count, 0),
           n: unclosedData.reduce((a, u) => a + u.n, 0),
           repos: unclosedData.length,

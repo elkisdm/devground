@@ -107,12 +107,22 @@ function isPlainObject(v: unknown): v is Record<string, unknown> {
  * object. Anything else is treated as absent rather than crashing the parse —
  * one malformed line must never take down a whole metrics run.
  *
+ * F5: the string `"n/a"` means the same thing as an object with `level:"n/a"`
+ * — "no review applied" — so both normalize to `{level:'n/a'}` (excluded from
+ * every review-loop metric downstream, including "sin cierre") rather than
+ * the string reading as absent (which used to make it look "unclosed").
+ *
+ * F6: reads the SAME fields `normalizeReviewEvent` reads (`found_total`,
+ * `open`, `tests`), so the inline 0.6 contract is not missing data the
+ * separate `review` event would have captured.
+ *
  * `findings`/`resolved`/etc. use `count`, not a loose numeric parse: a real
  * event from Capitalacademy carries `"findings":"pending"`, which must read as
  * "unknown", not "zero findings".
  * Never emits a key with an explicit `undefined` value.
  */
 function normalizeReview(v: unknown): SpecFlowReview | undefined {
+  if (v === 'n/a') return { level: 'n/a' };
   if (!isPlainObject(v)) return undefined;
   const level = str(v.level);
   if (level === '') return undefined;
@@ -122,6 +132,9 @@ function normalizeReview(v: unknown): SpecFlowReview | undefined {
   const findingsCapped = optBool(v.findings_capped);
   const induced = count(v.induced);
   const redesigned = optBool(v.redesigned);
+  const foundTotal = count(v.found_total);
+  const open = count(v.open);
+  const tests = str(v.tests) || undefined;
   return {
     level,
     ...(findings !== undefined ? { findings } : {}),
@@ -130,6 +143,9 @@ function normalizeReview(v: unknown): SpecFlowReview | undefined {
     ...(findingsCapped !== undefined ? { findingsCapped } : {}),
     ...(induced !== undefined ? { induced } : {}),
     ...(redesigned !== undefined ? { redesigned } : {}),
+    ...(foundTotal !== undefined ? { foundTotal } : {}),
+    ...(open !== undefined ? { open } : {}),
+    ...(tests !== undefined ? { tests } : {}),
   };
 }
 
@@ -288,12 +304,14 @@ export function parseSpecFlowLog(text: string): SpecFlowLog {
   for (const line of text.split('\n')) {
     const trimmed = line.trim();
     if (trimmed === '') continue;
-    let raw: RawEvent;
+    let parsed: unknown;
     try {
-      raw = JSON.parse(trimmed) as RawEvent;
+      parsed = JSON.parse(trimmed);
     } catch {
       continue; // tolerate a half-written or corrupted line
     }
+    if (!isPlainObject(parsed)) continue; // `null`, arrays, and primitives are not a usable event
+    const raw = parsed as RawEvent;
     switch (eventKind(raw)) {
       case 'spec': {
         const event = normalizeSpec(raw);
