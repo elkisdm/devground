@@ -1,6 +1,6 @@
 # ADR-0037: Pre-mortem en la spec y cota al ciclo de revisión
 
-- **Estado**: Propuesto
+- **Estado**: Aceptado
 - **Fecha**: 2026-09-14
 - **Decisor**: edaza
 - **Aplica a**: `@devground/sdd` (skill spec-flow v0.6), `@devground/dev-metrics` (parser y reporte de telemetría)

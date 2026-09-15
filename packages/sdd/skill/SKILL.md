@@ -454,8 +454,11 @@ race, **never rewrite a line**; just add one.
 Two lines, not one, because they are known at different moments and land in different
 commits. The `spec` event is written after Step 3.6 and **committed with the change** —
 that's the direct event↔commit link the metrics tool relies on. The `review` event is
-written at the end of Step 4 and committed with the last fix commit; dev-metrics joins the
-two by `change`. A `spec` event with no `review` event is a review that never closed —
+written at the end of Step 4 and committed with the last fix commit (a commit that only
+adds `review`/`assumption_reversed` lines is a *follow-up* of the change, and dev-metrics
+counts it as neither a spec-flow commit nor a control one); dev-metrics joins the two by
+`change`. On Tier 1 the `spec` event is written right after the brief (there is no gate).
+A `spec` event with no `review` event is a review that never closed —
 that is data too, and it is exactly what the placeholder values (`"findings":"pending"`)
 that a single line forced on 0.5 could not express.
 
