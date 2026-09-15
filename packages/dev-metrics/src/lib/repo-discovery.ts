@@ -1,4 +1,5 @@
-import { existsSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, realpathSync, statSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
 import { defaultRun } from './gh-accounts.js';
@@ -107,6 +108,157 @@ export function isLikelyThirdPartyFork(
   const owner = parseRemoteOwner(url);
   if (owner === null) return false; // unparseable -> keep
   return !ownUsernames.has(owner.toLowerCase());
+}
+
+/**
+ * Absolute path of a repo's git COMMON dir — shared by every worktree of the
+ * same repository (`git worktree` gives each worktree its own `.git` file
+ * pointing at a private gitdir, but `--git-common-dir` resolves back to the
+ * shared one). Runs ONLY after `isGitRepo` (L-7: never shell out on a path
+ * that isn't a repo), discards stderr, and canonicalizes the result with
+ * `realpathSync` — two paths to the same repo through a symlink must resolve
+ * to the same key, or they double-count that repo's history. Returns `null`
+ * when it cannot be determined. F10: used only to pick the main worktree
+ * within an already-identified group — repo IDENTITY is the root commit, see
+ * `rootCommit`.
+ */
+export function gitCommonDir(repoPath: string): string | null {
+  if (!isGitRepo(repoPath)) return null;
+  let out: string;
+  try {
+    out = execFileSync(
+      'git',
+      ['-C', repoPath, 'rev-parse', '--path-format=absolute', '--git-common-dir'],
+      { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'] },
+    ).trim();
+  } catch {
+    return null;
+  }
+  if (out === '') return null;
+  try {
+    return realpathSync(out);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * F10(a): a repo's IDENTITY — its root commit hash — used to group worktrees
+ * and clones of the SAME repository, instead of the git common dir (which
+ * differs between two independent clones of one repository, e.g. two
+ * checkouts of `giovannimarisio/Atlas`). When history has multiple root
+ * commits (an unrelated-history merge), the lexicographically smallest one is
+ * used, so the same repo always yields the same key regardless of branch.
+ * Runs ONLY after `isGitRepo` (L-7), discards stderr. Returns `null` when it
+ * cannot be determined (F10(b): an orphaned worktree — a `.git` file whose
+ * gitdir no longer exists — is the main real-world case) — callers must treat
+ * that as "cannot judge, DISCARD it" (unlike `gitCommonDir`'s "keep it").
+ */
+export function rootCommit(repoPath: string): string | null {
+  if (!isGitRepo(repoPath)) return null;
+  let out: string;
+  try {
+    out = execFileSync('git', ['-C', repoPath, 'rev-list', '--max-parents=0', 'HEAD'], {
+      encoding: 'utf-8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    });
+  } catch {
+    return null;
+  }
+  const hashes = out
+    .split('\n')
+    .map((l) => l.trim())
+    .filter((l) => l !== '')
+    .sort();
+  return hashes.length > 0 ? hashes[0]! : null;
+}
+
+/**
+ * True when `repoPath` IS the main worktree of `commonDir` — i.e. its own
+ * `.git` (canonicalized) resolves to the common dir itself, rather than to a
+ * `.git` file pointing at a linked worktree's private gitdir.
+ */
+function isMainWorktreeOf(repoPath: string, commonDir: string): boolean {
+  try {
+    return realpathSync(join(repoPath, '.git')) === commonDir;
+  } catch {
+    return false;
+  }
+}
+
+/** F10: why a repo path was excluded from the discovered set. */
+export type DiscardReason =
+  | 'same-repo' // a worktree/clone of a repo already kept under another path
+  | 'orphaned-worktree'; // isGitRepo() true (a `.git` file exists) but its gitdir cannot be resolved
+
+export interface DiscardedRepo {
+  path: string;
+  reason: DiscardReason;
+  /** Present when `reason === 'same-repo'`: the path counted instead. */
+  keptAs?: string;
+}
+
+/**
+ * F10: collapses repo paths that are the SAME repository — identified by
+ * ROOT COMMIT (a), not git common dir, so two independent clones of one
+ * repository (e.g. `atlas/core` and `atlasengine`, both `giovannimarisio/Atlas`)
+ * are recognized as one — to a single kept path, and discards a path whose
+ * gitdir cannot be resolved at all (b: an "orphaned worktree" — a `.git` file
+ * left pointing at a gitdir that no longer exists — rather than silently
+ * keeping it, since its history cannot be attributed to any root commit).
+ * Identical paths are deduped (c) before anything else. Within a group of
+ * paths sharing a root commit, the MAIN worktree (L-7, same git common dir as
+ * itself) is preferred; falls back to the first one seen when none of the
+ * group is judged main. `rootCommitOf`, `commonDirOf` and `isMainWorktree` are
+ * injectable for testing without shelling to git.
+ */
+export function dedupeWorktrees(
+  repoPaths: readonly string[],
+  rootCommitOf: (_repoPath: string) => string | null = rootCommit,
+  commonDirOf: (repoPath: string) => string | null = gitCommonDir,
+  isMainWorktree: (repoPath: string, commonDir: string) => boolean = isMainWorktreeOf,
+): { kept: string[]; discarded: DiscardedRepo[] } {
+  const uniquePaths = Array.from(new Set(repoPaths)); // (c) dedupe identical paths first
+
+  const rootOf = new Map<string, string | null>();
+  for (const p of uniquePaths) rootOf.set(p, rootCommitOf(p));
+
+  const groupOrder: string[] = [];
+  const groups = new Map<string, string[]>();
+  for (const p of uniquePaths) {
+    const root = rootOf.get(p) ?? null;
+    if (root === null) continue; // orphaned worktree — never groups with anything
+    const group = groups.get(root);
+    if (group) group.push(p);
+    else {
+      groups.set(root, [p]);
+      groupOrder.push(root);
+    }
+  }
+
+  const chosenFor = new Map<string, string>();
+  for (const root of groupOrder) {
+    const paths = groups.get(root)!;
+    const main = paths.find((p) => {
+      const common = commonDirOf(p);
+      return common !== null && isMainWorktree(p, common);
+    });
+    chosenFor.set(root, main ?? paths[0]!);
+  }
+
+  const kept: string[] = [];
+  const discarded: DiscardedRepo[] = [];
+  for (const p of uniquePaths) {
+    const root = rootOf.get(p) ?? null;
+    if (root === null) {
+      discarded.push({ path: p, reason: 'orphaned-worktree' }); // (b) never silently kept
+      continue;
+    }
+    const chosen = chosenFor.get(root)!;
+    if (p === chosen) kept.push(p);
+    else discarded.push({ path: p, reason: 'same-repo', keptAs: chosen });
+  }
+  return { kept, discarded };
 }
 
 /**

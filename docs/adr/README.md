@@ -51,6 +51,7 @@ siguiente número de la secuencia, rellénalo y añádelo al índice de abajo.
 - [ADR-0034 — Instalar el estándar una vez por máquina, no una vez por proyecto](0034-instalacion-por-maquina.md) (Aceptado)
 - [ADR-0035 — Cubrir Python/FastAPI y TanStack cosechando configuración ya rodada](0035-cobertura-python-y-tanstack.md) (Aceptado)
 - [ADR-0036 — El code review es parte de la Definition of Done en spec-flow](0036-review-como-definition-of-done.md) (Aceptado)
+- [ADR-0037 — Pre-mortem en la spec y cota al ciclo de revisión](0037-premortem-en-la-spec-y-cota-al-ciclo-de-revision.md) (Propuesto)
 
 ## Estándares con enforcement automático
 

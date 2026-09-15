@@ -1,0 +1,14 @@
+# El hook de lint-staged corre `prettier --write` sobre *.{json,md,css}. Estas
+# rutas NO deben pasar por ahí:
+# - packages/sdd/skill/ es un espejo generado de ~/.claude/skills/spec-flow/
+#   (lo escribe packages/sdd/scripts/sync-spec-flow.mjs); Prettier reformateaba
+#   markdown/JSON con significado semántico (listas numeradas, bloques jsonc de
+#   ejemplo) y el espejo nunca podía quedar idéntico a la fuente canónica.
+# - tools/model-orchestrator/skills/ es la misma clase de copia versionada de
+#   una skill canónica (~/.claude/skills/model-orchestrator/).
+# - docs/codemap.md se genera/edita a mano en formato compacto; Prettier lo
+#   infla rellenando columnas de tabla Markdown, y spec-flow lo relee en cada
+#   invocación (tokens pagados de más).
+packages/sdd/skill/
+tools/model-orchestrator/skills/
+docs/codemap.md

@@ -1,8 +1,8 @@
 import { execFileSync } from 'node:child_process';
-import { join } from 'node:path';
 import { parseCommitType } from './conventional.js';
 import { netGrossRatio, round, median } from './stats.js';
 import { isTestFile, isAdrOrSpecFile } from './detectors.js';
+import type { TierFriction } from './spec-flow-events.js';
 
 export { median };
 
@@ -29,6 +29,7 @@ const SEP = '\x1f'; // unit separator, safe inside commit metadata
 const REC = '\x1e'; // record separator, prefixes each commit
 const CODE_TYPES: ReadonlySet<string> = new Set(['feat', 'fix', 'perf', 'refactor']);
 const SPEC_FLOW_DIR = '.spec-flow/';
+const SPEC_FLOW_EVENTS_PATH = '.spec-flow/events.jsonl';
 
 /** Minimum control commits for a repo's comparison to be trustworthy. */
 export const MIN_CONTROL_COMMITS = 8;
@@ -47,7 +48,7 @@ export interface CommitDetail {
   deleted: number;
 }
 
-export type Segment = 'spec-flow' | 'control' | 'other';
+export type Segment = 'spec-flow' | 'control' | 'follow-up' | 'other';
 
 export interface SegmentMetrics {
   commits: number;
@@ -79,13 +80,104 @@ function safeGit(args: readonly string[], maxBuffer: number): string {
   }
 }
 
-/** Hashes of commits that touched `.spec-flow/events.jsonl` — the spec-flow changes. */
-export function specFlowHashes(repoPath: string): Set<string> {
+export interface SpecFlowCommitClassification {
+  /** Commits that add ≥1 `spec` (or discriminator-absent) line — the spec-flow population. */
+  specFlow: Set<string>;
+  /** Commits that add ONLY `review`/`assumption_reversed` lines — a follow-up (L-9): excluded from BOTH segments. */
+  followUp: Set<string>;
+}
+
+/** Parses one JSON object line, or `null` if it isn't a parseable plain object. */
+function tryParseEventLine(line: string): Record<string, unknown> | null {
+  try {
+    const v: unknown = JSON.parse(line);
+    return v !== null && typeof v === 'object' && !Array.isArray(v)
+      ? (v as Record<string, unknown>)
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * F1: is this parsed `.spec-flow/events.jsonl` line a spec (or discriminator-
+ * absent, pre-0.6) line, as opposed to a `review`/`assumption_reversed` line?
+ */
+function isSpecLine(parsed: Record<string, unknown>): boolean {
+  return parsed.event === undefined || parsed.event === 'spec';
+}
+
+/**
+ * L-9/F1: the spec-flow segment must not change population when a change's
+ * follow-up commits (a `review` line committed with the fix, or an
+ * `assumption_reversed` line) land later — nor when a `spec` line is later
+ * REWRITTEN in place (same `change`, edited fields): a rewrite is a follow-up,
+ * not a second spec-flow commit.
+ *
+ * Makes exactly ONE `git log -p` call for the whole repo (never one `git show`
+ * per commit — that was minutes on a large history) and classifies each
+ * commit by the lines it adds vs. removes in the SAME diff:
+ *  - spec-flow: adds ≥1 parseable line that is a spec (or discriminator-
+ *    absent) line whose `change` does NOT also appear on a REMOVED line in
+ *    the same commit (a rewrite removes and re-adds the same `change`).
+ *  - follow-up: not spec-flow, but adds ≥1 parseable line at all (a review, a
+ *    reversal, or a rewritten spec).
+ *  - neither (`other`): adds nothing parseable (a delete-only commit, or git
+ *    failed) — never silently defaulted to spec-flow.
+ */
+export function specFlowHashes(repoPath: string): SpecFlowCommitClassification {
+  const specFlow = new Set<string>();
+  const followUp = new Set<string>();
   const out = safeGit(
-    ['-C', repoPath, 'log', '--no-merges', '--format=%H', '--', '.spec-flow/events.jsonl'],
-    16 * 1024 * 1024,
+    [
+      '-C',
+      repoPath,
+      'log',
+      '--no-merges',
+      '-p',
+      '--no-color',
+      '--no-ext-diff',
+      '--no-textconv',
+      `--format=${REC}%H`,
+      '--',
+      SPEC_FLOW_EVENTS_PATH,
+    ],
+    64 * 1024 * 1024,
   );
-  return new Set(out.split('\n').map((l) => l.trim()).filter((l) => l !== ''));
+
+  for (const record of out.split(REC)) {
+    if (record.trim() === '') continue;
+    const nlIdx = record.indexOf('\n');
+    const hash = (nlIdx === -1 ? record : record.slice(0, nlIdx)).trim();
+    if (hash === '') continue;
+    const body = nlIdx === -1 ? '' : record.slice(nlIdx + 1);
+
+    const addedLines: Record<string, unknown>[] = [];
+    const removedChanges = new Set<string>();
+    for (const line of body.split('\n')) {
+      if (line.startsWith('+++') || line.startsWith('---')) continue;
+      if (line.startsWith('+')) {
+        const parsed = tryParseEventLine(line.slice(1).trim());
+        if (parsed !== null) addedLines.push(parsed);
+      } else if (line.startsWith('-')) {
+        const parsed = tryParseEventLine(line.slice(1).trim());
+        if (parsed !== null && typeof parsed.change === 'string') {
+          removedChanges.add(parsed.change);
+        }
+      }
+    }
+
+    const isSpecFlow = addedLines.some((p) => {
+      if (!isSpecLine(p)) return false;
+      const change = typeof p.change === 'string' ? p.change : undefined;
+      return change === undefined || !removedChanges.has(change);
+    });
+
+    if (isSpecFlow) specFlow.add(hash);
+    else if (addedLines.length > 0) followUp.add(hash);
+    // else: nothing parseable was added (delete-only, or git failed) -> `other`.
+  }
+  return { specFlow, followUp };
 }
 
 /** Collects per-commit detail (files + churn) for the given authors. */
@@ -106,8 +198,13 @@ export function collectCommitDetails(
   ];
   for (const email of authorEmails) args.push(`--author=${email}`);
   if (since) args.push(`--since=${since}`);
-  if (until) args.push(`--until=${until}`);
+  if (until) args.push(untilGitArg(until));
   return parseCommitDetails(safeGit(args, 256 * 1024 * 1024));
+}
+
+/** L-8: one clock for `--until` — the full day is included (`T23:59:59`), matching the event filter `date ≤ until`. */
+export function untilGitArg(until: string): string {
+  return `--until=${until}T23:59:59`;
 }
 
 /** Parses `git log --numstat` output (REC-prefixed) into commit details. Pure. */
@@ -172,35 +269,50 @@ export function isCodeCommit(subject: string): boolean {
 export function selectControl(
   commits: readonly CommitDetail[],
   sfHashes: ReadonlySet<string>,
+  followUpHashes: ReadonlySet<string>,
   rollout: string,
   target: number = CONTROL_TARGET,
 ): CommitDetail[] {
   return commits
-    .filter((c) => classifyCommit(c, sfHashes, rollout) === 'control' && c.day !== '')
+    .filter(
+      (c) => classifyCommit(c, sfHashes, followUpHashes, rollout) === 'control' && c.day !== '',
+    )
     .sort((a, b) => (a.day < b.day ? 1 : a.day > b.day ? -1 : 0)) // most recent first
     .slice(0, target);
 }
 
 /** Calendar span (days) covered by a set of commits, minimum 1. */
 export function spanDays(commits: readonly CommitDetail[]): number {
-  const days = commits.map((c) => c.day).filter((d) => d !== '').sort();
+  const days = commits
+    .map((c) => c.day)
+    .filter((d) => d !== '')
+    .sort();
   if (days.length === 0) return 1;
   return Math.max(daysBetween(days[0]!, days[days.length - 1]!) + 1, 1);
 }
 
-/** Classifies a commit into a segment given the spec-flow hashes and rollout date. */
+/**
+ * Classifies a commit into a segment given the spec-flow hashes, the
+ * follow-up hashes (L-9: a commit that only adds `review`/`assumption_reversed`
+ * lines — excluded from both spec-flow and control), and the rollout date.
+ */
 export function classifyCommit(
   commit: CommitDetail,
   sfHashes: ReadonlySet<string>,
+  followUpHashes: ReadonlySet<string>,
   rollout: string,
 ): Segment {
+  if (followUpHashes.has(commit.hash)) return 'follow-up';
   if (sfHashes.has(commit.hash)) return 'spec-flow';
   if (commit.day < rollout && isCodeCommit(commit.subject)) return 'control';
   return 'other';
 }
 
 /** Computes segment metrics over a window of `windowDays` calendar days. */
-export function segmentMetrics(commits: readonly CommitDetail[], windowDays: number): SegmentMetrics {
+export function segmentMetrics(
+  commits: readonly CommitDetail[],
+  windowDays: number,
+): SegmentMetrics {
   const n = commits.length;
   if (n === 0) {
     return {
@@ -246,8 +358,8 @@ export interface RepoImpact {
   control: SegmentMetrics;
   /** True when the control window has enough commits to trust the comparison. */
   comparable: boolean;
-  /** Mean questionsAsked per tier (the friction gauge). */
-  frictionByTier: Record<number, number>;
+  /** Mean questionsAsked (+ n) per tier (the friction gauge). */
+  frictionByTier: Record<number, TierFriction>;
 }
 
 /**
@@ -258,13 +370,14 @@ export function computeRepoImpact(args: {
   repo: string;
   commits: readonly CommitDetail[];
   sfHashes: ReadonlySet<string>;
+  followUpHashes: ReadonlySet<string>;
   rolloutDate: string | null;
-  frictionByTier: Record<number, number>;
+  frictionByTier: Record<number, TierFriction>;
 }): RepoImpact {
-  const { repo, commits, sfHashes, rolloutDate, frictionByTier } = args;
+  const { repo, commits, sfHashes, followUpHashes, rolloutDate, frictionByTier } = args;
 
   const sf = commits.filter((c) => sfHashes.has(c.hash));
-  const control = rolloutDate ? selectControl(commits, sfHashes, rolloutDate) : [];
+  const control = rolloutDate ? selectControl(commits, sfHashes, followUpHashes, rolloutDate) : [];
 
   return {
     repo,

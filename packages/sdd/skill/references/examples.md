@@ -118,6 +118,38 @@ justified.
 5. **Then** produce: exploration findings → brief + spec → design (with rollback plan) →
    task breakdown → implement → verify → offer to record an ADR.
 
+The brief itself gains two sections a Tier 1 brief doesn't need — filled *before* coding,
+one *after*:
+
+> ### Pre-mortem                     (REQUIRED from Tier 2 up — see references/premortem-and-review-loop.md)
+> - **Caminos**: escritura dual durante la ventana de migración (Mongo y Postgres a la vez) —
+>   cubierto; lecturas legacy que aún pegan a Mongo mientras dura la ventana — cubierto;
+>   backfill por lotes de la colección histórica — cubierto; rollback a solo-Mongo si el
+>   backfill falla a medio camino — cubierto; API/consumidores que leen `user._id` como
+>   ObjectId — out: se resuelve con un shim de ids, no con esta migración.
+> - **Fallas**: Postgres caído a mitad de un lote → el lote reintenta completo, no a medias
+>   (falla cerrado); un documento con shape inesperado (campo que Mongo permitía y el schema
+>   de Postgres no) → se encola a cuarentena, no tumba el lote; timeout de lote en escritura
+>   dual → el lote se marca pendiente y el cron de reconciliación lo re-corre.
+> - **Invariantes**: ningún usuario se pierde entre el conteo de Mongo y el de Postgres al
+>   cerrar la ventana → test de conteo pre/post; los ids son estables entre ambos stores (el
+>   mismo `_id` de Mongo es el mismo id en Postgres) → test de mapeo; una escritura dual
+>   nunca deja los dos stores en estados distintos para el mismo usuario → test de
+>   consistencia tras fallo simulado en uno de los dos lados.
+> - **Simetrías**: lo que aplica a *crear* un usuario durante la ventana dual aplica igual a
+>   *editar* y *borrar* — las tres operaciones escriben a ambos stores, no solo crear.
+> - **Reutilización**: el cliente/pool de Postgres que ya usa el resto del proyecto se
+>   reutiliza para la escritura dual; no se crea un cliente nuevo solo para la migración.
+>
+> ### Review                         (REQUIRED from Tier 1 up — a ledger, filled AFTER implementing)
+> - Level: max
+> - Pass 1 (full diff): 6 found (capped? no) → 5 fixed · deferred: 1 (índice compuesto de
+>   reconciliación, se hace en un cambio aparte) · refutado: 0
+> - Pass 2 (T3: full branch, ran because pass 1 left a fix diff): 1 found · induced: 0
+>   (the defect is already in the pre-fix version of `batch.ts`) → fixed in place
+> - No pass 3 (no redesign). Review event: findings 6, found_total 7, resolved 6, open 1
+>   (the deferred index), tests "verified".
+
 The contrast with Example A is the whole philosophy: the typo got zero questions and
 zero artifacts; the irreversible data migration got one precise question and the full
 treatment. Ceremony tracks risk, not habit.
@@ -131,3 +163,7 @@ If you're unsure whether to ask something, run it against the three bars
 it and state the assumption.** When in doubt, lean toward motion. The user can always
 correct an assumption in one sentence; they can't get back the time spent answering a
 form.
+
+If the change touches a piece of data with more than one entry point, or depends on an
+external service, the pre-mortem is almost never all `n/a`. Five `n/a` rows on a Tier 2
+change is a sign the table got filled to check a box, not to think.

@@ -18,7 +18,7 @@ description: >
 license: MIT
 metadata:
   author: edaza
-  version: "0.5"
+  version: "0.6"
 ---
 
 ## What this is
@@ -211,10 +211,19 @@ the plan; a spec without them is a wish.
 - <if the project measures coverage: note impact — never drops; money/leads/auth routes meet the fixed threshold (ADR-0012)>
 - <if no tests apply (docs/chore/style, no executable logic): say so with the reason, one line>
 
-### Review                         (REQUIRED from Tier 1 up)
+### Pre-mortem                     (REQUIRED from Tier 2 up — see references/premortem-and-review-loop.md)
+- **Caminos**: <every entry the data/behavior flows through — alta, reingreso, backfill, histórico, sync, API/MCP/UI, undo — each "covered" or "out: <reason>">
+- **Fallas**: <per external dependency: down / slow-timeout / malformed / partial / retry semantics; per operation: fails open or closed>
+- **Invariantes**: <3-5 statements that must always hold → the test that breaks each one>
+- **Simetrías**: <if the rule applies to read/budget/create, does it apply to write/status/edit/delete?>
+- **Reutilización**: <the existing helper that already does this, or "none exists">
+- <`n/a — <reason>` is a valid answer per row; omitting a row is not. ~15 lines max.>
+
+### Review                         (REQUIRED from Tier 1 up — a ledger, filled AFTER implementing)
 - Level: <medium (T1) | high (T2) | max or deepcheck (T3)> — see Step 4
-- <filled in AFTER implementing: findings surfaced, and what happened to each>
-- <a finding is closed by fixing it, or by one line saying why it isn't real / isn't now>
+- Pass 1 (full diff): <n> found (capped? yes/no) → fixed: <n> · deferred: <one line per item, with its reason> · refuted: <one line per item, with its reason>
+- Pass 2 (only if pass 1 left a fix diff; T1–T2: fix diff + callers · T3: full branch): <n> found · induced: <n> → closed | back to spec: redesign of <piece>
+- <Pass 3 only after a redesign; it is the last one. `open` = what is still unresolved at close, each with its reason — recorded as debt, not chased.>
 
 ### Out of scope
 - <what we are deliberately not doing now>
@@ -287,6 +296,29 @@ Reglas para llenarlo (lo infieres del brief que ya escribiste, sin preguntar):
 No dispares el orquestador tú: solo dejas el `tasks.json` listo. El usuario decide
 orquestar. Si no se pide orquestación, omite este paso.
 
+## Step 3.6 — Design gate: review the spec before the first Edit (Tier 2–3)
+
+The post-implementation review asks eleven questions of the diff — which paths call
+this, what invariant did the deleted line enforce, what happens when the dependency is
+down. Measured across 73 reviewed sessions, **most findings answer questions the spec
+never asked**, and fixing them inside the review loop is what makes the loop run to 14–18
+passes. So ask them **here**, while a gap costs one line instead of a pass.
+
+- **Tier 2**: walk the checklist in `references/premortem-and-review-loop.md` against your
+  own brief. Every gap you find becomes a Given/When/Then scenario or an invariant with
+  its test — added to the brief *before* you touch code.
+- **Tier 3**: propose delegating the gate to `planner-deep` (Tier 3's read-only planner,
+  Opus): give it the brief, the code map, the files in the surface and the checklist, and
+  ask it to **open its plan with a "Gaps in the spec" section** — one line per checklist
+  item that the brief does not answer. That section is what you count; the rest of its
+  plan is a bonus, not the deliverable. Delegation stays opt-in (ADR-0030) — if the user
+  declines, do the Tier 2 walk.
+
+Record the result as `spec_review: {gaps_found, gaps_adopted}` in the spec event. A gap
+you saw and chose not to adopt needs its one-line reason in the brief, same rule as a
+review finding. Zero gaps found on a Tier 3 change is a signal the gate was skimmed, not a
+signal the spec was perfect.
+
 ## Step 4 — Implement and verify
 
 Hand the work to the project's normal development flow. Honor whatever standards the
@@ -310,6 +342,14 @@ proportionality principle from Step 2 applied to the finish line, not just the s
   compiles and runs" — it's "it runs, and a test proves it."
 - **Tier 2+**: each Given/When/Then scenario in the spec maps 1:1 to a test case. If a
   scenario has no corresponding test, the spec isn't actually verified yet.
+- **Tier 2+, verified both ways**: a test that protects an invariant or a guard counts only
+  once you have watched it **fail with the fix reverted** (or the guard deleted) and pass
+  with it restored. One-step manual mutation, a minute of work — and the thing that ended
+  the two longest review chains on record, where suites of 800+ tests stayed green through
+  five rounds of the same bug because the fakes never exercised the guard.
+- **Fakes carry a contract**: a fake that ignores its arguments (an `eq()` that returns the
+  same rows whatever it is asked) does not test a filter or a security guard. If the real
+  dependency selects, the fake must select.
 - **Where the project measures coverage**: it never drops. On projects using
   devground's vitest standard, `test:coverage` stays green — critical paths (money,
   leads, auth — ADR-0012) meet the fixed threshold, and the global floor only moves up
@@ -336,13 +376,41 @@ Same proportionality as everything else:
 | 2 | `/code-review high` |
 | 3 | `/code-review max`, or `deepcheck` when the change crosses modules |
 
-This does not compete with `/code-review` or deepcheck — it **schedules** them. The rule
-is: **run the review for the tier, then close every finding.** A finding closes by being
-fixed, or by one line saying why it isn't real or isn't now. A change with open findings
-and no reason recorded is not done.
+This does not compete with `/code-review` or deepcheck — it **schedules** them, and it
+bounds them. The review is a **gate with a ledger, not a loop**: measured over 171 runs,
+44% of sessions re-ran it two or more times, and from the third pass on most findings were
+*caused by the previous pass's fixes*. The protocol below is what stops that.
 
-Run it **after the tests are green**, not instead of them: a reviewer reading broken code
-spends its attention on what the tests would have caught for free.
+1. **Pass 1** at the tier's level, on the full diff, **after the tests are green** (a
+   reviewer reading broken code spends its attention on what the tests would have caught
+   for free). Before touching code, read the whole list and **group it by root cause**;
+   fix by class, never finding by finding. The reviewer caps its output (15, or 10 via
+   ReportFindings): a list that hits the cap means *at least* that many — note it as
+   `findings_capped` and expect more behind it.
+2. **Close every finding**: fixed (with its test verified both ways), deferred with a
+   reason, or refuted with a reason — **one reason per item**, never one reason for a
+   group. Write the **ledger** into the `### Review` section. Commit the fixes separately
+   from the change. A pass that died (watchdog, rate limit) produced no verdict: re-run
+   it, and don't count it as a pass.
+3. **Pass 2 is the gate — and it runs only if pass 1 left a fix diff.** A clean pass 1, or
+   one whose findings were all deferred/refuted, ends the loop at `passes: 1`. Scope:
+   Tier 1–2 review the fix diff plus its callers; Tier 3 reviews the full branch. Hand the
+   reviewer the ledger: `/code-review` runs as a fork that inherits this conversation, so
+   stating the ledger here before launching is enough; a reviewer that does **not** inherit
+   context (deepcheck, a fresh session) gets the ledger pasted into its prompt. Tell it not
+   to re-flag what the ledger deferred or refuted unless the recorded reason is wrong.
+4. **Stop rule.** A pass-2 finding is **induced** when the defect did not exist before the
+   pass-1 fixes — check by reading the pre-fix version of those lines (`git show
+   <pre-fix>:<file>`), not by whether the line sits inside a fix hunk: a bug the cap hid in
+   a function the fix also touched is *pre-existing*, and gets fixed in place. Induced
+   findings are not fixed in place: go back to the brief, write the invariant that was
+   missing, redesign that piece, then run **pass 3 — the last one**. No induced findings →
+   close what remains and stop at `passes: 2`. Whatever is still unresolved after the last
+   pass is recorded as `open` in the review event, each item with its reason — visible
+   debt, not chased.
+5. **Zero findings is not the target.** The reviewer keeps every non-refuted candidate
+   (recall mode), so it has a floor. The target is a low first pass and a second pass
+   that is the last.
 
 If a finding reveals that an inferred assumption was wrong, that's an
 `assumption_reversed` event (below) — not just a fix. Reviews are the main way those
@@ -378,45 +446,76 @@ wrong inference — not just one.
 
 **Tier 0 emits nothing.** A trivial typo is too small to carry signal, and forcing an event
 would break Tier 0's "no artifacts" promise (its whole point is zero ceremony). Telemetry
-runs **from Tier 1 up.** Each qualifying run appends ONE line to
-`<repo-root>/.spec-flow/events.jsonl`. It's append-only JSONL — no read-modify-write, no
-race; just add a line.
+runs **from Tier 1 up.** A qualifying run appends **two lines** to
+`<repo-root>/.spec-flow/events.jsonl`: a `spec` event when the brief is settled, and a
+`review` event when the loop closes. It's append-only JSONL — no read-modify-write, no
+race, **never rewrite a line**; just add one.
 
-Emit it once the classification and the files are settled (after the brief). The line is
-**versioned and gets committed alongside the change** — deliberate: it gives the metrics
-tool a *direct* event↔commit link (the same commit touches `events.jsonl` and the code),
-instead of guessing by timestamp.
+Two lines, not one, because they are known at different moments and land in different
+commits. The `spec` event is written after Step 3.6 and **committed with the change** —
+that's the direct event↔commit link the metrics tool relies on. The `review` event is
+written at the end of Step 4 and committed with the last fix commit; dev-metrics joins the
+two by `change`. A `spec` event with no `review` event is a review that never closed —
+that is data too, and it is exactly what the placeholder values (`"findings":"pending"`)
+that a single line forced on 0.5 could not express.
 
-### The spec event (one per run, Tier 1+)
+### The spec event (one per run, Tier 1+, after the design gate)
 
 ```jsonc
 {"event":"spec","ts":"<ISO-8601 with tz>","date":"<YYYY-MM-DD>","change":"<kebab-name>",
  "tier":1,"type":"feat|fix|refactor|perf|docs|test|chore|spike","size":"trivial|small|medium|large",
  "risk":"low|med|high","uncertainty":"known|unknown","files":["path",...],
  "assumptions":2,"questions_asked":0,"brief":"inline|docs/specs/<name>.md","codemap_used":true,
- "tests":"added|updated|n/a|deferred",
- "review":{"level":"medium|high|max|deepcheck","findings":3,"resolved":3}|"n/a",
- "spec_flow_version":"0.5"}
+ "premortem":{"na":1}|false|"n/a",
+ "spec_review":{"gaps_found":3,"gaps_adopted":2}|"n/a",
+ "spec_flow_version":"0.6"}
 ```
 
-`review` records the closing gate of Step 4: which level ran, how many findings it
-surfaced, and how many were closed. `"n/a"` only for Tier 0 or a change with no
-executable logic. It is the third gauge, and the one that answers a question the other
-two can't: **are the changes getting cleaner?** `findings` per change should trend down
-as the flow improves — if it doesn't, spec-flow is producing briefs that look complete
-and aren't. `findings > resolved` at close is debt, and it's meant to be visible.
+`premortem` from Tier 2 up is `{"na": <rows answered n/a, 0–5>}` when the section was
+written and `false` when it was skipped; `"n/a"` on Tier 1. The `na` count is what makes
+a pre-mortem filled to comply (`{"na":5}` on a change with several data paths) visible in
+the data instead of indistinguishable from a real one. `spec_review` is Step 3.6's result;
+`"n/a"` on Tier 1. (Pick one value per field when you write the line — `a|b` is notation
+here, not JSON; a line that doesn't parse is silently dropped.)
+
+### The review event (one per run, Tier 1+, when the loop closes)
+
+```jsonc
+{"event":"review","ts":"<ISO-8601 with tz>","date":"<YYYY-MM-DD>","change":"<same kebab-name>",
+ "level":"medium|high|max|deepcheck","passes":2,
+ "findings":10,"findings_capped":true,"found_total":13,
+ "induced":0,"resolved":11,"open":2,"redesigned":false,
+ "tests":"verified|added|updated|n/a|deferred",
+ "spec_flow_version":"0.6"}
+```
+
+**`findings` is the first pass only** — the one number comparable across changes;
+`findings_capped` says pass 1 hit the reviewer's cap (so `findings` is a floor, not a
+count). `found_total` is every finding across all passes; `resolved` those fixed;
+**`open` is the debt** — deferred or still unresolved at close, each with its reason in
+the ledger. `passes` is how many completed (dead passes don't count); `induced` counts
+pass ≥2 findings the earlier fixes caused; `redesigned` says the stop rule fired.
+`level:"n/a"` and the bare string `"n/a"` both mean no review applied (Tier 0, or a change
+with no executable logic) — write one of them rather than zeros.
+
+Together these answer what ADR-0036 asked and could not yet read: **are the changes
+getting cleaner** — first-pass findings of 0.6 changes with a pre-mortem, against the 0.5
+baseline (whose `findings` counted all passes and never knew about the cap, so the
+comparison is labelled, not silent) — and **is the loop bounded** — median passes ≤ 2.
+Capped values are floors and are reported apart, never averaged with exact counts.
+
+`tests` records DoD compliance, not a count. `"verified"` = added/updated *and* watched
+fail with the fix reverted — **the only value that means the DoD was met from Tier 2
+up**; there, `"added"`/`"updated"` mean tests exist but were never watched to fail. On
+Tier 1 `"added"`/`"updated"` are compliant. `"deferred"` means new logic shipped without
+a test — an honest counter-weight, meant to be read alongside the other gauges rather
+than hidden; `"n/a"` means docs/chore/no executable logic.
 
 Read `questions_asked` and `assumptions` **together** — never `questions_asked` alone.
 Zero questions on a change that made ten high-risk assumptions is not a triumph; it's
 exposure waiting to be confirmed (or refuted) by the reversal events below. `assumptions`
 counts the inferred-and-stated lines in the brief. `codemap_used` records whether Step 0
 read an existing map.
-
-`tests` records DoD compliance, not a count — git already counts the test files
-touched. `"added"`/`"updated"` mean the DoD in Step 4 was met; `"deferred"` means new
-logic shipped without a test — an honest counter-weight, meant to be read alongside the
-other gauges rather than hidden; `"n/a"` means docs/chore/no executable logic. The
-field is optional and backward-compatible — older events without it still parse.
 
 ### The reversal event (the quality counter-signal)
 
@@ -429,7 +528,7 @@ user corrects it, or rework proves it — append a second line tied to the same 
 {"event":"assumption_reversed","ts":"<ISO-8601 with tz>","date":"<YYYY-MM-DD>",
  "change":"<same kebab-name as the spec event>","task_id":2,
  "assumption":"<the inferred thing that was wrong>",
- "cost":"trivial|rework|redesign","spec_flow_version":"0.5"}
+ "cost":"trivial|rework|redesign","spec_flow_version":"0.6"}
 ```
 
 This is what makes "asked 0 questions, built the wrong thing" register as the failure it is,
@@ -449,7 +548,9 @@ no orchestration or the reversal isn't tied to a single task.
 ### Backward compatibility & setup
 
 Older events have no `event` field; readers (dev-metrics) treat a missing `event` as
-`"spec"`. If `.spec-flow/` doesn't exist, create it — `events.jsonl` is fine to version
+`"spec"`, and 0.5 lines that carried `review` and `tests` inline on the spec event still
+parse — they are the baseline the 0.6 numbers are compared against. If `.spec-flow/`
+doesn't exist, create it — `events.jsonl` is fine to version
 (benign labels: name, tier, paths — NOT transcript content). Do NOT gitignore it; its value
 is in being committed with the change.
 
@@ -490,10 +591,20 @@ is a perfectly good spec for small work.
   brief's structure serve both at once.
 - ❌ Declaring done on a Tier 1+ change with new logic and no test — "it compiles and
   runs" is not done.
+- ❌ Fixing review findings one at a time and re-running the review to "see what's left"
+  — the cap hides the rest, and each in-place fix is the next pass's finding. Group by
+  root cause, close the list, then one gate pass.
+- ❌ A pre-mortem of five `n/a` on a change that touches a data path with more than one
+  entry or an external dependency — that's the section filled to comply, and the design
+  gate should catch it.
+- ❌ Calling a test "verified" that nobody has watched fail.
 
 ## Worked example (internal reference)
 
 See `references/examples.md` for three end-to-end walk-throughs (a typo → Tier 0, a
 small feature → Tier 1, a risky migration → Tier 3) showing the classification, the
 routing decision, and the brief produced — including how each one avoids asking the
-user anything it could infer.
+user anything it could infer. `references/premortem-and-review-loop.md` carries the
+pre-mortem checklist (each row mapped to the reviewer angle it anticipates), the ledger
+protocol, and a real case where the review found exactly what the pre-mortem would have
+listed.

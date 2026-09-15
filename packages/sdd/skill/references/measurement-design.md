@@ -5,6 +5,11 @@
 > `assumption_reversed` como contrapeso al Goodhart de `questions_asked`. Ver §4, §5, §8.
 > Revisión 2026-07-24 (spec-flow v0.4): se añade la señal `tests` al evento spec (DoD de
 > tests por tier).
+> Revisión 2026-09-14 (spec-flow v0.6): pre-mortem en la spec, design gate y cota al ciclo de
+> revisión (ADR-0037). El evento `spec` gana `premortem` y `spec_review`; el cierre del
+> review se emite como un SEGUNDO evento `review` (`passes, findings, findings_capped,
+> found_total, induced, resolved, open, redesigned, tests`) que se une por `change`;
+> `findings` pasa a significar hallazgos de la PRIMERA pasada. Ver §4, §5.
 > Cuando spec-flow se empaquete como `@devground/sdd`, este doc se promueve a un ADR
 > formal en devground.
 
@@ -59,9 +64,44 @@ spec-flow. spec-flow **emite un evento** por corrida:
   "assumptions": 2,             // # de supuestos inferidos y declarados en el brief
   "questions_asked": 0,         // fricción — SIEMPRE leído contra assumptions y reversiones
   "brief": "inline",            // inline | docs/specs/<change>.md
-  "tests": "added|updated|n/a|deferred"  // cumplimiento del DoD de tests; 'deferred' = lógica sin test (contrapeso honesto)
+  "premortem": "n/a",           // Tier 2+: {"na": <filas respondidas n/a>} o false si se omitió; "n/a" en Tier 1
+  "spec_review": "n/a"          // Tier 2+: {"gaps_found": 3, "gaps_adopted": 2}; "n/a" en Tier 1
 }
 ```
+
+(En 0.4–0.5 este mismo evento llevaba `tests` y, desde 0.5, `review` inline; siguen
+parseando y son la línea base contra la que se comparan los eventos 0.6.)
+
+**Evento de cierre del review (v0.6).** Se escribe cuando el bucle cierra, en el commit de
+los arreglos, y se une al evento `spec` por `change`. Un `spec` sin `review` es una revisión
+que nunca cerró — dato, no error:
+
+```jsonc
+{
+  "event": "review",
+  "ts": "2026-09-14T18:40:00-03:00", "date": "2026-09-14",
+  "change": "agregar-login-email",
+  "level": "high",               // medium|high|max|deepcheck; "n/a" = no aplicó review
+  "passes": 2,                   // pasadas COMPLETAS (una muerta por watchdog/429 no cuenta)
+  "findings": 10,                // SOLO la pasada 1: el número comparable entre cambios
+  "findings_capped": true,       // la pasada 1 llegó al tope del revisor → findings es un piso
+  "found_total": 13,             // hallazgos de todas las pasadas
+  "induced": 0,                  // hallazgos de pasada ≥2 que NO existían antes de los arreglos
+  "resolved": 11,                // arreglados
+  "open": 2,                     // deuda: diferidos o sin resolver al cierre, cada uno con motivo en el ledger
+  "redesigned": false,           // la regla de parada disparó (hubo pasada 3)
+  "tests": "verified"            // verified|added|updated|n/a|deferred — 'verified' es el único que cumple el DoD en Tier 2+
+}
+```
+
+`findings_capped` marca cuando la pasada 1 llegó al tope del revisor nativo (15, o 10 vía
+ReportFindings): en ese caso `findings` es "al menos N", no el conteo real. Los valores
+censurados **se reportan aparte** y nunca entran en una media junto a conteos exactos.
+`induced` cuenta hallazgos de una pasada ≥2 cuyo defecto no existía antes de los arreglos
+de la pasada anterior (se decide leyendo la versión pre-arreglo, no por la ubicación en el
+diff) — la señal de que una corrección generó un problema nuevo en vez de cerrarlo. La
+deuda es `open`, explícita; `findings > resolved` dejó de significar algo cuando `findings`
+pasó a ser solo la pasada 1.
 
 **Evento de reversión (el contrapeso de calidad).** `questions_asked` mide fricción, pero
 por sí solo premia no-preguntar → Goodhart: inferir a lo loco puntúa perfecto. El segundo
@@ -117,6 +157,16 @@ dev-metrics, que sí son PII y quedan locales).
 | **Velocidad** | cambios o commits por unidad de tiempo | plana o ↑ | anti-fricción |
 | **Fricción** | `questions_asked` por cambio, leído junto a `assumptions` | bajo *para el riesgo* (no →0 ciego) | Prime Directive |
 | **Calidad de inferencia** | `assumption_reversed` ÷ `assumptions` totales (tasa de reversión) | ↓ pocas reversiones | contrapeso al Goodhart de fricción |
+| **Pasadas de review** | mediana de `passes` (evento `review`), con su n | ↓ hacia ≤2 | la cota + el ledger |
+| **Hallazgos de 1ª pasada** | media de `findings` NO censurados, en tres brazos con su n cada uno: 0.6 con pre-mortem (`premortem.na ≤ 3`), 0.6 con pre-mortem de cumplimiento (`na ≥ 4`) o sin él, y **línea base 0.5** (inline `review.findings`, que contaba todas las pasadas y no conocía el tope — se etiqueta, no se esconde); proporción de censurados por brazo | ↓ en el brazo con pre-mortem respecto de la línea base | el pre-mortem — es la medición que puede refutar v0.6 |
+| **Hallazgos inducidos** | proporción de eventos `review` que reportan `induced` con `induced > 0`; `redesigned` aparte | ↓ | la regla de parada + tests verificados en ambos sentidos |
+| **Reviews sin cierre** | eventos `spec` 0.6 Tier 1+ sin evento `review` | ↓ | la cota: un bucle que se abandona deja rastro |
+| **Deuda visible** | suma y mediana de `open` | baja y estable | el ledger con motivo por ítem |
+
+Regla de agregación para todas las filas nuevas: **cada métrica usa como denominador solo los
+eventos que reportan su campo**, se calcula **por repo** y se combina entre repos con la
+misma mediana-de-repos del resto del reporte (nunca un pool crudo, que deja que un repo con
+worktrees cuente la misma historia varias veces). Cada número sale con su n.
 
 La fila *orientación* es la joya para el codemap (señal limpia, pocos confounds). La fila
 *calidad de inferencia* es la joya para el Prime Directive: es la única que castiga el

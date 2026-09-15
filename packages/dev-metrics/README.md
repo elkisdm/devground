@@ -39,13 +39,15 @@ por CLI y dejar que las identidades vengan del config o de la auto-detección.
 
 ### `dev-metrics.config.json` (versionable)
 
+<!-- Este bloque se copia a mano: Prettier le agregaría una coma final que JSON.parse rechaza. -->
+<!-- prettier-ignore -->
 ```jsonc
 {
-  "repos": ["/ruta/repoA", "/ruta/repoB"],        // 1..N (nunca un número fijo)
+  "repos": ["/ruta/repoA", "/ruta/repoB"], // 1..N (nunca un número fijo)
   "identities": ["123+tuusuario@users.noreply.github.com", "tu@correo.com"], // CONFIRMADAS
-  "candidateIdentities": ["colega@empresa.cl"],     // ambiguas: revísalas y promuévelas a mano
-  "baseDir": "/Users/tu/Documents",                 // carpeta a escanear por `init`
-  "excludes": ["vendor", "legacy"],                 // fragmentos de ruta a excluir
+  "candidateIdentities": ["colega@empresa.cl"], // ambiguas: revísalas y promuévelas a mano
+  "baseDir": "/Users/tu/Documents", // carpeta a escanear por `init`
+  "excludes": ["vendor", "legacy"], // fragmentos de ruta a excluir
   "events": [{ "date": "2026-05-14", "label": "adopté eslint" }] // opcional
 }
 ```
@@ -84,20 +86,20 @@ Qué hace:
   - `candidateIdentities` (ambiguas): emails que no mapean a ninguna cuenta (ej. un
     colega, o automatización que pasó el filtro). NO se usan para filtrar git;
     el usuario las revisa y mueve las suyas a `identities`.
-  Se filtran bots/agentes (`[bot]`, Anthropic, Cursor, `codex`, `cursoragent`,
-  `github-actions`, `@local`) vía `isBotEmail`. El log avisa: "N identidades
-  confirmadas, M candidatas".
+    Se filtran bots/agentes (`[bot]`, Anthropic, Cursor, `codex`, `cursoragent`,
+    `github-actions`, `@local`) vía `isBotEmail`. El log avisa: "N identidades
+    confirmadas, M candidatas".
 
 El config resultante es **editable a mano** (override manual de repos/identidades).
 
-| Opción | Default | Descripción |
-| --- | --- | --- |
-| `--config <path>` | `./dev-metrics.config.json` | Dónde escribir el config. |
-| `--base-dir <dir>` | `~/Documents` | Carpeta a escanear. |
-| `--max-depth <n>` | `2` | Profundidad máxima de escaneo. |
-| `--excludes <fragments>` | — | Fragmentos de ruta a excluir (coma). |
-| `--include-forks` | (excluye forks) | Conservar forks de terceros. |
-| `--force` | (no sobrescribe) | Sobrescribir un config existente. |
+| Opción                   | Default                     | Descripción                          |
+| ------------------------ | --------------------------- | ------------------------------------ |
+| `--config <path>`        | `./dev-metrics.config.json` | Dónde escribir el config.            |
+| `--base-dir <dir>`       | `~/Documents`               | Carpeta a escanear.                  |
+| `--max-depth <n>`        | `2`                         | Profundidad máxima de escaneo.       |
+| `--excludes <fragments>` | —                           | Fragmentos de ruta a excluir (coma). |
+| `--include-forks`        | (excluye forks)             | Conservar forks de terceros.         |
+| `--force`                | (no sobrescribe)            | Sobrescribir un config existente.    |
 
 ### `collect`
 
@@ -113,17 +115,17 @@ dev-metrics collect \
   --label "2026-05 baseline"
 ```
 
-| Opción | Default | Descripción |
-| --- | --- | --- |
-| `--repos <paths>` | config / auto | Repos a recorrer (coma). Override del config/auto-detección. |
-| `--emails <emails>` | config / auto | Emails de autor para filtrar git. Override del config/auto-detección. |
-| `--config <path>` | `./dev-metrics.config.json` | Config a leer si no pasas flags. |
-| `--since <date>` | — | Solo commits/transcripts ≥ fecha (YYYY-MM-DD). |
-| `--until <date>` | — | Solo commits/transcripts ≤ fecha. |
-| `--label <text>` | — | Etiqueta libre del snapshot. |
-| `--out-dir <dir>` | `./snapshots` | Carpeta de salida. |
-| `--events-file <path>` | `./snapshots/events.json` | Log de eventos. |
-| `--no-seed-events` | (siembra activa) | No auto-sembrar `events.json` con marcadores detectados. |
+| Opción                 | Default                     | Descripción                                                           |
+| ---------------------- | --------------------------- | --------------------------------------------------------------------- |
+| `--repos <paths>`      | config / auto               | Repos a recorrer (coma). Override del config/auto-detección.          |
+| `--emails <emails>`    | config / auto               | Emails de autor para filtrar git. Override del config/auto-detección. |
+| `--config <path>`      | `./dev-metrics.config.json` | Config a leer si no pasas flags.                                      |
+| `--since <date>`       | —                           | Solo commits/transcripts ≥ fecha (YYYY-MM-DD).                        |
+| `--until <date>`       | —                           | Solo commits/transcripts ≤ fecha.                                     |
+| `--label <text>`       | —                           | Etiqueta libre del snapshot.                                          |
+| `--out-dir <dir>`      | `./snapshots`               | Carpeta de salida.                                                    |
+| `--events-file <path>` | `./snapshots/events.json`   | Log de eventos.                                                       |
+| `--no-seed-events`     | (siembra activa)            | No auto-sembrar `events.json` con marcadores detectados.              |
 
 Si no pasas `--repos`/`--emails` y no hay config, `collect` **auto-detecta**
 (escanea `~/Documents` por repos e infiere identidades del `git log`). El log
@@ -178,10 +180,80 @@ dev-metrics spec-flow-impact                 # usa repos/identidades del config
 dev-metrics spec-flow-impact --repos ~/a,~/b --emails me@x.com
 ```
 
+**Señales de spec-flow 0.6 (ADR-0037)**: spec-flow escribe DOS eventos por cambio a
+`.spec-flow/events.jsonl` (`event:"spec"` y `event:"review"`), porque se conocen en
+momentos distintos y viajan en commits distintos — la telemetría de 0.5 forzaba
+placeholders como `"findings":"pending"` cuando el review todavía no cerraba. Un
+tercer tipo, `event:"assumption_reversed"`, es la reversión de un supuesto y NUNCA
+cuenta como un cambio Tier 0-3. El evento `spec` lleva `premortem`/`spec_review`
+(Step 3/3.6); el evento `review` lleva el cierre del bucle: `passes`, `findings`,
+`findings_capped`, `found_total`, `induced`, `resolved`, `open`, `redesigned`,
+`tests`.
+
+La lectura de esta telemetría vive en `lib/spec-flow-review-loop.ts` como un
+modelo de datos con once invariantes (L-1..L-11, cada una con su test en
+`spec-flow-review-loop.test.ts`), no como una lista suelta de métricas:
+
+- **L-1** la unidad es el **cambio**: los `spec` se colapsan por `change`
+  (el último por `ts` gana; sin `change` se descarta), y su review es el
+  `review` más reciente con `ts ≥` el del spec, o el `review` inline del
+  propio spec (L-6), o ninguno (cambio **abierto**).
+- **L-2** un campo ausente es **desconocido**, nunca `0` ni `false`; un
+  review "no aplicó" (`level` ausente o `"n/a"`) excluye el cambio de TODAS
+  las métricas, incluida "sin cierre".
+- **L-3** los hallazgos de 1ª pasada son exactos, censurados
+  (`findings_capped:true`) o desconocidos (flag ausente); la media usa solo
+  los exactos, y cada brazo reporta los tres conteos y su `cappedShare` aparte
+  — un brazo con datos nunca es `null` aunque su media lo sea.
+- **L-4** "sin cierre" cubre cambios Tier ≥ 1 que son 0.6 o traen review
+  inline, sin review aplicable o con `findings` no numérico (`"pending"`); el
+  agregado entre repos es la **mediana** del ratio `count/n` de cada repo
+  (nunca `count`/`n` agrupados de golpe), con `count`/`n` totales aparte, solo
+  para contexto.
+- **L-5** los hallazgos de 1ª pasada se comparan en brazos exhaustivos y
+  excluyentes sobre cambios 0.6 Tier ≥ 2: `con pre-mortem` (`na ≤ 3`),
+  `pre-mortem de cumplimiento` (`na ≥ 4` o `premortem:false`), `sin declarar`
+  (ausente/`"n/a"`/`true` legado) y `línea base 0.5` (el `review` inline
+  anterior a 0.6, que no conocía el tope de hallazgos).
+- **L-6** el contrato intermedio — un spec 0.6 con `review` inline, como el
+  que ya circula en producción — se lee igual que un evento `review` propio.
+- **L-7** la IDENTIDAD de un repo es su **root commit** (`git rev-list
+--max-parents=0 HEAD`), no el `git-common-dir` — dos clones independientes
+  del mismo repositorio (dos `.git` distintos, misma historia) se reconocen
+  como uno solo. `git-common-dir` (canonicalizado con `realpath`) se usa
+  DESPUÉS, solo para elegir el **worktree principal** dentro de un grupo ya
+  identificado por root commit; sin ganador claro, gana el primero visto. Un
+  path cuyo gitdir no se puede resolver (worktree huérfano) se **descarta**,
+  nunca se conserva — no hay root commit al que atribuirle su historia.
+- **L-8** `--until` se valida como `YYYY-MM-DD` real y usa un solo reloj:
+  eventos por `date ≤ until`, git con `--until=<until>T23:59:59`.
+- **L-9** una sola llamada a `git log -p` clasifica cada commit por las
+  líneas que AGREGA en el mismo diff: agrega ≥1 línea spec (o sin
+  discriminador) cuyo `change` no aparece también en una línea borrada del
+  mismo commit → spec-flow; si no, pero agrega algo parseable (un `review`,
+  una reversión, o un `spec` REESCRITO — mismo `change` borrado y re-agregado)
+  → **seguimiento** (ni spec-flow ni control); si no agrega nada parseable
+  (borra solo, o git falla) → ninguno de los dos, nunca spec-flow por
+  defecto.
+- **L-10** también se leen `assumptions` (tasa de reversión de supuestos,
+  dividida por el MÁXIMO `assumptions` declarado entre todas las líneas spec
+  del cambio, no solo la última si el spec se re-emitió con un número menor),
+  `spec_review` (adopción del gate), `tests` (verificados en Tier 2+, solo
+  cambios 0.6 con review aplicable y un valor real de `tests`, nunca `"n/a"`
+  ni la baseline 0.5) y `resolved`/`found_total` (resueltos sobre
+  encontrados, solo sobre cambios con review aplicable).
+- **L-11** cada número del reporte lleva su `n`; `repos` en el encabezado
+  cuenta solo los repos con al menos un dato; el render es puro (no escribe
+  en stdout).
+
+Por repo se calcula su propio `ReviewLoopStats`; entre repos se combina con la
+MISMA regla que el resto del reporte (mediana de valores por-repo, nunca un pool
+crudo de eventos — un repo con más cambios no debe dominar el promedio).
+
 ### `orientation`
 
 Mide el **costo de orientación**: output tokens gastados antes del primer `Edit`/`Write`
-por sesión (lo que cuesta orientarse antes de tocar código), más un *share* robusto al
+por sesión (lo que cuesta orientarse antes de tocar código), más un _share_ robusto al
 tamaño de tarea, y una comparación del payoff del codemap restringida a repos que
 realmente tienen `docs/codemap.md` (ver ADR-0015).
 
