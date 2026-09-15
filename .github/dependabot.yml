@@ -44,6 +44,11 @@ updates:
       time: '09:00'
       timezone: America/Santiago
     open-pull-requests-limit: 3
+    ignore:
+      # changesets/action v2 requiere @changesets/cli v3; se sube junto con la
+      # migración de la CLI, no por bump automático (ver release.yml).
+      - dependency-name: changesets/action
+        update-types: ['version-update:semver-major']
     commit-message:
       prefix: ci
       include: scope

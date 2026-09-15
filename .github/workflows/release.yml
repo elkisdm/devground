@@ -37,18 +37,20 @@ jobs:
         run: pnpm build
 
       - name: Create Release Pull Request or Publish
-        # v2 no publica un tag flotante `v2`: hay que fijar la versión exacta.
-        # Rupturas respecto de v1, todas aplicadas aquí: los inputs se renombraron
-        # (publish → publish-script, commit → commit-message, title → pr-title),
-        # el token va por el input `github-token` (la variable de entorno ya no
-        # se lee) y los commits/tags se empujan vía API de GitHub, con lo que
-        # los hooks de husky no intervienen en el commit del bot.
-        uses: changesets/action@v2.1.2
+        # Se queda en v1 a propósito: changesets/action v2 exige @changesets/cli v3
+        # (probado en main el 2026-09-15: "Changesets CLI v2 is not supported"), y
+        # migrar la CLI es una decisión aparte — v3 deja de versionar paquetes
+        # privados por defecto (deepcheck), cambia `prettier` por `format` en el
+        # config y sale con código 1 sin changesets. dependabot.yml ignora ese
+        # major hasta que se haga esa migración. Cuando se haga: v2 renombra los
+        # inputs (publish-script, commit-message, pr-title), exige github-token
+        # como input y no publica tag flotante `v2` (fijar la versión exacta).
+        uses: changesets/action@v1
         with:
-          publish-script: pnpm publish-packages
+          publish: pnpm publish-packages
           # Mensaje convencional: el repo consume su propio commitlint (PR #84).
-          commit-message: 'chore(release): version packages'
-          pr-title: 'chore(release): version packages'
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          commit: 'chore(release): version packages'
+          title: 'chore(release): version packages'
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
