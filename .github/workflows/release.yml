@@ -39,6 +39,12 @@ jobs:
         uses: changesets/action@v1
         with:
           publish: pnpm publish-packages
+          # El repo consume su propio commitlint (PR #84); el mensaje por defecto
+          # del bot ("Version Packages") no es convencional y el hook commit-msg
+          # lo rechaza en CI. Se le da un mensaje que pase el gate en vez de
+          # apagar los hooks.
+          commit: 'chore(release): version packages'
+          title: 'chore(release): version packages'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
