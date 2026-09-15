@@ -1,6 +1,6 @@
 # ADR-0028: La capa de orquestación es opt-in y queda desactivada por defecto
 
-- **Estado**: Propuesto
+- **Estado**: Aceptado
 - **Fecha**: 2026-07-22
 - **Decisor**: edaza
 - **Aplica a**: `@devground/sdd` (capa `orchestration/`), flujo de trabajo con agentes en Claude Code
@@ -16,14 +16,14 @@ días de operación continua se midió el sistema completo: 678 transcripts de s
 4.730 de subagentes en `~/.claude/projects`, comparando sesiones con modelo orquestador
 (Opus/Fable) antes y después de la activación de los hooks (corte 2026-07-14).
 
-| Señal | Antes (n=434) | Después (n=213) |
-|---|---|---|
-| Sesiones que delegan | 53% | 92% |
-| Invocaciones de `ejecutor` | 375 | 1.054 |
-| Costo en subagentes | 18% | 46% |
-| **Costo por turno de usuario** | **$8,23** | **$9,04** |
-| **Invocaciones de `spec-flow`** | **173** | **7** |
-| Denials del gate | 8 | 314 (en 62% de las sesiones) |
+| Señal                           | Antes (n=434) | Después (n=213)              |
+| ------------------------------- | ------------- | ---------------------------- |
+| Sesiones que delegan            | 53%           | 92%                          |
+| Invocaciones de `ejecutor`      | 375           | 1.054                        |
+| Costo en subagentes             | 18%           | 46%                          |
+| **Costo por turno de usuario**  | **$8,23**     | **$9,04**                    |
+| **Invocaciones de `spec-flow`** | **173**       | **7**                        |
+| Denials del gate                | 8             | 314 (en 62% de las sesiones) |
 
 Lecturas:
 
@@ -60,6 +60,7 @@ instalable. Se corrige su **encuadre**, de componente incluido a extra deliberad
 ## Consecuencias
 
 **Positivas**
+
 - Quien instala `@devground/sdd` obtiene spec-flow sin heredar un control cuyo beneficio
   no está demostrado.
 - Los defectos abiertos quedan documentados donde se toma la decisión de activar, no
@@ -67,6 +68,7 @@ instalable. Se corrige su **encuadre**, de componente incluido a extra deliberad
 - `spec-flow` recupera el camino de ejecución que el hook de contexto le estaba quitando.
 
 **Negativas / Trade-offs**
+
 - Vuelve el riesgo que ADR-0027 §Contexto quería mitigar: sin el gate activo, nada obliga
   mecánicamente a delegar, y la disciplina vuelve a depender de la instrucción en
   `CLAUDE.md`. Se acepta a conciencia: una regla que cuesta 10% más por turno y mata la

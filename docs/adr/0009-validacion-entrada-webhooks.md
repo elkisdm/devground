@@ -1,6 +1,7 @@
 # ADR-0009: Validación de entrada en toda ruta API + firma en webhooks
 
-- **Estado**: Propuesto
+- **Estado**: Aceptado
+  - Norma para proyectos consumidores; enforcement por auditoría (ADR-0013), sin regla automática.
 - **Fecha**: 2026-06-02
 - **Decisor**: edaza
 - **Aplica a**: cualquier proyecto del repo con rutas API (Next.js Route Handlers, serverless functions) y receptores de webhooks
@@ -81,6 +82,7 @@ export function verifySignature(rawBody: string, signature: string, secret: stri
 ```
 
 Reglas:
+
 - Usar **`timingSafeEqual`**, nunca `===` (la comparación naïve filtra el secreto por timing de bytes).
 - Verificar sobre el **cuerpo crudo** (raw body), no sobre el JSON re-serializado (el orden de claves cambiaría el HMAC).
 - **Ningún método sin firma**: si un `GET` de verificación existe, también valida firma (o un token equivalente). No hay "métodos de confianza".
@@ -88,12 +90,14 @@ Reglas:
 ## Consecuencias
 
 **Positivas**
+
 - Frontera única y obligatoria entre entrada no confiable y lógica de negocio.
 - Tipos derivados del schema (`z.infer`) → un solo lugar define forma + validación + tipo.
 - Respuestas de error consistentes (`422` con `issues`) en todo el proyecto.
 - Webhooks resistentes a spoofing y a ataques de timing; cierre del agujero del `GET` sin firma.
 
 **Negativas / Trade-offs**
+
 - Cada ruta paga el costo de definir un schema (es deliberado: ese costo es la documentación de la entrada).
 - Zod añade peso al bundle (aceptable; es el estándar de facto y tree-shakeable).
 - El wrapper asume body JSON; rutas con `multipart`/streams necesitan una variante (`withValidationForm`, etc.) — documentar cuando aparezca.

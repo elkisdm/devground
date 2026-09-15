@@ -1,6 +1,6 @@
 # ADR-0023: Convenciones de UI como contexto antes de generar
 
-- **Estado**: Propuesto
+- **Estado**: Aceptado
 - **Fecha**: 2026-07-11
 - **Decisor**: edaza
 - **Aplica a**: `packages/ui-conventions/`
@@ -36,11 +36,13 @@ vez menos que corregir.
 ## Consecuencias
 
 **Positivas**
+
 - Menos ciclos de corrección post-generación para patrones de UI mecánicos y conocidos.
 - La base universal es reutilizable en cualquier proyecto sin acoplarse a un stack
   específico; el overlay captura lo específico de cada repo sin contaminar la base.
 
 **Negativas / Trade-offs**
+
 - El overlay requiere minado explícito por proyecto (no es automático); si no se genera,
   la skill opera solo con la capa base, más genérica.
 - Mantener base.md y overlay-template.md sincronizados en estructura (mismo orden de

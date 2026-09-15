@@ -1,6 +1,6 @@
 # ADR-0011: Prohibido `any` en fronteras externas (DB/API)
 
-- **Estado**: Propuesto
+- **Estado**: Aceptado
 - **Fecha**: 2026-06-02
 - **Decisor**: edaza
 - **Aplica a**: `@devground/eslint-config` y todos los proyectos que tocan DB/API externas (Supabase, ORMs, clientes HTTP)
@@ -55,6 +55,7 @@ const client = thirdParty as any;
 ```
 
 Reglas del escape:
+
 - Siempre `eslint-disable-next-line` (puntual), nunca desactivar la regla a nivel de archivo o config.
 - Siempre con comentario `-- <razón>` explicando por qué es inevitable.
 - En la frontera DB/API **no** se acepta el escape: ahí siempre hay tipos generados.
@@ -62,12 +63,14 @@ Reglas del escape:
 ## Consecuencias
 
 **Positivas**
+
 - El compilador recupera la garantía de shape en la frontera más crítica.
 - Tipos generados se mantienen sincronizados con el esquema real (re-generar es un comando).
 - Bugs de columna/tipo se atrapan en compile-time, no en producción.
 - El escape justificado deja rastro auditable (grep de `eslint-disable.*no-explicit-any`).
 
 **Negativas / Trade-offs**
+
 - Hay que ejecutar (e idealmente automatizar en CI) la generación de tipos cuando cambia el esquema. Mitigación: script `gen:types` + recordatorio en CI.
 - El archivo de tipos generado es grande y se versiona; genera diffs al cambiar el esquema (es información, no ruido).
 - `no-explicit-any` puede chocar con código legacy migrado → resolver con escapes justificados durante la migración, no relajando la regla.

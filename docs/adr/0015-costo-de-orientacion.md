@@ -1,13 +1,13 @@
 # ADR-0015: Costo de orientación (tokens antes del primer edit) y payoff del codemap
 
-- **Estado**: Propuesto
+- **Estado**: Aceptado
 - **Fecha**: 2026-06-17
 - **Decisor**: edaza
 - **Aplica a**: `@devground/dev-metrics`, comando `orientation`
 
 ## Contexto
 
-El `codemap.md` se justifica con una promesa: reducir el **costo de orientación** — los tokens que un agente gasta entendiendo *dónde vive cada cosa* antes de tocar código. Hasta ahora esa promesa era fe, no dato. El `contextCost` existente (tokens en los primeros N mensajes) es un proxy crudo que no distingue "orientándose" de "ya trabajando".
+El `codemap.md` se justifica con una promesa: reducir el **costo de orientación** — los tokens que un agente gasta entendiendo _dónde vive cada cosa_ antes de tocar código. Hasta ahora esa promesa era fe, no dato. El `contextCost` existente (tokens en los primeros N mensajes) es un proxy crudo que no distingue "orientándose" de "ya trabajando".
 
 ## Decisión
 
@@ -24,7 +24,7 @@ Para probar el payoff del codemap, se segmentan las sesiones de código por si *
 
 **Negativas / límites (declarados, no ocultos)**
 
-1. **Auto-selección por tamaño de tarea**: el agente tiende a leer el codemap en tareas grandes/estructurales, que cuestan más orientación *de por sí*. En la primera corrida los lectores de codemap mostraron MÁS costo (79k vs 19k) — esto es el confound, **no** evidencia de que el codemap perjudique. La comparación es CORRELACIONAL; no se lee causalidad.
+1. **Auto-selección por tamaño de tarea**: el agente tiende a leer el codemap en tareas grandes/estructurales, que cuestan más orientación _de por sí_. En la primera corrida los lectores de codemap mostraron MÁS costo (79k vs 19k) — esto es el confound, **no** evidencia de que el codemap perjudique. La comparación es CORRELACIONAL; no se lee causalidad.
 2. **n escaso**: solo 11/448 sesiones (2.5%) leyeron un codemap. El hallazgo accionable real es que **el hábito de consultar el codemap casi no existe** — el payoff no es medible mientras nadie lo lea.
 3. **Denominador all-time**: el scan incluye sesiones anteriores a que el codemap existiera (sembrado ~2026-06-03). Un denominador justo es "sesiones de código en repos con codemap, posteriores a su siembra" — requiere atribución repo+fecha (v2).
 

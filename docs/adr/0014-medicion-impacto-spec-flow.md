@@ -1,6 +1,6 @@
 # ADR-0014: Medición de impacto de spec-flow (segmentación con reglas anti-trampa)
 
-- **Estado**: Propuesto
+- **Estado**: Aceptado
 - **Fecha**: 2026-06-17
 - **Decisor**: edaza
 - **Aplica a**: `@devground/dev-metrics`, comando `spec-flow-impact`
@@ -21,17 +21,21 @@ El `before/after` ingenuo también miente: el dev ya venía mejorando solo (supe
 El comando `spec-flow-impact` segmenta los commits de cada repo en **spec-flow** (el commit que toca `.spec-flow/events.jsonl`), **control** (pre-rollout, tipo código, del autor) y **other**, y compara solo spec-flow vs control con TRES reglas obligatorias:
 
 ### (a) Detectores ESTRICTOS, nunca substring
+
 `lib/detectors.ts` exige evidencia estructural: extensión real de test (`*.test.ts`, `*.spec.ts`), directorio dedicado (`__tests__/`, `tests/`), o convención de lenguaje (`test_*.py`, `*_test.go`). Un archivo llamado `test.ts` fuera de un directorio de test **no** cuenta. Hay un test de regresión explícito para ese caso.
 
 ### (b) Baseline-relative por repo
+
 Cada métrica compara un repo contra su PROPIO control. El agregado cross-repo es la **mediana de los deltas por-repo**, nunca un pooling de conteos crudos (un repo test-heavy aplastaría a uno test-poor). Repos sin control suficiente se **listan, no se descartan en silencio**.
 
 ### (c) Densidad neutralizada por diseño, no por ventana
-Se comparan **tasas por-commit**, nunca totales absolutos — una tasa ya está normalizada por commit, así que la densidad no la distorsiona. El control son los **K commits de código más RECIENTES pre-rollout** (K=30): la recencia controla la tendencia de aprendizaje (un commit reciente refleja la habilidad de hoy) sin que una ventana calendario de igual largo *starve* la muestra. La métrica fix-follow-up **no se implementa**.
+
+Se comparan **tasas por-commit**, nunca totales absolutos — una tasa ya está normalizada por commit, así que la densidad no la distorsiona. El control son los **K commits de código más RECIENTES pre-rollout** (K=30): la recencia controla la tendencia de aprendizaje (un commit reciente refleja la habilidad de hoy) sin que una ventana calendario de igual largo _starve_ la muestra. La métrica fix-follow-up **no se implementa**.
 
 Comparabilidad exige DOS pisos: `n_spec-flow ≥ 5` y `n_control ≥ 8`.
 
 ### Métricas reportadas
+
 ADR/spec-coupling, test-coupling, files/commit, churn/commit, supervivencia (net/gross), y fricción (`questions_asked` por tier).
 
 ## Consecuencias
@@ -43,7 +47,7 @@ ADR/spec-coupling, test-coupling, files/commit, churn/commit, supervivencia (net
 
 **Negativas / límites**
 
-- Los repos *greenfield* nacidos post-rollout no tienen control (sin "antes") y quedan no-comparables — honesto, pero reduce la muestra.
+- Los repos _greenfield_ nacidos post-rollout no tienen control (sin "antes") y quedan no-comparables — honesto, pero reduce la muestra.
 - La recencia mitiga, no elimina, el confound de aprendizaje. No es un experimento aleatorizado; es la mejor segmentación observacional disponible.
 - K=30 y los pisos de n son heurísticos; ajustables si la evidencia lo pide.
 

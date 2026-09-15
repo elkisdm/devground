@@ -1,6 +1,6 @@
 # ADR-0024: Integración del ecosistema ui-conventions
 
-- **Estado**: Propuesto
+- **Estado**: Aceptado
 - **Fecha**: 2026-07-11
 - **Decisor**: edaza
 - **Aplica a**: `tools/model-orchestrator/`, `packages/{deepcheck,eslint-config,chile-formats,cli,agents-md,ui-conventions}/`
@@ -58,6 +58,7 @@ no cargan skills de Claude Code.
 ## Consecuencias
 
 **Positivas**
+
 - Las convenciones de UI llegan al código también en sesiones orquestadas, no solo en uso
   interactivo directo de la skill.
 - El costo de aplicar reglas mecánicas (a11y, primitivas propias, capa de iconos) se mueve
@@ -65,6 +66,7 @@ no cargan skills de Claude Code.
 - Los helpers es-CL dejan de reimplementarse por proyecto.
 
 **Negativas / Trade-offs**
+
 - La métrica "hallazgos UI recurrentes por cambio" queda **diferida**: el rastro parseable
   (`aud-ui-conventions` en los ledgers `audits/<flujo>/` de deepcheck) ya existe, pero el
   reader de `dev-metrics` que la agregue no se construye en este ADR — no hay datos aún

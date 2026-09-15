@@ -1,6 +1,6 @@
 # ADR-0026: Declarar el núcleo soportado y entrar en fase de consolidación
 
-- **Estado**: Propuesto
+- **Estado**: Reemplazado por ADR-0033
 - **Fecha**: 2026-07-13
 - **Decisor**: edaza
 - **Aplica a**: todo el monorepo (alcance de paquetes, versionado, criterio de entrada de trabajo nuevo)
@@ -66,6 +66,7 @@ ejecutado más de una persona; salir de ella (reabrir expansión) se decide en u
 ## Consecuencias
 
 **Positivas**
+
 - El equipo que adopta puede depender del núcleo sin sorpresas: `1.0` + semver estricto
   convierte "no debería romperse" en un contrato verificable en cada release.
 - Los experimentales dejan de acumularse: cada uno tiene fecha y veredicto, y el costo de
@@ -74,6 +75,7 @@ ejecutado más de una persona; salir de ella (reabrir expansión) se decide en u
   deriva.
 
 **Negativas / Trade-offs**
+
 - La velocidad de capacidades nuevas cae deliberadamente. Es el punto — pero si aparece una
   necesidad real del equipo, compite como graduación o espera a la salida de la fase.
 - `1.0` compromete APIs que pueden resultar mal diseñadas. Mitigación: con changesets un

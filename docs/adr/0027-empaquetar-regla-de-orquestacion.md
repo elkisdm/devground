@@ -1,6 +1,6 @@
 # ADR-0027: Empaquetar la regla de orquestación en `@devground/sdd`
 
-- **Estado**: Propuesto
+- **Estado**: Aceptado
 - **Fecha**: 2026-07-13
 - **Decisor**: edaza
 - **Aplica a**: `@devground/sdd`, flujo de trabajo con agentes en Claude Code (regla dura de orquestación)
@@ -57,14 +57,16 @@ existente de `@devground/sdd` (`devground-sdd`, `skill/`).
 ## Consecuencias
 
 **Positivas**
+
 - Elimina el bus factor 1 de la regla dura de orquestación — ejecuta el compromiso de
   [ADR-0026](0026-fase-de-consolidacion-nucleo-soportado.md) §4.
 - Instalación reproducible en cualquier máquina/miembro del equipo: `npx -p
-  @devground/sdd devground-orchestration`.
+@devground/sdd devground-orchestration`.
 - El modelo de tiers completo (0-3) queda documentado en un solo lugar versionado, no
   solo en la memoria del mantenedor.
 
 **Negativas / Trade-offs**
+
 - Doble fuente: los archivos vivos en `~/.claude` y el mirror en el repo pueden divergir
   entre sincronizaciones. Mitigación: `sync-orchestration.mjs` hace la sincronización un
   acto explícito y barato (mismo patrón ya validado por `sync-spec-flow.mjs`).
