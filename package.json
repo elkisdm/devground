@@ -15,18 +15,18 @@
     "prepare": "husky"
   },
   "devDependencies": {
-    "@changesets/cli": "^2.31.0",
+    "@changesets/cli": "^2.31.1",
     "@commitlint/cli": "^19.6.1",
     "@devground/commitlint-config": "workspace:*",
     "@devground/eslint-config": "workspace:*",
     "@devground/husky-config": "workspace:*",
     "@devground/lint-staged-config": "workspace:*",
     "@devground/prettier-config": "workspace:*",
-    "@typescript-eslint/parser": "^8.63.0",
-    "eslint": "^10.7.0",
+    "@typescript-eslint/parser": "^8.70.0",
+    "eslint": "^10.10.0",
     "husky": "^9.1.7",
     "lint-staged": "^15.2.11",
-    "prettier": "^3.4.2"
+    "prettier": "^3.9.6"
   },
   "prettier": "@devground/prettier-config"
 }
