@@ -103,7 +103,7 @@ interruptores que se encienden aparte y la falta de una forma de verificar qué 
   única salida es una excepción escrita en el `.md` del build, con vencimiento de 7 días como
   máximo, aprobada por el dueño, con la **causa externa demostrada** (anotación del run o estado
   de facturación) y evidencia de la suite corrida en local (comando, commit y resultado).
-  **Punto a confirmar por el usuario.**
+  Confirmado por el usuario el 24-sep-2026.
 - **Todo desplegable necesita un endpoint de versión** que exponga el commit que corre. Sin él,
   `<b>-desplegado` queda en `sin_dato` y el build no puede pasar a `desplegado`. Hoy ninguno de
   los dos pilotos lo cumple del todo: la API de Atlas responde `version="dev"` en `/health`, la web
