@@ -1,8 +1,8 @@
-# Pre-mortem and the review loop (spec-flow 0.6, ADR-0037)
+# Pre-mortem, closing check and opt-in review (spec-flow 0.7, ADR-0037 → ADR-0039)
 
-Two mechanisms, one purpose: reach in one or two review passes the state that used to
-take many. The pre-mortem moves the reviewer's questions to spec time; the loop protocol
-turns the review from an open loop into a bounded gate.
+One purpose: get the change right from the spec, so no review loop is needed to find what
+the spec forgot. The pre-mortem moves the reviewer's questions to spec time; the closing
+check proves the code against the spec; the review is opt-in and bounded to one pass.
 
 ## Why this exists (the measurement)
 
@@ -20,7 +20,22 @@ Across 73 sessions that ran `/code-review` (171 invocations):
 - The reviewer caps its output (15; 10 via ReportFindings). Telemetry showed a block of
   changes reporting exactly 10: not convergence — censoring. Fix ten, re-run, see the next ten.
 
-## The five rows
+Then 0.6 (pre-mortem + a bounded loop) ran on 88 reviewed changes from 2026-09-15:
+
+- 50 of 88 hit the 3-pass limit; 55 had **induced** findings (caused by the review's own
+  fixes); 65 closed with open debt — 293 items in total. Pass 1 still averaged 7.7
+  findings, even though the design gate had found 361 gaps at spec time.
+- From 2026-09-01, review and verifier subagents were ~43% of all token spend.
+- The findings that kept appearing fell into four families the five rows did not ask:
+  **who reads what changed** (an email that now renders an "ad" link, a cadence graph
+  that does not know a new state, a report that keeps showing a provider no longer
+  polled); **the shape real data already has** (`''` vs `null` in production rows);
+  **config variants** (two env vars selecting the same path); and **claims** (docs or PR
+  text promising more than the code does, contracts left stale). Those are rows 6–9.
+
+So 0.7 stops paying for the loop and puts the effort where the defects are born.
+
+## The nine rows
 
 Each row is the spec-time form of a question the reviewer will ask the diff later. Answer
 it before code exists, when a gap costs one line.
@@ -32,9 +47,15 @@ it before code exists, when a gap costs one line.
 | **Invariantes** (invariants) | The 3–5 sentences that must always be true. Each one names the test that breaks when it is violated. | B removed-behavior · altitude | `previous_state` captured outside the lock → undo re-activates what someone else paused; two clocks compared (app `now()` vs DB `clock_timestamp()`); "one audit row per attempt" broken on one of three rejection paths |
 | **Simetrías** (symmetries) | If the rule applies to read / budget / create, does it apply the same way to write / status / edit / delete? Twin operations drift apart when only one is in the request. | C · gap sweep | reads hardened to fail-closed while writes stayed fail-open (found three separate times) |
 | **Reutilización** (reuse) | Which existing helper already does this? Name it, or say none exists. | reuse · simplification | a hand-rolled JWKS cache re-implementing `PyJWKClient`; an existing backfill script duplicated instead of extended |
+| **Consumidores** (consumers) | For every field, state, enum value or flag you add or change: grep its readers. For each `file:line`, does its behavior change? Unchanged, or a scenario. | C cross-file tracer · B removed-behavior | populating `ad_id` made the assignment email render an Ad Library link for GHL leads; a new `buzon` outcome silently broke a cadence graph matched on exact conditions; `saldos()` kept showing the last balance of a provider no longer polled |
+| **Datos reales** (real data) | What shape does the data **already** have where it lives — empty strings vs `null`, non-strings, historical rows, rows another writer produced? Sample it read-only when you can; otherwise write the assumption as a risk. | D language pitfalls · gap sweep | production GHL leads carrying `utm_content: ''` reached the CRM mixed with `null`; a non-string UTM raised a `ValidationError` swallowed as `no_contact` |
+| **Variantes** (variants) | Which env vars, flags, providers or modes select this same path? Each one covered or out. | C · gap sweep | a gate keyed on `TELEFONIA_PROVEEDOR` while the own-telephony bridge reached Telnyx through a separate `TELEFONIA=telnyx` |
+| **Afirmaciones** (claims) | Which docs, contracts, README, UI copy or PR text describe this behavior? Update them, and claim no more than the code does. | conventions · altitude | "the CRM receives them on every delivery" + "757 back-filled" when the drain sends each lead once; the Atlas→CRM contract still listing two keys after six were added |
 
-Format in the brief: five bullets, ~15 lines total. `n/a — <reason>` is a valid answer per
-row; omitting a row is not. A change that touches a multi-entry data path or an external
+Format in the brief: one bullet per row, ~20 lines total. **Tier 1** answers only
+Consumidores and Fallas (3–4 lines, with a real grep); Tier 2+ answers all nine.
+`n/a — <reason>` is a valid answer per row; omitting a row is not. Telemetry's
+`premortem.na` counts only the first five rows, so it stays comparable with 0.6. A change that touches a multi-entry data path or an external
 service almost never gets five `n/a` honestly — that pattern is what the design gate
 (Step 3.6) is there to catch.
 
@@ -56,49 +77,63 @@ item below the brief does not answer) — that section is the deliverable you co
 6. Are any of the brief's assumptions the *nice shape* of external data (a string that is
    always a string, a page that always fits, an error message that always contains the
    word "timeout")? Those were the most common `assumption_reversed` on record.
+7. Was **Consumidores** produced by a grep for every changed field/state/flag — and does
+   each reader whose behavior changes have a scenario?
+8. Does **Datos reales** describe the data as it is today (sampled, or stated as a risk),
+   not as the new code will write it?
+9. Is every **Variante** that reaches this path listed?
+10. Is every **Afirmación** — doc, contract, copy — on the files-to-touch list?
 
 Every gap adopted becomes a Given/When/Then scenario or an invariant with its test.
 Record `spec_review: {gaps_found, gaps_adopted}`; a gap seen and not adopted carries its
 one-line reason in the brief.
 
-## The review loop protocol (Step 4)
+## Closing check (Step 4, Tier 1+)
+
+Runs in the main loop, no subagents, after the tests are green. It is the gate that
+replaced the default review.
 
 ```
 tests green
-  → pass 1 (tier level, full diff)
-  → read the WHOLE list · group by root cause · fix by class
-  → close all: fixed (test verified both ways) | deferred: reason per item | refuted: reason per item
-  → write the ledger in ### Review · commit fixes separately
-  → no fix diff (clean, or all deferred/refuted) → done (passes: 1)
-  → pass 2 (T1–T2: fix diff + callers · T3: full branch), ledger handed to the reviewer
-      → no induced findings → close the rest → done (passes: 2)
-      → induced findings   → back to the brief: write the missing invariant,
-                              redesign that piece → pass 3, the last → done (redesigned: true)
-  → write the review event (findings, found_total, resolved, open, …)
+  → each acceptance criterion / scenario      → the test that proves it
+  → each pre-mortem row that is not n/a       → file:line that handles it + its test
+  → Consumidores grep re-run on the final diff → new readers: unchanged or scenario
+  → full suite + typecheck + lint green; Tier 2+ invariant tests verified both ways
+  → anything missing: one line in the brief first, then the code
 ```
 
-**Induced** = a pass-2 finding for a defect that **did not exist before the pass-1 fixes**.
-Decide it by causation, not by location: read the pre-fix version of the lines (`git show
-<pre-fix-commit>:<file>`). If the defect is already there, it is pre-existing — the cap hid
-it and the fix merely touched its function — and it gets fixed in place like any pass-1
-finding. If it is not there, the fix introduced it: that means the fix was made without the
-invariant it needed, and another in-place fix is the next pass's finding. The 18-pass
-session put it in one sentence: *"none of the last five passes found a problem in the
-original design — every one found something I introduced fixing the previous one."*
+The rule underneath: **the spec moves first.** Anything the implementation discovers that
+the brief did not say — a path, a reader, a malformed answer — is written into the brief
+before it is coded. Induced findings were code that grew without its invariant; writing
+the line first is what keeps the invariant.
 
-**Handing over the ledger**: `/code-review` runs as a fork that inherits the conversation,
-so stating the ledger — what was deferred and why, what was refuted and why, which commit
-holds the fixes — before launching pass 2 is enough for it. A reviewer that does not
-inherit context — deepcheck (a Workflow built from its arguments), or a review run in a
-fresh session — gets the ledger pasted into its prompt. Either way, tell it explicitly not
-to re-flag those items unless a recorded reason is wrong.
+## Opt-in review (ADR-0039)
 
-**Why the cap matters**: when pass 1 returns 10 or 15 findings, treat the list as a sample
-of a larger population. Grouping by root cause is how you fix the population, not the
-sample. Mark `findings_capped: true`.
+No review runs by default. It runs when the user asks, or when the change is Tier 3 with
+high risk (auth/security, money, irreversible migration, external contract) and the user
+accepts a one-line proposal made after the closing check.
 
-**Dead passes don't count**: a reviewer killed by a watchdog or a rate limit produced no
-verdict. Re-run it; do not log it as a pass or as "zero findings".
+When it runs:
+
+1. **One pass**, on the diff, at the level the user picks (default `medium`). Give the
+   reviewer the brief — `/code-review` is a fork that inherits the conversation, so it
+   already has it; deepcheck or a fresh session gets it pasted into its prompt — and ask
+   it to review against the spec.
+2. Read the whole list and **group by root cause**. A list that hits the cap (15, or 10
+   via ReportFindings) is a sample: mark `findings_capped`.
+3. Triage every item, one reason each: **fixed** (real defect or spec violation, with its
+   test verified both ways), **deferred**, or **refuted**.
+4. A finding that shows the spec had a gap goes **back to the brief first** — the row and
+   the scenario — then the fix. Never fix it in place without the line.
+5. **No automatic second pass.** If the user wants another, it reviews only the fix diff
+   plus its callers, with the ledger of deferred/refuted items handed over so they are not
+   re-flagged.
+6. Record `### Review` in the brief and emit the `review` event. A pass killed by a
+   watchdog or rate limit produced no verdict: it is not a pass.
+
+**Induced** (for the `induced` field): a finding in a later pass for a defect that did
+not exist before the earlier fixes — decided by reading the pre-fix lines (`git show
+<pre-fix-commit>:<file>`), not by whether the line sits inside a fix hunk.
 
 ## Tests verified both ways
 
