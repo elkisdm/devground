@@ -118,10 +118,10 @@ justified.
 5. **Then** produce: exploration findings → brief + spec → design (with rollback plan) →
    task breakdown → implement → verify → offer to record an ADR.
 
-The brief itself gains two sections a Tier 1 brief doesn't need — filled *before* coding,
-one *after*:
+The brief itself gains sections a Tier 1 brief doesn't have in full — the pre-mortem filled
+*before* coding, the closing check *after*:
 
-> ### Pre-mortem                     (REQUIRED from Tier 2 up — see references/premortem-and-review-loop.md)
+> ### Pre-mortem                     (Tier 2+: all nine rows — see references/premortem-and-review-loop.md)
 > - **Caminos**: escritura dual durante la ventana de migración (Mongo y Postgres a la vez) —
 >   cubierto; lecturas legacy que aún pegan a Mongo mientras dura la ventana — cubierto;
 >   backfill por lotes de la colección histórica — cubierto; rollback a solo-Mongo si el
@@ -140,15 +140,25 @@ one *after*:
 >   *editar* y *borrar* — las tres operaciones escriben a ambos stores, no solo crear.
 > - **Reutilización**: el cliente/pool de Postgres que ya usa el resto del proyecto se
 >   reutiliza para la escritura dual; no se crea un cliente nuevo solo para la migración.
+> - **Consumidores** (grep de `users.find`/`UserModel`): 14 lecturas; 12 sin cambio vía el
+>   repositorio; `reports/active.ts:41` ordena por `_id` (ObjectId lleva timestamp, el id de
+>   Postgres no) → escenario "el reporte ordena por `created_at`"; `auth/session.ts:88`
+>   compara ids como string → escenario de mapeo.
+> - **Datos reales** (muestra de 1.000 docs, solo lectura): 3% sin `email`, `phone` a veces
+>   número y a veces string → la migración normaliza a string; los sin email van a cuarentena.
+> - **Variantes**: `USERS_STORE=mongo|dual|pg` selecciona el camino — los tres cubiertos.
+> - **Afirmaciones**: `docs/data-model.md` y el contrato de la API de usuarios describen ids
+>   ObjectId → se actualizan en este cambio.
 >
-> ### Review                         (REQUIRED from Tier 1 up — a ledger, filled AFTER implementing)
-> - Level: max
-> - Pass 1 (full diff): 6 found (capped? no) → 5 fixed · deferred: 1 (índice compuesto de
->   reconciliación, se hace en un cambio aparte) · refutado: 0
-> - Pass 2 (T3: full branch, ran because pass 1 left a fix diff): 1 found · induced: 0
->   (the defect is already in the pre-fix version of `batch.ts`) → fixed in place
-> - No pass 3 (no redesign). Review event: findings 6, found_total 7, resolved 6, open 1
->   (the deferred index), tests "verified".
+> ### Closing check                  (filled AFTER implementing)
+> - Cada escenario → su test (`migrate.test.ts`, `dual-write.test.ts`); invariantes de
+>   conteo y consistencia verificados en ambos sentidos (fallan con el guard quitado).
+> - Cada fila del pre-mortem → `file:line` + test; el grep de Consumidores re-corrido sobre
+>   el diff final encontró un lector nuevo (`jobs/cleanup.ts:12`) → escenario agregado al
+>   brief primero, luego el código.
+> - Suite, typecheck y lint verdes.
+> - Tier 3 + riesgo alto (migración irreversible) → se propone un review en una línea; el
+>   usuario decide. Si lo acepta: una pasada, triage por ítem, `### Review` y evento `review`.
 
 The contrast with Example A is the whole philosophy: the typo got zero questions and
 zero artifacts; the irreversible data migration got one precise question and the full

@@ -10,6 +10,10 @@
 > review se emite como un SEGUNDO evento `review` (`passes, findings, findings_capped,
 > found_total, induced, resolved, open, redesigned, tests`) que se une por `change`;
 > `findings` pasa a significar hallazgos de la PRIMERA pasada. Ver §4, §5.
+> Revisión 2026-10-01 (spec-flow v0.7, ADR-0039): el review pasa a ser **opt-in**. El evento
+> `spec` se escribe al cerrar (tras el chequeo de cierre) y lleva `tests`; el evento `review`
+> solo existe si se pidió un review. Las métricas de review (pasadas, hallazgos, inducidos,
+> deuda) quedan sobre ese subconjunto; un `spec` 0.7 sin `review` NO cuenta como sin cierre.
 > Cuando spec-flow se empaquete como `@devground/sdd`, este doc se promueve a un ADR
 > formal en devground.
 
@@ -160,7 +164,7 @@ dev-metrics, que sí son PII y quedan locales).
 | **Pasadas de review** | mediana de `passes` (evento `review`), con su n | ↓ hacia ≤2 | la cota + el ledger |
 | **Hallazgos de 1ª pasada** | media de `findings` NO censurados, en tres brazos con su n cada uno: 0.6 con pre-mortem (`premortem.na ≤ 3`), 0.6 con pre-mortem de cumplimiento (`na ≥ 4`) o sin él, y **línea base 0.5** (inline `review.findings`, que contaba todas las pasadas y no conocía el tope — se etiqueta, no se esconde); proporción de censurados por brazo | ↓ en el brazo con pre-mortem respecto de la línea base | el pre-mortem — es la medición que puede refutar v0.6 |
 | **Hallazgos inducidos** | proporción de eventos `review` que reportan `induced` con `induced > 0`; `redesigned` aparte | ↓ | la regla de parada + tests verificados en ambos sentidos |
-| **Reviews sin cierre** | eventos `spec` 0.6 Tier 1+ sin evento `review` | ↓ | la cota: un bucle que se abandona deja rastro |
+| **Reviews sin cierre** | eventos `spec` 0.6 Tier 1+ sin evento `review`; desde 0.7 solo cuenta un `review` pedido que no cerró | ↓ | la cota: un bucle que se abandona deja rastro |
 | **Deuda visible** | suma y mediana de `open` | baja y estable | el ledger con motivo por ítem |
 
 Regla de agregación para todas las filas nuevas: **cada métrica usa como denominador solo los

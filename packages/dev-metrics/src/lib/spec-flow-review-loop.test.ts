@@ -188,6 +188,25 @@ describe('L-4: sin cierre', () => {
     expect(stats.unclosed).toEqual({ count: 1, n: 2 });
     expect(stats.unclosed!.count).toBeLessThanOrEqual(stats.unclosed!.n);
   });
+
+  it('spec 0.7 sin review NO cuenta: el review es opt-in (ADR-0039)', () => {
+    const { specs, reviews } = parseSpecFlowLog(
+      [
+        specLine({ change: 'a', spec_flow_version: '0.7' }),
+        specLine({ change: 'b' }), // 0.6 sin review -> sigue sin cierre
+      ].join('\n'),
+    );
+    const stats = reviewLoopStats(specs, reviews);
+    expect(stats.unclosed).toEqual({ count: 1, n: 1 });
+  });
+
+  it('spec 0.7 con review pedido que no cerro (findings ausente) sigue contando', () => {
+    const { specs, reviews } = parseSpecFlowLog(
+      [specLine({ spec_flow_version: '0.7' }), reviewLine()].join('\n'),
+    );
+    const stats = reviewLoopStats(specs, reviews);
+    expect(stats.unclosed).toEqual({ count: 1, n: 1 });
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -297,6 +316,18 @@ describe('L-10: assumptions/gate/tests/resolved tienen consumidor', () => {
     );
     const stats = reviewLoopStats(specs, reviews);
     expect(stats.verifiedShare).toEqual({ rate: 1, n: 1 });
+  });
+
+  it('verifiedShare 0.7: sin review, tests sale del evento spec', () => {
+    const { specs, reviews } = parseSpecFlowLog(
+      [
+        specLine({ change: 'a', spec_flow_version: '0.7', tests: 'verified' }),
+        specLine({ change: 'b', spec_flow_version: '0.7', tests: 'added' }),
+        specLine({ change: 'c', tests: 'verified' }), // 0.6 sin review -> fuera
+      ].join('\n'),
+    );
+    const stats = reviewLoopStats(specs, reviews);
+    expect(stats.verifiedShare).toEqual({ rate: 0.5, n: 2 });
   });
 
   it('resolvedShare = suma resolved / suma found_total', () => {

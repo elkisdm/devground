@@ -315,12 +315,15 @@ export interface UnclosedStats {
  * L-4: universe = changes with spec Tier ≥ 1 that are 0.6 OR carry an inline
  * review, EXCLUDING changes whose review is "no aplicó" (L-2). Unclosed =
  * review `null`, or review with `findings` non-numeric (`"pending"`).
+ * From 0.7 the review is opt-in (ADR-0039): a 0.7 change with no review event
+ * is not an unclosed review, so it stays out of the universe.
  */
 function unclosedStats(changes: readonly Change[]): UnclosedStats | null {
   const universe = changes.filter((c) => {
     if (c.spec.tier === undefined || c.spec.tier < 1) return false;
     const eligible = versionAtLeast(c.spec.specFlowVersion, '0.6') || c.spec.review !== undefined;
     if (!eligible) return false;
+    if (versionAtLeast(c.spec.specFlowVersion, '0.7') && c.review === null) return false;
     if (c.review !== null && !isApplicable(c.review)) return false;
     return true;
   });
@@ -372,6 +375,8 @@ function gateAdoption(changes: readonly Change[]): SumRatioMetric | null {
  * is a real declared value (`"verified"` or otherwise), never `"n/a"` and
  * never a pre-0.6 change (where `"added"` already satisfied the old,
  * unrestricted universe). n = those declaring a real `tests` value.
+ * From 0.7 a change with no review event also counts: `tests` then comes from
+ * the spec event, written after the closing check (ADR-0039).
  */
 function verifiedShare(changes: readonly Change[]): RateMetric | null {
   const declaring = changes
@@ -380,7 +385,8 @@ function verifiedShare(changes: readonly Change[]): RateMetric | null {
         versionAtLeast(c.spec.specFlowVersion, '0.6') &&
         c.spec.tier !== undefined &&
         c.spec.tier >= 2 &&
-        isApplicable(c.review),
+        (isApplicable(c.review) ||
+          (versionAtLeast(c.spec.specFlowVersion, '0.7') && c.review === null)),
     )
     .map(testsValueOf)
     .filter((t): t is string => t !== undefined && t !== 'n/a');
