@@ -44,7 +44,7 @@ siguiente número de la secuencia, rellénalo y añádelo al índice de abajo.
 - [ADR-0027 — Empaquetar la regla de orquestación en @devground/sdd](0027-empaquetar-regla-de-orquestacion.md) (Aceptado)
 - [ADR-0028 — La capa de orquestación es opt-in y queda desactivada por defecto](0028-orquestacion-opt-in-desactivada-por-defecto.md) (Aceptado)
 - [ADR-0029 — Tests como Definition of Done en spec-flow](0029-tests-como-definition-of-done.md) (Aceptado)
-- [ADR-0030 — La delegación a subagentes es opt-in por petición](0030-delegacion-opt-in-por-peticion.md) (Aceptado)
+- [ADR-0030 — La delegación a subagentes es opt-in por petición](0030-delegacion-opt-in-por-peticion.md) (Aceptado) — para Tier 2–3 reemplazado por ADR-0040
 - [ADR-0031 — Al delegar, el modelo del subagente va explícito por naturaleza de la tarea](0031-modelo-explicito-al-delegar.md) (Aceptado)
 - [ADR-0032 — Veredicto de los 11 experimentales al cierre del ciclo de 8 semanas](0032-veredictos-experimentales.md) (Aceptado)
 - [ADR-0033 — Cerrar la fase de consolidación y reabrir la expansión hacia los stacks reales](0033-salida-de-consolidacion.md) (Aceptado)
@@ -54,6 +54,7 @@ siguiente número de la secuencia, rellénalo y añádelo al índice de abajo.
 - [ADR-0037 — Pre-mortem en la spec y cota al ciclo de revisión](0037-premortem-en-la-spec-y-cota-al-ciclo-de-revision.md) (Aceptado; protocolo de pasadas reemplazado por ADR-0039)
 - [ADR-0038 — Agrupar el trabajo en builds con un gate de salida verificable](0038-trabajo-por-builds-con-gate-verificable.md) (Propuesto)
 - [ADR-0039 — El review pasa a ser opt-in; el gate de cierre es la spec](0039-review-opt-in-y-spec-como-gate.md) (Aceptado)
+- [ADR-0040 — Plan de ejecución por agentes y contexto acotado](0040-plan-de-ejecucion-por-agentes-y-contexto-acotado.md) (Aceptado)
 
 ## Estándares con enforcement automático
 

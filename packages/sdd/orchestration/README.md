@@ -8,30 +8,34 @@ el tier de la petición. Ver [ADR-0027](../../../docs/adr/0027-empaquetar-regla-
 
 **Sin esta capa no hay delegación automática.** El flujo por defecto de `@devground/sdd`
 —`spec-flow` clasifica, tú ejecutas, los subagentes se lanzan solo si el usuario los pide—
-es el de [ADR-0030](../../../docs/adr/0030-delegacion-opt-in-por-peticion.md). Todo lo que
-sigue describe qué cambia si activas la capa a propósito.
+es el de [ADR-0030](../../../docs/adr/0030-delegacion-opt-in-por-peticion.md), salvo el plan
+de ejecución de Tier 2–3 de spec-flow 0.8, que despacha los tres `ejecutor*` sin hooks
+([ADR-0040](../../../docs/adr/0040-plan-de-ejecucion-por-agentes-y-contexto-acotado.md)).
+Todo lo que sigue describe qué cambia si activas la capa a propósito.
 
 **La fuente de verdad son los archivos vivos en `~/.claude`.** Este directorio es su
 **mirror versionado** — se actualiza con `sync-orchestration.mjs`, nunca a mano.
 
-## Las 5 piezas
+## Las piezas
 
-| Pieza | Rol |
-|---|---|
-| `scripts/orchestrator-gate.sh` | Hook `PreToolUse`. Enforcement: si el modelo de sesión es orquestador, deniega `Edit`/`Write`/`NotebookEdit`, Bash mutante y MCP mutante en el main loop (con allowlist administrativa de un solo comando y excepción para `~/.claude/` y el scratchpad). Los subagentes nunca son bloqueados. |
-| `scripts/orchestrator-context.sh` | Hook `UserPromptSubmit`. Activación: si el modelo de sesión es orquestador, inyecta el contexto de la regla y el modelo de tiers en cada turno; en Sonnet/Haiku queda en silencio. |
-| `agents/ejecutor.md` | Subagente Sonnet. Implementa un plan o brief ya recibido — edits, comandos mutantes, tests, commits. |
-| `agents/planner.md` | Subagente Opus, esfuerzo `high`. Diseña la implementación de un cambio Tier 2: archivos a tocar, riesgos, criterios de verificación. Solo lectura. |
-| `agents/planner-deep.md` | Subagente Opus, esfuerzo `xhigh`. Igual que `planner` pero para Tier 3 o riesgo alto (migraciones, cambios irreversibles, contratos externos, seguridad, cambios que cruzan varios módulos). Solo lectura. |
+| Pieza                             | Rol                                                                                                                                                                                                                                                                                            |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `scripts/orchestrator-gate.sh`    | Hook `PreToolUse`. Enforcement: si el modelo de sesión es orquestador, deniega `Edit`/`Write`/`NotebookEdit`, Bash mutante y MCP mutante en el main loop (con allowlist administrativa de un solo comando y excepción para `~/.claude/` y el scratchpad). Los subagentes nunca son bloqueados. |
+| `scripts/orchestrator-context.sh` | Hook `UserPromptSubmit`. Activación: si el modelo de sesión es orquestador, inyecta el contexto de la regla y el modelo de tiers en cada turno; en Sonnet/Haiku queda en silencio.                                                                                                             |
+| `agents/ejecutor.md`              | Subagente Sonnet, esfuerzo `medium`. Implementa lógica (feat, fix, refactor, tests) a partir de su porción del brief.                                                                                                                                                                          |
+| `agents/ejecutor-mecanico.md`     | Subagente Haiku, esfuerzo `low`. Trabajo determinista sin lógica nueva: docs, renombrar, bump, formato.                                                                                                                                                                                        |
+| `agents/ejecutor-critico.md`      | Subagente Opus, esfuerzo `high`. Implementación de riesgo alto: auth, dinero, migraciones irreversibles, contratos externos.                                                                                                                                                                   |
+| `agents/planner.md`               | Subagente Opus, esfuerzo `high`. Diseña la implementación de un cambio Tier 2: archivos a tocar, riesgos, criterios de verificación. Solo lectura.                                                                                                                                             |
+| `agents/planner-deep.md`          | Subagente Opus, esfuerzo `xhigh`. Igual que `planner` pero para Tier 3 o riesgo alto (migraciones, cambios irreversibles, contratos externos, seguridad, cambios que cruzan varios módulos). Solo lectura.                                                                                     |
 
 ## Modelo de tiers
 
-| Tier | Ruteo |
-|---|---|
-| 0 (typo, chore trivial) | Directo a `Agent(subagent_type=ejecutor, model haiku)`, sin ceremonia. |
+| Tier                                           | Ruteo                                                                                                                                                                             |
+| ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0 (typo, chore trivial)                        | Directo a `Agent(subagent_type=ejecutor, model haiku)`, sin ceremonia.                                                                                                            |
 | 1 (cambio pequeño, ~1-3 archivos, bajo riesgo) | Sin planner: el orquestador explora lo mínimo, escribe un brief autocontenido (rutas exactas + fragmentos relevantes inline) y delega en `Agent(subagent_type=ejecutor, Sonnet)`. |
-| 2 | `Agent(subagent_type=planner, Opus effort high)` produce el plan, luego `ejecutor` lo implementa. |
-| 3 / riesgo alto | `Agent(subagent_type=planner-deep, Opus effort xhigh)` produce el plan, luego `ejecutor` lo implementa. |
+| 2                                              | `Agent(subagent_type=planner, Opus effort high)` produce el plan, luego `ejecutor` lo implementa.                                                                                 |
+| 3 / riesgo alto                                | `Agent(subagent_type=planner-deep, Opus effort xhigh)` produce el plan, luego `ejecutor` lo implementa.                                                                           |
 
 En sesiones Sonnet/Haiku como modelo de sesión, no aplica el gate: se procede directo.
 
@@ -86,12 +90,12 @@ Pipe-tests herméticos de `orchestrator-gate.sh` y `orchestrator-context.sh` en
 
 Medición sobre 678 sesiones reales (ver [ADR-0028](../../../docs/adr/0028-orquestacion-opt-in-desactivada-por-defecto.md)):
 
-| Señal | Resultado |
-|---|---|
-| Delegación a subagentes | 53% → 92% de las sesiones |
+| Señal                      | Resultado                                    |
+| -------------------------- | -------------------------------------------- |
+| Delegación a subagentes    | 53% → 92% de las sesiones                    |
 | Costo por turno de usuario | $8,23 → $9,04 (+10%, sin ahorro demostrable) |
-| Invocaciones de spec-flow | 173 → 7 (el hook de contexto la desplaza) |
-| Denials del gate | 314, en 62% de las sesiones |
+| Invocaciones de spec-flow  | 173 → 7 (el hook de contexto la desplaza)    |
+| Denials del gate           | 314, en 62% de las sesiones                  |
 
 Defectos conocidos abiertos, a resolver antes de recomendar la activación:
 

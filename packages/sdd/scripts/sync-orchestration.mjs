@@ -16,6 +16,8 @@ const MAP = [
   ['agents/planner.md',               'orchestration/agents/planner.md'],
   ['agents/planner-deep.md',          'orchestration/agents/planner-deep.md'],
   ['agents/ejecutor.md',              'orchestration/agents/ejecutor.md'],
+  ['agents/ejecutor-mecanico.md',     'orchestration/agents/ejecutor-mecanico.md'],
+  ['agents/ejecutor-critico.md',      'orchestration/agents/ejecutor-critico.md'],
 ];
 let n = 0;
 for (const [src, dst] of MAP) {

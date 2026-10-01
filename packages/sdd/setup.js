@@ -65,5 +65,18 @@ if (written > 0) log(`spec-flow installed — ${scope} — ${written} file(s)`);
 if (skipped > 0) warn(`${skipped} file(s) already existed (kept your version)`);
 if (written === 0 && skipped > 0) info('Already up to date.');
 
+// The Tier 2-3 execution plan (spec-flow 0.8, ADR-0040) dispatches these agents;
+// their effort lives in the definition, so they ship with the skill.
+const agentsDst = path.join(baseDir, '.claude', 'agents');
+fs.mkdirSync(agentsDst, { recursive: true });
+let agentsWritten = 0;
+for (const name of ['ejecutor.md', 'ejecutor-mecanico.md', 'ejecutor-critico.md']) {
+  const to = path.join(agentsDst, name);
+  if (fs.existsSync(to)) continue;
+  fs.copyFileSync(path.join(__dirname, 'orchestration', 'agents', name), to);
+  agentsWritten++;
+}
+if (agentsWritten > 0) log(`${agentsWritten} executor agent(s) installed in ${agentsDst}`);
+
 info('Describe a change and the skill takes over: it classifies, enriches and routes it.');
 info('Impact is measured separately by @devground/dev-metrics (spec-flow-impact, orientation).');

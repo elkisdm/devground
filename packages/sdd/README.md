@@ -39,13 +39,18 @@ Given a change request ("add login", "make this faster", "fix this bug"), the sk
    test that breaks it), symmetries, reuse, consumers found by grep, real data shape,
    config variants and claims in docs/contracts, answered _before_ code exists. It is the
    reviewer's question list, moved to spec time (ADR-0037, ADR-0039).
-5. **Gates the design** (Step 3.6): the brief is reviewed against that checklist before
+5. **Plans the execution** (Step 3.5, Tier 2–3): one row per task with its agent and
+   effort — `ejecutor-mecanico` (haiku · low), `ejecutor` (sonnet · medium) or
+   `ejecutor-critico` (opus · high) — at most 5 agents; the main loop orchestrates and
+   integrates instead of implementing in a long context (ADR-0040). The installer ships
+   these three agents.
+6. **Gates the design** (Step 3.6): the brief is reviewed against that checklist before
    the first edit; on Tier 3 the gate can be delegated to a read-only planner.
-6. **Closes against the spec**: new logic ships with tests watched to fail with the fix
+7. **Closes against the spec**: new logic ships with tests watched to fail with the fix
    reverted (ADR-0029), and a closing check maps every criterion and pre-mortem row to its
    code and test. Code review is **opt-in** — one pass, only when asked; proposed in one
    line on high-risk Tier 3 (ADR-0039).
-7. **Emits telemetry** (one line per change to `.spec-flow/events.jsonl`) so impact is
+8. **Emits telemetry** (one line per change to `.spec-flow/events.jsonl`) so impact is
    measurable — friction, assumption reversals, tests verified, and the review loop when
    one was requested.
 
