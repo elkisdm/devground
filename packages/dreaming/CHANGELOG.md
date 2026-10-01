@@ -1,5 +1,12 @@
 # @devground/dreaming
 
+## 0.2.3
+
+### Patch Changes
+
+- Updated dependencies [28cb323]
+  - @devground/dev-metrics@1.4.0
+
 ## 0.2.2
 
 ### Patch Changes
