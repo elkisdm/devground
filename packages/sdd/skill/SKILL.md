@@ -18,7 +18,7 @@ description: >
 license: MIT
 metadata:
   author: edaza
-  version: "0.7"
+  version: "0.8"
 ---
 
 ## What this is
@@ -155,8 +155,8 @@ always runs. Everything downstream scales by tier. Pick the tier from the axes:
 |------|---------|-----------|
 | **0 — Express** | trivial · `chore`/`docs`/`style`/tiny `fix` · low risk | No artifacts. State the one-line classification, make the change, verify it. |
 | **1 — Light** | small `feat`/`fix` · low risk · known | A **thin brief** (goal + acceptance criteria) → implement → verify. No proposal, no design doc. |
-| **2 — Standard** | medium · OR risk ≥ med · OR `refactor`/`perf` with observable impact | **Full brief + spec** (Given/When/Then) → implement → verify. Add a short design note if there's a real architectural choice. |
-| **3 — Full** | large · OR high risk · OR `breaking` · OR `unknown` | **Explore first**, then brief + spec + design + task breakdown → implement → verify → record the decision (ADR if the project uses them). |
+| **2 — Standard** | medium · OR risk ≥ med · OR `refactor`/`perf` with observable impact | **Full brief + spec** (Given/When/Then) + execution plan → agents implement, the main loop orchestrates → verify. Add a short design note if there's a real architectural choice. |
+| **3 — Full** | large · OR high risk · OR `breaking` · OR `unknown` | **Explore first**, then brief + spec + design + task breakdown + execution plan → agents implement, the main loop orchestrates → verify → record the decision (ADR if the project uses them). |
 
 The matrix is a floor, not a cage. If your gut says a "small" change is actually
 dangerous, bump the tier and say why in one line. Quality judgment overrides the table.
@@ -253,6 +253,11 @@ the plan; a spec without them is a wish.
 
 ### Tasks
 1. <small, sequenced, each completable in one sitting>
+
+--- (Tier 2+ adds, after Tasks or Spec:) ---
+
+### Ejecución                      (see Step 3.5)
+| # | Tarea | Agente | Modelo · esfuerzo | Archivos | Entrega |
 ```
 
 After writing the brief, **do not wait for permission on low tiers**. For Tier 0–1,
@@ -264,41 +269,68 @@ do ask, batch it into one round, then go.
 This is the whole point: the user experiences **forward motion with visible reasoning**,
 not an interview.
 
-## Step 3.5 — (opcional, Tier 2–3) Emitir `tasks.json` para orquestación
+## Step 3.5 — Execution plan: agents and effort per task (Tier 2–3, ADR-0040)
 
-Si el cambio se va a **orquestar por modelo** (repartir las tareas a Opus/Sonnet/Haiku
-según complejidad vía la skill `model-orchestrator`), emite además del brief una versión
-machine-readable de la sección `### Tasks`, para que el orquestador no tenga que parsear
-prosa. Es **aditivo y opcional**: no cambia el brief ni el flujo; solo escribe un archivo
-extra cuando hay descomposición en tareas (Tier 2–3).
+Measured from 2026-09-01: **75% of main-session cost is re-reading context** — median
+293k tokens per turn, p90 700k, the costliest sessions past 1,000 turns. The model choice
+barely moves that; the size of the context does. So on Tier 2–3 the main loop becomes the
+**orchestrator**: it holds the brief, hands each task to an agent that starts with a small
+context, and reads back only summaries. Tier 0–1 stay in the main loop — delegating a
+small change costs more than it saves.
 
-Escríbelo junto al brief: `docs/specs/<change>.tasks.json` (o en el scratchpad si el brief
-es inline), conforme al contrato
-`~/.claude/skills/model-orchestrator/references/tasks-input.schema.json`:
+Add an `### Ejecución` table to the brief, one row per task — on Tier 3 from `### Tasks`;
+on Tier 2 (no Tasks section) group **Files & routes to touch** into tasks right here:
 
-```json
-{
-  "change": "<kebab>", "spec_flow_tier": 2,
-  "tasks": [
-    { "id": 1, "title": "<tarea>", "kind": "decision|feat|fix|refactor|perf|test|docs|chore|spike|...",
-      "size": "small|medium|large",
-      "signals": { "type": "feat", "tier": 2, "risk": "med", "breaking": false },
-      "depends_on": [] }
-  ]
-}
+```
+### Ejecución
+| # | Tarea | Agente | Modelo · esfuerzo | Archivos | Entrega |
+|---|-------|--------|-------------------|----------|---------|
+| 1 | Migración + modelo | ejecutor-critico | opus · high | `db/0042_*.sql`, `models/user.ts` | diff + tests verdes |
+| 2 | Endpoint y validación | ejecutor | sonnet · medium | `api/users.ts` | diff + tests verdes |
+| 3 | README y changelog | ejecutor-mecanico | haiku · low | `README.md` | diff |
 ```
 
-Reglas para llenarlo (lo infieres del brief que ya escribiste, sin preguntar):
-- **`kind`** por tarea = su naturaleza (una "decisión de arquitectura" es `decision`,
-  "implementar endpoint" es `feat`, "actualizar README" es `docs`). El orquestador rutea
-  por `kind`, así que es el campo que más importa.
-- **`signals`** = las señales globales del brief (`type`/`tier`/`risk`/`breaking` de la
-  línea Classification); una tarea las hereda salvo que su naturaleza difiera.
-- **`size`** = tamaño aproximado de esa tarea (no del cambio global).
-- **`depends_on`** = el orden natural de tu sección Tasks (tarea 2 suele depender de la 1).
+Assign by the task's nature, not the change's tier — the floor in
+`~/.claude/skills/model-orchestrator/policy.json` (ADR-0031):
 
-No dispares el orquestador tú: solo dejas el `tasks.json` listo. El usuario decide
-orquestar. Si no se pide orquestación, omite este paso.
+| Task nature | Agent | Model · effort |
+|---|---|---|
+| Find / read / map code | `Explore` (pass `model: "sonnet"`) | sonnet · default |
+| Mechanical: docs, rename, move, bump, format | `ejecutor-mecanico` | haiku · low |
+| Logic: feat, fix, refactor, tests | `ejecutor` | sonnet · medium |
+| Logic on high risk: auth/security, money, irreversible migration, external contract, concurrency | `ejecutor-critico` | opus · high |
+| Judgment: design, decision, integration | **the orchestrator itself** — it already holds the brief | session model |
+
+The effort lives in each agent's definition (`~/.claude/agents/`), which is why the
+table names agents, not just models. If an agent is not installed, use `general-purpose`
+with the row's `model` and say so in one line (its effort is then the default).
+
+Rules — they exist because delegation by default once launched 232 agents nobody asked
+for (ADR-0030):
+
+1. **At most 5 agents per change.** More tasks than that → merge the small ones.
+2. **Tasks that touch the same files run in sequence**; only disjoint tasks run in
+   parallel (one message, several `Agent` calls).
+3. **No review agents.** Review stays opt-in (ADR-0039).
+4. **The plan is visible.** The table is part of the brief the user sees; Tier 2 proceeds
+   unless the user objects, Tier 3 presents it first — same rule as the rest of the brief.
+
+**What each agent gets** — self-contained, because it does not inherit this
+conversation: the change's goal in one line; its task; the exact files; the scenarios,
+invariants and pre-mortem rows that belong to its task; the tests it must write; "do not
+commit". **What it returns**, in at most 15 lines: files changed, the test command and its
+real result, and any deviation from the brief.
+
+**The orchestrator** dispatches, then integrates: it reads the summaries and `git diff
+--stat`, opens a file only where a summary is unclear or a deviation needs judgment, runs
+the full suite, and does the closing check (Step 4). A deviation goes back to the brief
+first ("the spec moves first"), then to a follow-up task — never patched blind.
+
+`model-orchestrator` (with its `model-router` ±1 adjustment and cost estimate) is still
+available when the user asks for it; this table is its floor policy applied inline,
+without the extra router call. If it is requested, also write
+`docs/specs/<change>.tasks.json` per
+`~/.claude/skills/model-orchestrator/references/tasks-input.schema.json`.
 
 ## Step 3.6 — Design gate: review the spec before the first Edit (Tier 2–3)
 
@@ -328,7 +360,9 @@ signal the spec was perfect.
 
 ## Step 4 — Implement and verify
 
-Hand the work to the project's normal development flow. Honor whatever standards the
+On Tier 2–3, run the execution plan from Step 3.5: dispatch, integrate, verify. On Tier
+0–1, implement in the main loop. Either way, hand the work to the project's normal
+development flow. Honor whatever standards the
 project already has — if there's a TDD / testing convention, an `AGENTS.md`/`CLAUDE.md`,
 or coding skills for the stack, follow them. The spec's acceptance criteria become the
 tests; Given/When/Then scenarios map directly to test cases. Verify against every
@@ -435,6 +469,14 @@ enough; it doesn't have to be exhaustive on day one. Don't seed for Tier 0 trivi
 This step is cheap (a few lines) and the payoff compounds: every future request starts
 from a better index. Skipping it is borrowing against your future self.
 
+### One session per change (Tier 1+)
+
+Once the change is closed and committed, tell the user in one line that the next change
+is cheaper in a **fresh session** (`/clear`, or a new one): everything it needs lives in
+the brief, the code map and git, not in this conversation. Context carried from a closed
+change is re-read on every turn of the next one — that re-reading was 75% of main-session
+cost (ADR-0040). Say it once; don't insist.
+
 ## Step 6 — Emit telemetry (Tier 1+, two-sided)
 
 This is what lets us MEASURE whether spec-flow actually helps (see
@@ -468,7 +510,7 @@ requested. Never write a `review` event for a review that did not run.
  "premortem":{"na":1}|false|"n/a",
  "spec_review":{"gaps_found":3,"gaps_adopted":2}|"n/a",
  "tests":"verified|added|updated|n/a|deferred",
- "spec_flow_version":"0.7"}
+ "spec_flow_version":"0.8"}
 ```
 
 `premortem` from Tier 2 up is `{"na": <rows answered n/a, 0–5>}` when the section was
@@ -488,7 +530,7 @@ here, not JSON; a line that doesn't parse is silently dropped.)
  "findings":10,"findings_capped":true,"found_total":13,
  "induced":0,"resolved":11,"open":2,"redesigned":false,
  "tests":"verified|added|updated|n/a|deferred",
- "spec_flow_version":"0.7"}
+ "spec_flow_version":"0.8"}
 ```
 
 **`findings` is the first pass only** — the one number comparable across changes;
@@ -531,7 +573,7 @@ user corrects it, or rework proves it — append a second line tied to the same 
 {"event":"assumption_reversed","ts":"<ISO-8601 with tz>","date":"<YYYY-MM-DD>",
  "change":"<same kebab-name as the spec event>","task_id":2,
  "assumption":"<the inferred thing that was wrong>",
- "cost":"trivial|rework|redesign","spec_flow_version":"0.7"}
+ "cost":"trivial|rework|redesign","spec_flow_version":"0.8"}
 ```
 
 This is what makes "asked 0 questions, built the wrong thing" register as the failure it is,
@@ -599,6 +641,10 @@ is a perfectly good spec for small work.
 - ❌ Fixing review findings one at a time and re-running the review to "see what's left"
   — the cap hides the rest, and each in-place fix is the next pass's finding.
 - ❌ Coding something the brief does not mention without writing it in the brief first.
+- ❌ On Tier 2–3, reading the whole codebase into the main loop and implementing there
+  instead of dispatching the execution plan — the orchestrator's context is the cost.
+- ❌ More than 5 agents on one change, parallel agents on the same files, or an agent
+  without an explicit model.
 - ❌ A pre-mortem of mostly `n/a` on a change that touches a data path with more than one
   entry or an external dependency, or a **Consumidores** row written without a grep — that's the section filled to comply, and the design
   gate should catch it.
