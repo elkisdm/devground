@@ -11,19 +11,21 @@ Las fuentes primarias están en `sources/`:
 - [bd.md](sources/bd.md) — Arquitectura de bases de datos
 - [patron arq.md](sources/patron%20arq.md) — Patrones de arquitectura de software
 - [sistemas.md](sources/sistemas.md) — Diseño de sistemas escalables
+- [configuracion.md](sources/configuracion.md) — Dónde vive cada configuración (código, env, flags, DB)
 
 **No modificar las transcripciones**. Son la fuente verificable.
 
 ## Mapa
 
-| Pregunta | Documento |
-|---|---|
-| ¿Qué tipo de BD elijo? | [01-database-architecture.md](01-database-architecture.md) |
-| ¿Monolito, microservicios, hexagonal, CQRS? | [02-architectural-patterns.md](02-architectural-patterns.md) |
-| ¿Cómo escalo lecturas/escrituras? ¿Cuándo uso caché, queues, circuit breakers? | [03-systems-design.md](03-systems-design.md) |
-| Empiezo un proyecto desde cero, ¿qué hago primero? | [BEST-PRACTICES.md](BEST-PRACTICES.md) |
-| Necesito justificar una decisión técnica concreta | [adr/](adr/) |
-| ¿Esta guía realmente sirve? Caso real aplicado | [CASE-STUDY-devground.md](CASE-STUDY-devground.md) |
+| Pregunta                                                                       | Documento                                                    |
+| ------------------------------------------------------------------------------ | ------------------------------------------------------------ |
+| ¿Qué tipo de BD elijo?                                                         | [01-database-architecture.md](01-database-architecture.md)   |
+| ¿Monolito, microservicios, hexagonal, CQRS?                                    | [02-architectural-patterns.md](02-architectural-patterns.md) |
+| ¿Cómo escalo lecturas/escrituras? ¿Cuándo uso caché, queues, circuit breakers? | [03-systems-design.md](03-systems-design.md)                 |
+| Empiezo un proyecto desde cero, ¿qué hago primero?                             | [BEST-PRACTICES.md](BEST-PRACTICES.md)                       |
+| ¿Esto va en `.env`, en la DB o como feature flag?                              | [adr/0012](adr/0012-donde-vive-cada-configuracion.md)        |
+| Necesito justificar una decisión técnica concreta                              | [adr/](adr/)                                                 |
+| ¿Esta guía realmente sirve? Caso real aplicado                                 | [CASE-STUDY-devground.md](CASE-STUDY-devground.md)           |
 
 ## Cómo usar esta base
 
@@ -41,7 +43,7 @@ knowledge/
 ├── 03-systems-design.md            síntesis de sistemas.md
 ├── BEST-PRACTICES.md               síntesis cruzada + checklist
 ├── CASE-STUDY-devground.md         la guía aplicada al propio repo
-├── sources/                        transcripciones originales (bd, patrones, sistemas)
+├── sources/                        fuentes originales (bd, patrones, sistemas, configuración)
 └── adr/
     ├── README.md                   qué es un ADR
     ├── 0001-elegir-tipo-de-base-de-datos.md
@@ -54,7 +56,8 @@ knowledge/
     ├── 0008-estrategia-de-cache.md
     ├── 0009-read-replicas-vs-cache.md
     ├── 0010-queues-y-workers-para-escrituras.md
-    └── 0011-timeouts-y-circuit-breakers.md
+    ├── 0011-timeouts-y-circuit-breakers.md
+    └── 0012-donde-vive-cada-configuracion.md
 ```
 
 ## Principio rector

@@ -9,6 +9,7 @@ Documento operativo. Lectura obligada antes de iniciar cualquier proyecto nuevo.
 Los 3 videos coinciden en estas verdades fundacionales:
 
 ### 1. Entiende el problema antes que la herramienta
+
 - **Bases de datos**: "no existe BD universal, hay BDs especializadas".
 - **Arquitectura**: "ninguna arquitectura es buena/mala per se".
 - **Sistemas**: "no existe solución universal, entiende el contexto primero".
@@ -16,28 +17,39 @@ Los 3 videos coinciden en estas verdades fundacionales:
 Operativamente: **prohibido elegir tecnología antes de entender el dominio**.
 
 ### 2. Diseña por patrones de acceso, no por modelo teórico
+
 - BD: "ten en cuenta qué queries quieres hacer para diseñar la información".
 - Sistemas: "¿cómo interactúan los usuarios con los datos?".
 
 Operativamente: **enumera los queries/operaciones reales antes del schema**.
 
 ### 3. Simplicidad > pureza arquitectónica
+
 - Arquitectura: "no se trata de la arquitectura más pura, sino la que tu equipo pueda mantener".
 - BD: "la simplicidad es una ventaja competitiva".
 
 Operativamente: **empezar simple, modularizar antes que fragmentar, fragmentar solo cuando duela**.
 
 ### 4. Las features tienen perfiles independientes
+
 - Sistemas: "pensad en estas capacidades de forma independiente por cada característica del producto".
 - BD: Netflix usa Cassandra + MySQL; Uber usa Redis + PostgreSQL.
 
 Operativamente: **una sola decisión arquitectónica global rara vez sirve a todas las features**.
 
 ### 5. Resiliencia se diseña desde día 1
+
 - Sistemas: timeouts, circuit breakers, queues no son optimización tardía.
 - BD: shard key, índices y CAP se eligen al inicio.
 
 Operativamente: **planificar los modos de fallo en el diseño, no en producción**.
+
+### 6. Cada valor configurable vive en una sola capa
+
+- Código (cómo funciona) · env/secrets (con qué infraestructura) · feature flags (qué está encendido y para quién) · config en DB (cómo opera el negocio hoy) · datos (qué ocurrió).
+- Cuanto mayor el blast radius de un cambio, más difícil debe ser hacerlo: copy en DB, umbrales en DB con audit log, algoritmos tras un flag, proveedores de auth/pagos solo con deploy.
+
+Operativamente: **ante cada valor nuevo, pregunta quién debería poder cambiarlo y cuánto daño hace si cambia mal**. Ver [ADR-0012](adr/0012-donde-vive-cada-configuracion.md).
 
 ---
 
@@ -46,6 +58,7 @@ Operativamente: **planificar los modos de fallo en el diseño, no en producción
 ### Paso 1 — Mapear dominios
 
 Lista los **bounded contexts** del producto. Ejemplo (e-commerce):
+
 - Catálogo de productos
 - Carrito y checkout
 - Pagos
@@ -57,6 +70,7 @@ Lista los **bounded contexts** del producto. Ejemplo (e-commerce):
 ### Paso 2 — Identificar patrones de acceso por dominio
 
 Para cada dominio, responde:
+
 - ¿Lectura-heavy o escritura-heavy?
 - ¿Datos personalizados por usuario o broadcast a muchos?
 - ¿Consistencia fuerte requerida o eventual aceptable?
@@ -67,6 +81,7 @@ Para cada dominio, responde:
 **Default**: monolito modular con capas (transporte, dominio, datos).
 
 Solo desviarse si:
+
 - Equipo >5 con módulos paralelos → considera extracción incremental.
 - Algún módulo recibe ~10x más tráfico que el resto → microservicio para ese módulo.
 - Vida del proyecto >2 años + dominio estable → aplica Clean/Hexagonal en el monolito.
@@ -78,14 +93,14 @@ Ver [ADR-0004](adr/0004-monolito-vs-microservicios.md), [ADR-0005](adr/0005-cuan
 
 Usa la siguiente tabla rápida:
 
-| Dominio típico | BD recomendada |
-|---|---|
-| Pagos, órdenes, transacciones | PostgreSQL / MySQL |
-| Catálogo flexible, CMS | MongoDB |
-| Sesiones, caché, leaderboards | Redis |
-| Recomendaciones, redes sociales | Neo4j |
+| Dominio típico                     | BD recomendada         |
+| ---------------------------------- | ---------------------- |
+| Pagos, órdenes, transacciones      | PostgreSQL / MySQL     |
+| Catálogo flexible, CMS             | MongoDB                |
+| Sesiones, caché, leaderboards      | Redis                  |
+| Recomendaciones, redes sociales    | Neo4j                  |
 | Eventos / telemetría / time-series | Cassandra / ClickHouse |
-| Clave-valor a gran escala | DynamoDB |
+| Clave-valor a gran escala          | DynamoDB               |
 
 Define la **shard key** desde el diseño (user_id, region, timestamp).
 Documenta qué dos de CAP eligió cada BD.
@@ -96,14 +111,14 @@ Ver [ADR-0001](adr/0001-elegir-tipo-de-base-de-datos.md), [ADR-0002](adr/0002-no
 
 Para cada feature crítica, decide:
 
-| Decisión | Default | Cuándo cambiar |
-|---|---|---|
-| CDN | Sí para estáticos | — |
-| Cache (Redis) | Sí para lecturas frecuentes | NO si es escritura-heavy |
-| Read replicas | Cuando lectura supera ~70% del tráfico | — |
-| Message queue | Sí para escritura-heavy o picos | — |
-| Timeouts | Siempre, en toda llamada externa | — |
-| Circuit breakers | Siempre, en dependencias críticas | — |
+| Decisión         | Default                                | Cuándo cambiar           |
+| ---------------- | -------------------------------------- | ------------------------ |
+| CDN              | Sí para estáticos                      | —                        |
+| Cache (Redis)    | Sí para lecturas frecuentes            | NO si es escritura-heavy |
+| Read replicas    | Cuando lectura supera ~70% del tráfico | —                        |
+| Message queue    | Sí para escritura-heavy o picos        | —                        |
+| Timeouts         | Siempre, en toda llamada externa       | —                        |
+| Circuit breakers | Siempre, en dependencias críticas      | —                        |
 
 Ver [ADR-0008](adr/0008-estrategia-de-cache.md), [ADR-0009](adr/0009-read-replicas-vs-cache.md), [ADR-0010](adr/0010-queues-y-workers-para-escrituras.md), [ADR-0011](adr/0011-timeouts-y-circuit-breakers.md).
 
@@ -118,21 +133,21 @@ Por cada decisión no trivial, crea un ADR en `/docs/adr/` del proyecto. Formato
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │ TIPO DE BD                                                       │
-│  ¿Transacciones fuertes + integridad referencial? → PostgreSQL  │
-│  ¿Schema flexible, iteración rápida?              → MongoDB     │
-│  ¿Latencia <1ms, datos efímeros?                  → Redis       │
-│  ¿Relaciones complejas, traversal de grafos?      → Neo4j       │
-│  ¿Telemetría/eventos masivos?                     → Cassandra   │
+│  ¿Transacciones fuertes + integridad referencial? → PostgreSQL   │
+│  ¿Schema flexible, iteración rápida?              → MongoDB      │
+│  ¿Latencia <1ms, datos efímeros?                  → Redis        │
+│  ¿Relaciones complejas, traversal de grafos?      → Neo4j        │
+│  ¿Telemetría/eventos masivos?                     → Cassandra    │
 └─────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────┐
 │ ARQUITECTURA                                                     │
-│  Equipo <5, MVP, dominio acoplado    → Monolito + capas         │
-│  Equipo mediano, evolución sostenida → Monolito modular         │
-│  Dominio estable, vida >2 años       → + Clean/Hexagonal        │
-│  Módulo con 10x tráfico              → Extraer microservicio    │
-│  Eventos asíncronos masivos          → CQRS en ese módulo       │
-│  Tráfico en picos esporádicos        → Serverless en ese módulo │
+│  Equipo <5, MVP, dominio acoplado    → Monolito + capas          │
+│  Equipo mediano, evolución sostenida → Monolito modular          │
+│  Dominio estable, vida >2 años       → + Clean/Hexagonal         │
+│  Módulo con 10x tráfico              → Extraer microservicio     │
+│  Eventos asíncronos masivos          → CQRS en ese módulo        │
+│  Tráfico en picos esporádicos        → Serverless en ese módulo  │
 └─────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────┐
@@ -140,6 +155,15 @@ Por cada decisión no trivial, crea un ADR en `/docs/adr/` del proyecto. Formato
 │  Lectura-heavy   → CDN + Redis + read replicas                   │
 │  Escritura-heavy → Queue + workers, evitar cachés                │
 │  Siempre         → Timeouts + circuit breakers                   │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ CONFIGURACIÓN  (¿quién debería poder cambiarlo?)                 │
+│  Developer: infra, credenciales, providers → env/secrets+deploy  │
+│  Encender código nuevo por partes          → feature flag        │
+│  Admin/cliente: umbrales, copy, prompts    → DB (+audit, tipado) │
+│  La aplicación                             → datos               │
+│  Multi-tenant                → fila por org, nunca env por org   │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -161,6 +185,7 @@ El CLI `devground-init` configura proyectos nuevos. Una mejora natural es que pu
 ### 2. A las decisiones del propio monorepo
 
 Aunque sea tooling, hay decisiones aplicables:
+
 - **Patrones de acceso al monorepo**: el CLI se ejecuta esporádicamente (instalación). Es un patrón de "tráfico en picos" — esto justifica que sea un CLI distribuido por npm en lugar de un servicio (que sería sobre-ingeniería).
 - **Simplicidad > pureza**: devground evita reinventar (usa Changesets, ESLint v9 flat config, husky). Aplicar Clean/Hexagonal aquí sería absurdo — es una librería, no un dominio de negocio.
 - **Decisiones documentadas**: el propio devground podría tener su `docs/adr/` para decisiones como "por qué pnpm workspace y no npm/yarn", "por qué Changesets", "por qué ESLint flat config".
@@ -174,13 +199,10 @@ devground se posiciona como "estándares de desarrollo". Esta carpeta `knowledge
 ## Lectura mínima recomendada
 
 Si solo tienes 30 minutos:
+
 1. Este documento (`BEST-PRACTICES.md`).
 2. [ADR-0001](adr/0001-elegir-tipo-de-base-de-datos.md) y [ADR-0004](adr/0004-monolito-vs-microservicios.md).
 
-Si tienes 2 horas:
-3. Los 3 documentos de síntesis (01, 02, 03).
-4. Los 11 ADRs.
+Si tienes 2 horas: 3. Los 3 documentos de síntesis (01, 02, 03). 4. Los 11 ADRs.
 
-Si tienes 1 día:
-5. Las 3 transcripciones originales en la raíz.
-6. *"Designing Data-Intensive Applications"* (Kleppmann) — el libro de referencia que cubre los 3 temas con profundidad.
+Si tienes 1 día: 5. Las 3 transcripciones originales en la raíz. 6. _"Designing Data-Intensive Applications"_ (Kleppmann) — el libro de referencia que cubre los 3 temas con profundidad.
