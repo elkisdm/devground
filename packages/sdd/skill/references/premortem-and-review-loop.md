@@ -83,6 +83,10 @@ item below the brief does not answer) — that section is the deliverable you co
    not as the new code will write it?
 9. Is every **Variante** that reaches this path listed?
 10. Is every **Afirmación** — doc, contract, copy — on the files-to-touch list?
+11. Does the change add a tunable value (threshold, limit, copy, prompt, provider, toggle)?
+    Then the brief says which layer it lives in — code, env, flag, DB config — per
+    `knowledge/adr/0012-donde-vive-cada-configuracion.md` in devground: who should be able
+    to change it, and how much breaks if it changes wrong.
 
 Every gap adopted becomes a Given/When/Then scenario or an invariant with its test.
 Record `spec_review: {gaps_found, gaps_adopted}`; a gap seen and not adopted carries its
