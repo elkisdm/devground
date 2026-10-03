@@ -1,5 +1,11 @@
 # @devground/sdd
 
+## 1.7.1
+
+### Patch Changes
+
+- be63914: El design gate de spec-flow pregunta en qué capa vive cada valor configurable nuevo (código, env, flag o config en DB), según ADR-0012 de la knowledge base.
+
 ## 1.7.0
 
 ### Minor Changes
