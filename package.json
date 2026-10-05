@@ -22,7 +22,7 @@
     "@devground/husky-config": "workspace:*",
     "@devground/lint-staged-config": "workspace:*",
     "@devground/prettier-config": "workspace:*",
-    "@typescript-eslint/parser": "^8.70.1",
+    "@typescript-eslint/parser": "^8.71.0",
     "eslint": "^10.11.0",
     "husky": "^9.1.7",
     "lint-staged": "^15.2.11",
