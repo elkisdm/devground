@@ -57,6 +57,11 @@ viaja con la rama y no se pierde al recrear el servicio.
    basta correrlos en local sobre esos commits.
 2. Después del merge, el primer commit de solo docs debe aparecer como SKIPPED (Railway) o
    "Canceled / ignored" (Netlify, Vercel).
+   En Netlify, `$CACHED_COMMIT_REF` es el commit del último deploy **terminado**. Si el commit de
+   prueba empieza a construirse antes de que termine el deploy del cambio de filtro, compara
+   contra un commit anterior, ve el propio `netlify.toml` modificado y construye igual. No es una
+   falla del filtro: la prueba válida es el siguiente commit de docs, con el deploy anterior ya
+   publicado. Pasó en Atlas el 6-oct-2026.
 
 ### Fuera de alcance
 
