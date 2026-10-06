@@ -55,6 +55,7 @@ siguiente número de la secuencia, rellénalo y añádelo al índice de abajo.
 - [ADR-0038 — Agrupar el trabajo en builds con un gate de salida verificable](0038-trabajo-por-builds-con-gate-verificable.md) (Propuesto)
 - [ADR-0039 — El review pasa a ser opt-in; el gate de cierre es la spec](0039-review-opt-in-y-spec-como-gate.md) (Aceptado)
 - [ADR-0040 — Plan de ejecución por agentes y contexto acotado](0040-plan-de-ejecucion-por-agentes-y-contexto-acotado.md) (Aceptado)
+- [ADR-0041 — Desplegar un servicio solo cuando cambia lo que entra a su build](0041-desplegar-solo-cuando-cambia-el-codigo-del-servicio.md) (Aceptado)
 
 ## Estándares con enforcement automático
 
