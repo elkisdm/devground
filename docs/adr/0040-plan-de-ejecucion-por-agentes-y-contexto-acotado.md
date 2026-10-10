@@ -3,7 +3,7 @@
 - **Estado**: Aceptado
 - **Fecha**: 2026-10-01
 - **Decisor**: edaza
-- **Aplica a**: `@devground/sdd` (skill spec-flow v0.8, agentes `ejecutor*`, instalador), configuración de Claude Code (`autoCompactWindow`)
+- **Aplica a**: `@devground/sdd` (skill spec-flow v0.8, agentes `ejecutor*`, instalador), configuración de Claude Code (`autoCompactWindow`, `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` desde la enmienda del 2026-10-10)
 - **Reemplaza**: [ADR-0030](0030-delegacion-opt-in-por-peticion.md) para la ejecución de cambios Tier 2–3. `planner`, `planner-deep` y los agentes de review siguen siendo opt-in.
 - **Extiende**: [ADR-0031](0031-modelo-explicito-al-delegar.md) (modelo explícito por naturaleza de la tarea), [ADR-0039](0039-review-opt-in-y-spec-como-gate.md)
 
@@ -82,6 +82,24 @@ nadie pidió. Esa lección se conserva como límites, no como prohibición.
 6. **Distribución:** `npx @devground/sdd` instala, además de la skill, los tres
    `ejecutor*` (sin sobrescribir los existentes), porque el plan depende de ellos. La capa
    de hooks de orquestación (ADR-0027/0028) sigue siendo opt-in y aparte.
+
+### Enmienda 2026-10-10 — compactación al 50 %, configurable por proyecto
+
+Reemplaza el punto 1. El usuario pidió compactar al 50 % de la ventana y poder ajustarlo
+por proyecto.
+
+- **Default global** en `~/.claude/settings.json`: `autoCompactWindow: 1000000` (el techo
+  deja de recortar; Claude Code igual lo limita a la ventana del modelo) y
+  `env.CLAUDE_AUTOCOMPACT_PCT_OVERRIDE: "50"`. El umbral queda en
+  `min(ventana × 50 %, ventana − 13k)`: ~500k en un modelo de 1M, ~100k en uno de 200k.
+- **Por proyecto**: `.claude/settings.local.json` (personal, sin commitear) o
+  `.claude/settings.json` (compartido) del proyecto con
+  `{"env": {"CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "35"}}`. La configuración de proyecto se
+  superpone a la global; aplica al abrir una sesión nueva.
+- **Riesgos aceptados**: la variable sigue figurando como override de prueba en el código
+  de Claude Code (v2.1.296) y los forks la ignoran (usan el umbral sin override). En un
+  modelo de 1M sube el umbral de ~307k a ~500k, lo que encarece la relectura de contexto
+  que motivó este ADR; si la medición del 2026-10-15 lo muestra, se baja el porcentaje.
 
 ## Consecuencias
 
