@@ -20,9 +20,15 @@ skill by name.
 
 1. **Always** load `references/base.md` first. It is the universal layer: rules that apply
    to any project regardless of stack or design system.
-2. **Look for a project overlay** at `docs/ui-conventions.md` in the repo you are working in.
+2. **Always** load `references/design-fundamentals.md` too. It is the universal design layer:
+   principles (tokens over raw values, one decision per context, data with its context,
+   purposeful space, people-first copy) — never a concrete style. When a token or rule you
+   need is missing, declare a **SYSTEM GAP** instead of inventing a value.
+3. **Look for a project overlay** at `docs/ui-conventions.md` in the repo you are working in.
    - If it exists, load it. On conflict, **the overlay wins over base.md** — its concrete
-     tokens, own components, and helpers replace the generic rule.
+     tokens, own components, and helpers replace the generic rule. The overlay is also the
+     only place a brand or design system enters: never carry one project's look (colors,
+     fonts, radii) into another project that does not declare it.
    - If it does **not** exist, continue with the base layer alone and **offer** to mine one,
      pointing at `references/mining-prompt.md`. Do not mine it unless the user asks for it.
 
