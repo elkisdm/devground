@@ -45,8 +45,20 @@ librería o CSS puro, ninguna]
 
 > Helper preferente si el repo no tiene uno propio: @devground/chile-formats.
 
+## 7. Sistema de diseño (valores)
+
+> Solo si el proyecto adopta un sistema de diseño. Aquí entran los valores que
+> `design-fundamentals.md` deja abiertos; un proyecto sin esta sección no hereda el estilo de
+> otro.
+
+- **Fuente:** [ruta o URL del sistema de diseño]
+- **Tokens por rol:** [nombre de uso → token del código, p. ej. `decide` → `--color-decide`]
+- **Tipografías, escala de espaciado, radios:** [valores]
+- **Excepciones a los fundamentos:** [principio → motivo, o «ninguna»]
+- **SYSTEM GAP abiertos:** [lo que el sistema todavía no define]
+
 ## Deuda conocida
 
-| Deuda | Ubicación | Patrón correcto |
-| --- | --- | --- |
+| Deuda         | Ubicación                   | Patrón correcto                  |
+| ------------- | --------------------------- | -------------------------------- |
 | [descripción] | `ruta/al/archivo.ext:línea` | [qué debería usarse en su lugar] |

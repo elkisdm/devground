@@ -35,10 +35,16 @@ explicitly.
 
 1. It always loads the universal base layer (`references/base.md`): rules that hold across
    any stack or design system.
-2. It looks for a project-specific overlay at `docs/ui-conventions.md` in the repo you're
+2. It always loads the universal design fundamentals (`references/design-fundamentals.md`):
+   principles, not a style — tokens over raw values (and a **SYSTEM GAP** instead of an invented
+   value), one primary action and one emphasis region per context, numbers with their
+   composition and timestamp, purposeful space, people-first copy, and how a product family
+   shares one grammar with different voices.
+3. It looks for a project-specific overlay at `docs/ui-conventions.md` in the repo you're
    working in. If one exists, it loads it, and on conflict the overlay wins over the base
-   — concrete tokens, own components, and helpers replace the generic rule.
-3. If no overlay exists yet, it offers to mine one from your actual code (never without
+   — concrete tokens, own components, and helpers replace the generic rule. The overlay is the
+   only door for a brand or design system, so one project's look never leaks into another.
+4. If no overlay exists yet, it offers to mine one from your actual code (never without
    asking) using `references/mining-prompt.md`, producing a `docs/ui-conventions.md` in the
    format of `references/overlay-template.md`.
 
