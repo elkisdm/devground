@@ -108,10 +108,10 @@ que ya pide el CRM (N-115).
 
 ### 7. Hooks
 
-Los hooks de commit y de cierre de sesión **no llaman a Pauta directamente**: detectan la clave en la
+Los hooks de commit (PostToolUse) y de inicio de sesión (SessionStart; el de cierre no puede inyectar contexto porque la sesión ya terminó) **no llaman a Pauta directamente**: detectan la clave en la
 rama o el commit e inyectan en el contexto la instrucción de comentar en ese ítem, y la sesión lo
 hace por el MCP (que ya está autenticado). Así no hace falta guardar una credencial de Pauta en un
-script.
+script. Implementación: `~/.claude/scripts/pauta-item-context.sh`.
 
 ### 8. Qué se conserva del ADR-0038
 

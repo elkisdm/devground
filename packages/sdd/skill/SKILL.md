@@ -257,7 +257,7 @@ the plan; a spec without them is a wish.
 --- (Tier 2+ adds, after Tasks or Spec:) ---
 
 ### Ejecución                      (see Step 3.5)
-| # | Tarea | Agente | Modelo · esfuerzo | Archivos | Entrega |
+| # | Tarea | Destino | Estimación | Agente | Modelo · esfuerzo | Archivos | Entrega |
 ```
 
 After writing the brief, **do not wait for permission on low tiers**. For Tier 0–1,
@@ -283,12 +283,23 @@ on Tier 2 (no Tasks section) group **Files & routes to touch** into tasks right 
 
 ```
 ### Ejecución
-| # | Tarea | Agente | Modelo · esfuerzo | Archivos | Entrega |
-|---|-------|--------|-------------------|----------|---------|
-| 1 | Migración + modelo | ejecutor-critico | opus · high | `db/0042_*.sql`, `models/user.ts` | diff + tests verdes |
-| 2 | Endpoint y validación | ejecutor | sonnet · medium | `api/users.ts` | diff + tests verdes |
-| 3 | README y changelog | ejecutor-mecanico | haiku · low | `README.md` | diff |
+| # | Tarea | Destino | Estimación | Agente | Modelo · esfuerzo | Archivos | Entrega |
+|---|-------|---------|------------|--------|-------------------|----------|---------|
+| 1 | Migración + modelo | api | 2h | ejecutor-critico | opus · high | `db/0042_*.sql`, `models/user.ts` | diff + tests verdes |
+| 2 | Endpoint y validación | api | 2h | ejecutor | sonnet · medium | `api/users.ts` | diff + tests verdes |
+| 3 | README y changelog | api | 30m | ejecutor-mecanico | haiku · low | `README.md` | diff |
 ```
+
+**Destino and Estimación (ADR-0042)** — they feed Pauta; outside a Pauta project, leave
+them out.
+
+- **Destino** = the project's platform in Pauta (api, web, mcp…). Each task belongs to one
+  destino; a destino can have several tasks.
+- **Estimación** per task, fixed scale: **XS 30m · S 2h · M 1d · L 3d** (1d = 8h). Bigger
+  than L → split it before dispatching. The destino's estimate is the sum of its tasks.
+- **Agent and model stay in the brief only**: Pauta's owner is the orchestrating session
+  (`claude`), not the subagents.
+- Tier 1 has no table: estimate each destino directly.
 
 Assign by the task's nature, not the change's tier — the floor in
 `~/.claude/skills/model-orchestrator/policy.json` (ADR-0031):
@@ -331,6 +342,27 @@ available when the user asks for it; this table is its floor policy applied inli
 without the extra router call. If it is requested, also write
 `docs/specs/<change>.tasks.json` per
 `~/.claude/skills/model-orchestrator/references/tasks-input.schema.json`.
+
+### Registro en Pauta (ADR-0042)
+
+Applies **only** when the repo/project is registered in Pauta (today `ATL` = Atlas,
+`CLA` = Claudia IA). If the `pauta` MCP is unavailable, do not block: continue and
+register afterwards. A spec-flow change is a Pauta item; the ADR stays the source of
+decisions.
+
+| Tier | In Pauta |
+|---|---|
+| 0 | No item (a comment if it touches an existing one) |
+| 1 | Item with the short brief as its text |
+| 2–3 | Item with the full brief attached (`adjuntar_informe`, title `Brief · <título>`); if the brief changes, `proponer_version_de_documento` |
+
+Lifecycle: brief ready → `crear_item` (or reuse: `listar_items` first), `adjuntar_informe`
+(Tier 2–3), `estimar` per destino, `asignar` to `claude`, `agregar_al_sprint` if a Build is
+active. Task dispatched → `cambiar_estado` `in_progress`. Task integrated → `comentar`, one
+line. Decision → `registrar_decision`. PR open/merged but not deployed → a comment; the
+destino stays open. In production → `cerrar_destino` with the REAL level reached (Step 4).
+Naming: the key goes in the branch (`feat/ATL-12-slug`), the commits (`(ATL-12)`) and the
+PR title.
 
 ## Step 3.6 — Design gate: review the spec before the first Edit (Tier 2–3)
 
@@ -420,6 +452,11 @@ Done is proven against the spec, not discovered by a reviewer. Fill the brief's
 3. Re-run the **Consumidores** grep against the final diff — new readers appear while you
    code. Each one is "unchanged" or has its scenario.
 4. Full test suite, typecheck and lint green; Tier 2+ invariant tests verified both ways.
+
+In a Pauta project, the evidence level for `cerrar_destino` comes from this check as it
+really ran, never the desired one (`compiles` < `measured_in_code` < `tested` <
+`measured_in_prod`; `minor_change` for Tier 0 text/style). Merging is not deploying: the
+destino stays open until it is in production.
 
 This runs in the main loop with no subagents. It costs minutes; it replaces a review whose
 loop cost hundreds of dollars per change and still closed with open debt in 65 of 88
