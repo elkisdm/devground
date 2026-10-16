@@ -52,10 +52,11 @@ siguiente número de la secuencia, rellénalo y añádelo al índice de abajo.
 - [ADR-0035 — Cubrir Python/FastAPI y TanStack cosechando configuración ya rodada](0035-cobertura-python-y-tanstack.md) (Aceptado)
 - [ADR-0036 — El code review es parte de la Definition of Done en spec-flow](0036-review-como-definition-of-done.md) (Aceptado)
 - [ADR-0037 — Pre-mortem en la spec y cota al ciclo de revisión](0037-premortem-en-la-spec-y-cota-al-ciclo-de-revision.md) (Aceptado; protocolo de pasadas reemplazado por ADR-0039)
-- [ADR-0038 — Agrupar el trabajo en builds con un gate de salida verificable](0038-trabajo-por-builds-con-gate-verificable.md) (Propuesto)
+- [ADR-0038 — Agrupar el trabajo en builds con un gate de salida verificable](0038-trabajo-por-builds-con-gate-verificable.md) (Propuesto) — reemplazado en parte por ADR-0042
 - [ADR-0039 — El review pasa a ser opt-in; el gate de cierre es la spec](0039-review-opt-in-y-spec-como-gate.md) (Aceptado)
 - [ADR-0040 — Plan de ejecución por agentes y contexto acotado](0040-plan-de-ejecucion-por-agentes-y-contexto-acotado.md) (Aceptado)
 - [ADR-0041 — Desplegar un servicio solo cuando cambia lo que entra a su build](0041-desplegar-solo-cuando-cambia-el-codigo-del-servicio.md) (Aceptado)
+- [ADR-0042 — Plan de ejecución unificado con Pauta](0042-plan-de-ejecucion-unificado-con-pauta.md) (Aceptado)
 
 ## Estándares con enforcement automático
 

@@ -1,6 +1,6 @@
 # ADR-0038: Agrupar el trabajo en builds con un gate de salida verificable
 
-- **Estado**: Propuesto
+- **Estado**: Propuesto — reemplazado en parte por [ADR-0042](0042-plan-de-ejecucion-unificado-con-pauta.md) (Builds y sprints pasan a Pauta; el verificador queda como criterio de cierre de Épica)
 - **Fecha**: 2026-09-24
 - **Decisor**: elkisdm
 - **Aplica a**: cualquier proyecto que despliegue a producción con devground (piloto en paralelo: Claudia IA y Atlas Engine)
