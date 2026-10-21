@@ -81,7 +81,7 @@ carpeta de proyecto:
   Ej: `/Users/macbookpro/Documents/encuentrosmart`
   → `-Users-macbookpro-Documents-encuentrosmart`.
   (Verificado contra el disco; un espacio y un guion del path producen doble
-  guion, que coincide con `HCLP--Capitalinteligente`.)
+  guion, que coincide con `ACME--Empresa`.)
 
 `collect` ahora, para cada repo: deriva `<DIR>`, lee sus `*.jsonl` (live +
 backup), deduplica por `uuid`, filtra por período y **suma** `message.usage`.
@@ -170,10 +170,10 @@ versionable. Degrada con gracia en cada paso (nunca crashea):
   - `candidateIdentities` (ambiguas): emails que no mapean a ninguna cuenta (un
     colega que comparte un solo repo, automatización que pasó el filtro). NO se usan
     para filtrar git — el usuario las revisa y promueve a mano.
-  Bots/agentes se descartan vía `isBotEmail` (`[bot]`, `noreply@anthropic.com`,
-  `@local`, `codex`, `cursoragent`, `@cursor.com`, `github-actions`). En particular
-  `codex@local` ahora se filtra (antes pasaba). `init` escribe ambos campos y avisa:
-  "N identidades confirmadas, M candidatas (revísalas en el config)".
+    Bots/agentes se descartan vía `isBotEmail` (`[bot]`, `noreply@anthropic.com`,
+    `@local`, `codex`, `cursoragent`, `@cursor.com`, `github-actions`). En particular
+    `codex@local` ahora se filtra (antes pasaba). `init` escribe ambos campos y avisa:
+    "N identidades confirmadas, M candidatas (revísalas en el config)".
 - **Override manual**: el config es editable a mano (repos/identidades/candidatas/
   excludes/events).
 
@@ -259,12 +259,14 @@ finales).
 ## Consecuencias
 
 **Positivas**
+
 - Base verificable y reproducible para responder "¿estoy mejorando?".
 - Snapshots versionables: el `events.json` se commitea; los snapshots no
   (`.gitignore`), evitando ruido en git pero conservando el log curado.
 - Funciones puras → alta cobertura de tests, bajo costo de mantenimiento.
 
 **Negativas / Trade-offs**
+
 - Los tokens por repo son medición, pero el gasto **por cuenta** sigue sin
   poder atribuirse desde los archivos (caveat 1) — sirve para tendencia, no
   para facturación por cuenta.

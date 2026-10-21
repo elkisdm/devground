@@ -75,20 +75,12 @@ describe('isLikelyThirdPartyFork', () => {
   const own = new Set(['elkisdm', 'edaza-create']);
 
   it('flags a repo whose origin owner is not one of the user accounts', () => {
-    const fork = isLikelyThirdPartyFork(
-      '/x',
-      own,
-      () => 'git@github.com:someoneelse/repo.git',
-    );
+    const fork = isLikelyThirdPartyFork('/x', own, () => 'git@github.com:someoneelse/repo.git');
     expect(fork).toBe(true);
   });
 
   it('keeps a repo owned by the user', () => {
-    const fork = isLikelyThirdPartyFork(
-      '/x',
-      own,
-      () => 'https://github.com/elkisdm/repo.git',
-    );
+    const fork = isLikelyThirdPartyFork('/x', own, () => 'https://github.com/elkisdm/repo.git');
     expect(fork).toBe(false);
   });
 
@@ -127,14 +119,14 @@ describe('parseNoreplyUsername', () => {
 describe('localPartMatchesAccount', () => {
   const own = new Set(['elkisdm', 'edaza-create']);
   it('matches when the local-part is a prefix of a gh login', () => {
-    expect(localPartMatchesAccount('edaza@capitalinteligente.cl', own)).toBe(true);
+    expect(localPartMatchesAccount('edaza@empresa.example', own)).toBe(true);
   });
   it('matches an exact local-part', () => {
     expect(localPartMatchesAccount('elkisdm@gmail.com', own)).toBe(true);
   });
   it('does not match an unrelated colleague email', () => {
-    expect(localPartMatchesAccount('vpedrerop@capitalinteligente.cl', own)).toBe(false);
-    expect(localPartMatchesAccount('export@selectcapital.cl', own)).toBe(false);
+    expect(localPartMatchesAccount('colega@empresa.example', own)).toBe(false);
+    expect(localPartMatchesAccount('export@cliente.example', own)).toBe(false);
   });
   it('ignores too-short local-parts to avoid spurious matches', () => {
     expect(localPartMatchesAccount('ab@x.com', new Set(['abel']))).toBe(false);
@@ -164,10 +156,10 @@ describe('inferIdentities', () => {
       const repo = args[1];
       if (repo === '/a') {
         return [
-          'edaza@capitalinteligente.cl',
+          'edaza@empresa.example',
           '140560932+elkisdm@users.noreply.github.com',
           'codex@local', // bot, must be dropped
-          'edaza@capitalinteligente.cl',
+          'edaza@empresa.example',
         ].join('\n');
       }
       if (repo === '/b') {
@@ -191,15 +183,13 @@ describe('inferIdentities', () => {
       const repo = args[1];
       // edaza@ shares its local-part with gh login `edaza-create`
       if (repo === '/a') {
-        return ['140560932+elkisdm@users.noreply.github.com', 'edaza@capitalinteligente.cl'].join(
-          '\n',
-        );
+        return ['140560932+elkisdm@users.noreply.github.com', 'edaza@empresa.example'].join('\n');
       }
       return '';
     };
     const out = inferIdentities(['/a'], new Set(['elkisdm', 'edaza-create']), run);
-    expect(out.identities).toContain('edaza@capitalinteligente.cl');
-    expect(out.candidateIdentities).not.toContain('edaza@capitalinteligente.cl');
+    expect(out.identities).toContain('edaza@empresa.example');
+    expect(out.candidateIdentities).not.toContain('edaza@empresa.example');
   });
 
   it('confirms a personal email that co-occurs with a confirmed identity in 2+ repos', () => {
@@ -218,21 +208,19 @@ describe('inferIdentities', () => {
       const repo = args[1];
       // colleague co-occurs with the user's confirmed noreply, but in ONE repo
       if (repo === '/a') {
-        return ['140560932+elkisdm@users.noreply.github.com', 'vpedrerop@capitalinteligente.cl'].join(
-          '\n',
-        );
+        return ['140560932+elkisdm@users.noreply.github.com', 'colega@empresa.example'].join('\n');
       }
       // automation alongside the user, also a single shared repo
       if (repo === '/b') {
-        return ['140560932+elkisdm@users.noreply.github.com', 'export@selectcapital.cl'].join('\n');
+        return ['140560932+elkisdm@users.noreply.github.com', 'export@cliente.example'].join('\n');
       }
       return '';
     };
     const out = inferIdentities(['/a', '/b'], new Set(['elkisdm']), run);
-    expect(out.candidateIdentities).toContain('vpedrerop@capitalinteligente.cl');
-    expect(out.candidateIdentities).toContain('export@selectcapital.cl');
-    expect(out.identities).not.toContain('vpedrerop@capitalinteligente.cl');
-    expect(out.identities).not.toContain('export@selectcapital.cl');
+    expect(out.candidateIdentities).toContain('colega@empresa.example');
+    expect(out.candidateIdentities).toContain('export@cliente.example');
+    expect(out.identities).not.toContain('colega@empresa.example');
+    expect(out.identities).not.toContain('export@cliente.example');
   });
 
   it('with no detected accounts, confirms nothing and routes all non-bots to candidates', () => {

@@ -27,9 +27,7 @@ export function inferIdentitiesFromRepo(
     if (email === '') continue;
     counts.set(email, (counts.get(email) ?? 0) + 1);
   }
-  return [...counts.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .map(([email]) => email);
+  return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([email]) => email);
 }
 
 /**
@@ -54,18 +52,18 @@ export function parseNoreplyUsername(email: string): string | null {
  * True when the local-part of `email` ties it to one of the detected gh logins.
  * We normalise both sides to `[a-z0-9]` (dropping dots, dashes, plus tags) and
  * accept an equality or prefix relation in EITHER direction, so:
- *   edaza@capitalinteligente.cl   ↔ gh `edaza-create`  -> true  (edaza ⊂ edazacreate)
+ *   edaza@empresa.example         ↔ gh `edaza-create`  -> true  (edaza ⊂ edazacreate)
  *   elkisdm@gmail.com             ↔ gh `elkisdm`        -> true  (equal)
- *   vpedrerop@capitalinteligente.cl ↔ {elkisdm,edaza-create} -> false
+ *   colega@empresa.example        ↔ {elkisdm,edaza-create} -> false
  * Requires the shorter side to be at least 4 chars to avoid spurious matches.
  */
-export function localPartMatchesAccount(
-  email: string,
-  ownUsernames: ReadonlySet<string>,
-): boolean {
+export function localPartMatchesAccount(email: string, ownUsernames: ReadonlySet<string>): boolean {
   const at = email.toLowerCase().indexOf('@');
   if (at <= 0) return false;
-  const local = email.slice(0, at).toLowerCase().replace(/[^a-z0-9]/g, '');
+  const local = email
+    .slice(0, at)
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '');
   if (local.length < 4) return false;
   for (const login of ownUsernames) {
     const norm = login.toLowerCase().replace(/[^a-z0-9]/g, '');
