@@ -5,12 +5,12 @@
 
 ## 1. Resumen
 
-| Pieza | Qué es | ADR |
-| --- | --- | --- |
-| `@devground/dreaming` | Consolidación de memoria fuera de banda para Claude Code | — (sin ADR propio, ya en `main..HEAD` antes de esta tanda) |
-| Coverage ratchet | Installer `vitest` en `devground-init` + hook `pre-push` + umbrales críticos | ADR-0025 |
-| `@devground/ui-conventions` | Skill de convenciones de UI como contexto previo a generar código | ADR-0023 |
-| Integración de ecosistema | 5 conexiones que enchufan ui-conventions al resto de devground | ADR-0024 |
+| Pieza                       | Qué es                                                                       | ADR                                                        |
+| --------------------------- | ---------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| `@devground/dreaming`       | Consolidación de memoria fuera de banda para Claude Code                     | — (sin ADR propio, ya en `main..HEAD` antes de esta tanda) |
+| Coverage ratchet            | Installer `vitest` en `devground-init` + hook `pre-push` + umbrales críticos | ADR-0025                                                   |
+| `@devground/ui-conventions` | Skill de convenciones de UI como contexto previo a generar código            | ADR-0023                                                   |
+| Integración de ecosistema   | 5 conexiones que enchufan ui-conventions al resto de devground               | ADR-0024                                                   |
 
 Este deploy trae 4 commits nuevos sobre los 2 de `dreaming` que ya estaban en la rama.
 
@@ -18,9 +18,10 @@ Este deploy trae 4 commits nuevos sobre los 2 de `dreaming` que ya estaban en la
 
 Ya estaba en la rama (commits `24aabb6` y `2fbbcef`), incluido aquí como contexto porque forma parte de lo que se va a mostrar.
 
-Es consolidación de memoria "fuera de banda": revisa las transcripciones de sesión recientes de un proyecto contra su almacén de memoria y propone un *diff revisado* — fusionar duplicados, deprecar memorias obsoletas o contradichas, agregar patrones recurrentes que nunca se capturaron, y corregir el drift del índice `MEMORY.md`. **Nada se escribe sin aprobación explícita; nada se borra, solo se archiva.**
+Es consolidación de memoria "fuera de banda": revisa las transcripciones de sesión recientes de un proyecto contra su almacén de memoria y propone un _diff revisado_ — fusionar duplicados, deprecar memorias obsoletas o contradichas, agregar patrones recurrentes que nunca se capturaron, y corregir el drift del índice `MEMORY.md`. **Nada se escribe sin aprobación explícita; nada se borra, solo se archiva.**
 
 Tres actores separados deliberadamente:
+
 1. **El harness** (`devground-dreaming gather`) hace la parte barata y determinística: selecciona las transcripciones de la ventana, las destila a su columna conversacional + señales de error de herramientas, y toma una foto de la memoria actual. Está portado a TypeScript compilado (antes era Python) y reutiliza el lector de transcripciones y los helpers de memoria de `@devground/dev-metrics` en vez de duplicar el parseo de JSONL.
 2. **La skill** (`dreaming`) razona sobre el bundle: encuentra duplicados, memorias obsoletas, patrones no capturados y drift de índice, y escribe una propuesta con evidencia (session id + fecha) por cada cambio.
 3. **Tú** eres el gate de aprobación: la skill se detiene en la propuesta y aplica solo lo que apruebes, ítem por ítem.
@@ -36,7 +37,7 @@ Instalación: `npx @devground/dreaming` (proyecto) o `npx @devground/dreaming --
 **La solución — un ratchet, no un umbral fijo**:
 
 - **Rutas críticas (fijas, compartidas)**: `@devground/vitest-config` ahora exporta `CRITICAL_GLOBS` + `CRITICAL_THRESHOLDS` (90% líneas/funciones/statements, 85% ramas) sobre rutas de dinero/leads/auth. Viven en el preset porque son estándar, no preferencia por repo.
-- **Piso global con ratchet (por repo)**: el nuevo installer `vitest` de `devground-init` scaffoldea un `vitest.config.mjs` que hereda el preset por *spread* (no `mergeConfig` — `autoUpdate` de Vitest hace una transformación estática del archivo y falla con configs envueltos en `mergeConfig`) e inyecta `thresholds: { autoUpdate: true, lines: 0, functions: 0, branches: 0, statements: 0 }`. `autoUpdate` reescribe esos números a la cobertura real cuando la supera, y nunca los baja. Arrancan en 0 para no romper un repo con poca cobertura hoy.
+- **Piso global con ratchet (por repo)**: el nuevo installer `vitest` de `devground-init` scaffoldea un `vitest.config.mjs` que hereda el preset por _spread_ (no `mergeConfig` — `autoUpdate` de Vitest hace una transformación estática del archivo y falla con configs envueltos en `mergeConfig`) e inyecta `thresholds: { autoUpdate: true, lines: 0, functions: 0, branches: 0, statements: 0 }`. `autoUpdate` reescribe esos números a la cobertura real cuando la supera, y nunca los baja. Arrancan en 0 para no romper un repo con poca cobertura hoy.
 - **Enforcement en dos niveles**: gate **duro** en CI (`pnpm -r test:coverage`, bloqueante, salta paquetes sin el script) y hook **suave** `pre-push` en `@devground/husky-config` que corre coverage y avisa si no alcanza, pero nunca bloquea (`SKIP_COVERAGE=1` para omitir). Mismo patrón de degradación que gitleaks en pre-commit (ADR-0008): la garantía dura la da CI, lo local solo avisa.
 - El installer agrega los scripts `test` y `test:coverage` sin sobreescribir un `test` existente.
 
@@ -57,7 +58,7 @@ La skill incluye una §5 de mantenimiento del overlay: quien lo usa es quien lo 
 
 Aislada, la skill tenía tres huecos: no se auto-disparaba en sesiones orquestadas (un subagente `ejecutor` recibe un brief, no un prompt interactivo, así que ninguna skill de Claude Code se dispara por keyword), no había ciclo de retroalimentación entre lo que un audit encontraba y la base/overlay, y reglas mecánicamente verificables gastaban tokens de LLM en vez de resolverse con lint. ADR-0024 cierra los tres huecos con cinco conexiones puntuales:
 
-1. **Checklist UI/FRONTEND en `model-orchestrator`**: inyectado *aditivamente* por superficie frontend detectada en la tarea (no es un `kind` nuevo, el ruteo de modelo no cambia). Así llega también a sesiones orquestadas.
+1. **Checklist UI/FRONTEND en `model-orchestrator`**: inyectado _aditivamente_ por superficie frontend detectada en la tarea (no es un `kind` nuevo, el ruteo de modelo no cambia). Así llega también a sesiones orquestadas.
 2. **Dimensión `aud-ui-conventions` en deepcheck** (13ª del array `DIMENSIONS[]`, guardada: solo corre en flujos que tocan UI). Audita la base más el overlay del proyecto si existe, y lleva la regla de promoción en el rationale del hallazgo: repetido ≥2 veces en el mismo proyecto → promover a overlay; convergente entre proyectos → promover a base. Cierra el ciclo de retroalimentación.
 3. **Preset opt-in `./ui` en `@devground/eslint-config`**: `jsx-a11y` en modo `error` (alineado a base.md §3) más `no-restricted-syntax`/`no-restricted-imports` parametrizables (`warn`) para empujar primitivas propias y una capa única de iconos. Lo determinista se resuelve con lint, no gastando tokens del LLM en cada generación.
 4. **Paquete `@devground/chile-formats`**: helpers es-CL sin dependencias runtime — RUT (formateo con puntos y guion, validación módulo 11), teléfono (+56 9), moneda/UF/número vía `Intl.NumberFormat('es-CL')` memoizado. Código reutilizable pesa menos que instrucción reutilizable.
@@ -65,7 +66,7 @@ Aislada, la skill tenía tres huecos: no se auto-disparaba en sesiones orquestad
 
 ## 6. Fuera del repo
 
-Tres proyectos ya tienen su overlay `docs/ui-conventions.md` minado y commiteado: **Rentix**, **Capital Academy** (`Capitalacademy`) y **hclp** (`hclp-capitalinteligente`).
+Tres proyectos ya tienen su overlay `docs/ui-conventions.md` minado y commiteado: **Rentix**, **Capital Academy** (`Capitalacademy`) y **hclp**.
 
 ## 7. Cómo se publica
 
@@ -75,14 +76,14 @@ Flujo esperado: merge de esta rama a `main` → CI corre → se abre (o actualiz
 
 Changesets pendientes que trae este deploy:
 
-| Changeset | Paquete(s) | Bump |
-| --- | --- | --- |
-| `coverage-ratchet.md` | `devground-init`, `@devground/vitest-config`, `@devground/husky-config` | minor |
-| `ui-conventions-skill.md` | `@devground/ui-conventions` | minor |
-| `chile-formats-package.md` | `@devground/chile-formats` | minor |
-| `eslint-config-ui-preset.md` | `@devground/eslint-config` | minor |
-| `cli-ui-conventions-installer.md` | `devground-init` | minor |
-| `agents-md-ui-pointer.md` | `@devground/agents-md` | patch |
+| Changeset                         | Paquete(s)                                                              | Bump  |
+| --------------------------------- | ----------------------------------------------------------------------- | ----- |
+| `coverage-ratchet.md`             | `devground-init`, `@devground/vitest-config`, `@devground/husky-config` | minor |
+| `ui-conventions-skill.md`         | `@devground/ui-conventions`                                             | minor |
+| `chile-formats-package.md`        | `@devground/chile-formats`                                              | minor |
+| `eslint-config-ui-preset.md`      | `@devground/eslint-config`                                              | minor |
+| `cli-ui-conventions-installer.md` | `devground-init`                                                        | minor |
+| `agents-md-ui-pointer.md`         | `@devground/agents-md`                                                  | patch |
 
 `npx changeset status` sobre el estado actual del repo (incluye changesets previos a esta rama que seguían pendientes) reporta:
 
@@ -94,7 +95,7 @@ Changesets pendientes que trae este deploy:
 
 - `@devground/dreaming`: consolidación de memoria fuera de banda para Claude Code — propone un diff revisado de tu memoria, nunca escribe sin tu aprobación.
 - Coverage ratchet (ADR-0025): nuevo installer `vitest` que scaffoldea un piso de cobertura que solo puede subir (nunca baja), más gate duro en CI y aviso suave en `pre-push`.
-- `@devground/ui-conventions` (ADR-0023): las convenciones de UI ahora se cargan como contexto *antes* de generar código, no como corrección posterior — base universal + overlay por proyecto.
+- `@devground/ui-conventions` (ADR-0023): las convenciones de UI ahora se cargan como contexto _antes_ de generar código, no como corrección posterior — base universal + overlay por proyecto.
 - Integración de ecosistema (ADR-0024): las convenciones de UI ahora llegan a sesiones orquestadas, se auditan con `aud-ui-conventions` en deepcheck (con ciclo de promoción overlay↔base), y lo mecánico (a11y, primitivas, iconos) se valida con un preset de eslint en vez de gastar tokens del LLM.
 - Nuevo paquete `@devground/chile-formats`: RUT, teléfono y moneda es-CL sin dependencias.
 - Instalación de todo lo nuevo vía `devground-init`: `npx devground-init` y eliges `vitest` y/o `ui-conventions` (auto-skip fuera de React/Next).

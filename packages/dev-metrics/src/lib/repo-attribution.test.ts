@@ -9,10 +9,10 @@ describe('repoPathToProjectDir', () => {
   });
 
   it('collapses a space the same as any other non-alphanumeric (one dash each)', () => {
-    // "HCLP -Capitalinteligente" -> the space AND the dash each become a dash,
+    // "ACME -Empresa" -> the space AND the dash each become a dash,
     // yielding a double dash, matching the real dir on disk.
-    expect(repoPathToProjectDir('/Users/macbookpro/Documents/HCLP -Capitalinteligente')).toBe(
-      '-Users-macbookpro-Documents-HCLP--Capitalinteligente',
+    expect(repoPathToProjectDir('/Users/macbookpro/Documents/ACME -Empresa')).toBe(
+      '-Users-macbookpro-Documents-ACME--Empresa',
     );
   });
 
