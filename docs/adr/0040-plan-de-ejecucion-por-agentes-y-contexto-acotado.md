@@ -3,7 +3,8 @@
 - **Estado**: Aceptado
 - **Fecha**: 2026-10-01
 - **Decisor**: edaza
-- **Aplica a**: `@devground/sdd` (skill spec-flow v0.8, agentes `ejecutor*`, instalador), configuración de Claude Code (`autoCompactWindow`)
+- **Aplica a**: `@devground/sdd` (skill spec-flow v0.8, agentes `ejecutor*`, instalador), configuración de Claude Code (`autoCompactWindow`, hook `Stop`)
+- **Enmendado**: 2026-10-26 (punto 1: compactar solo con el turno terminado)
 - **Reemplaza**: [ADR-0030](0030-delegacion-opt-in-por-peticion.md) para la ejecución de cambios Tier 2–3. `planner`, `planner-deep` y los agentes de review siguen siendo opt-in.
 - **Extiende**: [ADR-0031](0031-modelo-explicito-al-delegar.md) (modelo explícito por naturaleza de la tarea), [ADR-0039](0039-review-opt-in-y-spec-como-gate.md)
 
@@ -48,11 +49,18 @@ nadie pidió. Esa lección se conserva como límites, no como prohibición.
 
 ## Decisión
 
-1. **Compactación automática con techo de ~300k.** `autoCompactWindow: 320000` en
-   `~/.claude/settings.json` (el mismo ajuste que guarda `/autocompact`). Claude Code toma
-   el menor entre ese valor y la ventana del modelo, así que un modelo con ventana de 200k
-   no cambia. Se descartó `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE`: en el código figura como
-   override de prueba y es un porcentaje de la ventana de cada modelo.
+1. **Compactación con techo de ~300k, solo con el turno terminado** (enmienda del
+   2026-10-26). La autocompactación de Claude Code revisa el umbral antes de cada llamada
+   al modelo, así que con un techo de 300k cortaba trabajos a mitad de camino. Ahora:
+   - `autoCompactWindow: 1000000` en `~/.claude/settings.json`: la compactación
+     automática queda solo como red de seguridad cerca de la ventana completa. Sin
+     `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` (es un override de prueba y dispara a mitad de
+     tarea).
+   - Hook `Stop` (`~/.claude/scripts/compactar-al-terminar.py`): cuando la sesión
+     principal termina un trabajo o queda esperando al usuario y el contexto pasa los
+     300k (`COMPACTAR_UMBRAL_TOKENS`), avisa para correr `/compact`. Un hook no puede
+     compactar por su cuenta; la compactación en reposo nativa depende de un flag del
+     servidor que no está activo en la cuenta.
 2. **spec-flow 0.8 — plan de ejecución en Tier 2–3** (Paso 3.5). El brief lleva una tabla
    `### Ejecución` con una fila por tarea: agente, modelo · esfuerzo, archivos y entrega.
    La asignación sigue el piso de `model-orchestrator/policy.json` según la naturaleza de
@@ -90,7 +98,8 @@ nadie pidió. Esa lección se conserva como límites, no como prohibición.
 - Ataca el 75 % del gasto de las sesiones principales en vez del modelo, que pesaba poco.
 - El esfuerzo por tarea queda explícito y visible en el brief; lo mecánico deja de correr
   en Opus.
-- La compactación y la sesión por cambio se refuerzan: menos sesiones llegan a 300k.
+- La compactación y la sesión por cambio se refuerzan: menos sesiones llegan a 300k, y
+  ninguna se compacta a mitad de un trabajo.
 
 **Negativas / Trade-offs**
 
@@ -101,6 +110,8 @@ nadie pidió. Esa lección se conserva como límites, no como prohibición.
   común van en secuencia.
 - Cada compactación puede perder detalle. Se mitiga porque la spec vive en el brief y no
   solo en la conversación.
+- La compactación a 300k ya no es automática: depende de que el usuario corra `/compact`
+  tras el aviso. Un turno largo puede pasar de 300k antes de terminar.
 - Revierte parcialmente el ADR-0030. El riesgo que motivó ese ADR (agentes que nadie
   pidió) queda acotado por el tope de 5, la tabla visible y que Tier 0–1 no delegan.
 
