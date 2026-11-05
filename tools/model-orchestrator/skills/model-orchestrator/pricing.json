@@ -1,9 +1,10 @@
 {
   "_meta": {
     "unit": "USD per 1,000,000 tokens",
-    "updated": "2026-06-30",
+    "updated": "2026-11-05",
     "policy": "Pre-llenado SOLO con tarifas verificadas. Lo no verificado queda null con un 'estimate' y su origen. El estimador de costos NUNCA usa un 'estimate' como si fuera precio confirmado: si input/output es null, el costo de esa tarea se reporta como 'pendiente', no se inventa.",
-    "how_to_fill": "Reemplaza input/output con el valor real y sube 'confidence' a 'confirmed'. Cuando confirmes Sonnet 5, borra el bloque 'estimate'."
+    "how_to_fill": "Reemplaza input/output con el valor real y sube 'confidence' a 'confirmed'. Cuando confirmes Sonnet 5, borra el bloque 'estimate'.",
+    "stale_warning": "Skill congelada (ADR-0032). Los IDs son de junio de 2026 y la familia 5.5 ya está disponible: verifica precios en https://platform.claude.com/docs/en/about-claude/pricing antes de usar estas estimaciones."
   },
   "models": {
     "opus": {
@@ -18,13 +19,12 @@
     "sonnet": {
       "id": "claude-sonnet-5",
       "tier": "medio",
-      "input": 2.0,
-      "output": 10.0,
+      "input": 3.0,
+      "output": 15.0,
       "confidence": "verified",
       "source": "https://www.anthropic.com/news/claude-sonnet-5",
-      "price_window": "introductory",
-      "standard_after": { "date": "2026-09-01", "input": 3.0, "output": 15.0 },
-      "note": "Precio INTRODUCTORIO de Sonnet 5, vigente hasta 2026-08-31 ($2/$10). Desde 2026-09-01 sube a estándar $3/$15 → ACTUALIZAR input/output a 3.0/15.0 en esa fecha. OJO: Sonnet 5 usa un tokenizer nuevo que produce ~1.0-1.35x más tokens que modelos previos; la estimación de costo puede quedar baja para texto denso."
+      "price_window": "standard",
+      "note": "Precio estándar de Sonnet 5 desde 2026-09-01 ($3/$15), según el anuncio del introductorio. OJO: el tokenizer de Sonnet 5 produce ~1.0-1.35x más tokens que modelos previos."
     },
     "haiku": {
       "id": "claude-haiku-4-5",
