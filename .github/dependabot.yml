@@ -11,11 +11,6 @@ updates:
       timezone: America/Santiago
     open-pull-requests-limit: 5
     versioning-strategy: increase
-    ignore:
-      # ADR-0026 (fase de consolidación): los majors son trabajo de migración,
-      # no de consolidación. Reevaluar al salir de la fase.
-      - dependency-name: '*'
-        update-types: ['version-update:semver-major']
     commit-message:
       prefix: chore
       include: scope
@@ -28,12 +23,22 @@ updates:
         update-types:
           - minor
           - patch
+      # Los majors de dev llegan juntos en un solo PR (ADR-0026: la fase de
+      # consolidación cerró el 2026-09-07).
+      dev-dependencies-major:
+        dependency-type: development
+        update-types:
+          - major
       # Group production dependencies separately
       production-dependencies:
         dependency-type: production
         update-types:
           - minor
           - patch
+      production-dependencies-major:
+        dependency-type: production
+        update-types:
+          - major
 
   # GitHub Actions
   - package-ecosystem: github-actions

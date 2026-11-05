@@ -23,7 +23,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: [20, 22]
+        node: [22, 24]
 
     steps:
       - name: Checkout
@@ -41,7 +41,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # pnpm -r recorre los 20 packages del workspace (packages/*); salta los que no
+      # pnpm -r recorre todos los packages del workspace (packages/*); salta los que no
       # definan el script (no falla por ausencia).
       - name: Typecheck
         run: pnpm -r typecheck
@@ -61,8 +61,13 @@ jobs:
       - name: Coverage gate
         run: pnpm -r test:coverage
 
-      # Lint de repo completo: hoy es un no-op documentado (el lint real vive
-      # en pre-commit vía lint-staged, ADR-0005). Cuando exista un eslint.config
-      # root, el script `lint` correrá eslint sobre todo el repo aquí.
+      # Lint de repo completo: eslint sobre todo el repo con el eslint.config.js
+      # raíz (además del lint-staged en pre-commit, ADR-0005).
       - name: Lint
         run: pnpm lint
+
+      # Seguridad de dependencias. No bloquea: hay hallazgos preexistentes en
+      # dependencias transitivas de dev; se revisan sin frenar el merge.
+      - name: Audit de dependencias
+        run: pnpm audit --audit-level=high
+        continue-on-error: true

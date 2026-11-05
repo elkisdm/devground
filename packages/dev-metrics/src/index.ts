@@ -43,7 +43,11 @@ program
   .command('collect')
   .description('Compute a labelled metrics snapshot from git repos and Claude Code transcripts')
   .option('--repos <paths>', 'Comma-separated repo paths (overrides config/auto-detect)', splitList)
-  .option('--emails <emails>', 'Comma-separated author emails (overrides config/auto-detect)', splitList)
+  .option(
+    '--emails <emails>',
+    'Comma-separated author emails (overrides config/auto-detect)',
+    splitList,
+  )
   .option('--config <path>', 'Path to dev-metrics.config.json', DEFAULT_CONFIG_PATH)
   .option('--since <date>', 'Only include commits/transcripts on/after this date (YYYY-MM-DD)')
   .option('--until <date>', 'Only include commits/transcripts on/before this date (YYYY-MM-DD)')
@@ -96,9 +100,14 @@ program
 
 program
   .command('init')
-  .description('Auto-detect accounts, repos and identities into a versionable dev-metrics.config.json')
+  .description(
+    'Auto-detect accounts, repos and identities into a versionable dev-metrics.config.json',
+  )
   .option('--config <path>', 'Where to write the config', DEFAULT_CONFIG_PATH)
-  .option('--base-dir <dir>', 'Base directory to scan for git repos (default ~/Documents)')
+  .option(
+    '--base-dir <dir>',
+    'Base directory to scan for git repos (default ~/Developer, or ~/Documents if absent)',
+  )
   .option('--max-depth <n>', 'Max scan depth below base dir', (v) => Number.parseInt(v, 10))
   .option('--excludes <fragments>', 'Comma-separated path fragments to exclude', splitList)
   .option('--include-forks', 'Keep third-party forks instead of excluding them')
@@ -185,7 +194,11 @@ program
   .command('spec-flow-impact')
   .description('Measure spec-flow impact: spec-flow changes vs same-repo pre-rollout control')
   .option('--repos <paths>', 'Comma-separated repo paths (overrides config/auto-detect)', splitList)
-  .option('--emails <emails>', 'Comma-separated author emails (overrides config/auto-detect)', splitList)
+  .option(
+    '--emails <emails>',
+    'Comma-separated author emails (overrides config/auto-detect)',
+    splitList,
+  )
   .option('--config <path>', 'Path to dev-metrics.config.json', DEFAULT_CONFIG_PATH)
   .option('--until <date>', 'Only include commits on/before this date (YYYY-MM-DD)')
   .action((opts: { repos?: string[]; emails?: string[]; config: string; until?: string }) => {
@@ -217,7 +230,10 @@ program
   .option('--backup-dir <dir>', 'Extra frozen-backup transcript dir (with a projects/ subtree)')
   .action((opts: { repos?: string[]; config: string; backupDir?: string }) => {
     try {
-      const resolved = resolveCollectInputs({ flags: { repos: opts.repos }, configPath: opts.config });
+      const resolved = resolveCollectInputs({
+        flags: { repos: opts.repos },
+        configPath: opts.config,
+      });
       for (const w of resolved.warnings) warn(w);
       log(runOrientation({ repos: resolved.repos, backupDir: opts.backupDir }));
     } catch (err) {

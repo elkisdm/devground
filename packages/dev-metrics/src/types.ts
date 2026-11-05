@@ -206,7 +206,7 @@ export interface DevMetricsConfig {
    * used for filtering. Review them and move the real ones into `identities`.
    */
   candidateIdentities?: string[];
-  /** Base dir scanned by `init` to auto-discover repos (e.g. ~/Documents). */
+  /** Base dir scanned by `init` to auto-discover repos (e.g. ~/Developer). */
   baseDir?: string;
   /** Glob/substring fragments of paths to exclude from discovery. */
   excludes?: string[];

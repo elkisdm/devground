@@ -12,7 +12,7 @@ import { defaultRun } from './gh-accounts.js';
 
 /** Options for repo discovery. */
 export interface DiscoverReposOptions {
-  /** Directory to scan (default: ~/Documents). */
+  /** Directory to scan (default: ~/Developer, or ~/Documents if it does not exist). */
   baseDir?: string;
   /** Max directory depth below baseDir to descend (default 2). */
   maxDepth?: number;
@@ -76,9 +76,10 @@ export function discoverRepos(opts: DiscoverReposOptions = {}): string[] {
   return found.sort();
 }
 
-/** Default discovery base dir: `~/Documents`. */
+/** Default discovery base dir: `~/Developer` if it exists, else `~/Documents`. */
 export function defaultBaseDir(home = homedir()): string {
-  return join(home, 'Documents');
+  const developer = join(home, 'Developer');
+  return existsSync(developer) ? developer : join(home, 'Documents');
 }
 
 /** True when `dir` looks like a git working tree. */

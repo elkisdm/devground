@@ -43,7 +43,7 @@
   ],
   "license": "MIT",
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "repository": {
     "type": "git",
@@ -62,8 +62,8 @@
   "devDependencies": {
     "@devground/vitest-config": "workspace:*",
     "@types/node": "^26",
-    "typescript": "^5.0.0",
-    "vitest": "^2.1.0",
-    "@vitest/coverage-v8": "^2.1.0"
+    "typescript": "^6.0.3",
+    "vitest": "^5.1.0",
+    "@vitest/coverage-v8": "^5.1.0"
   }
 }

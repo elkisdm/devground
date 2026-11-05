@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { dedupeWorktrees, parseRemoteOwner } from './repo-discovery.js';
+import { mkdtempSync, mkdirSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { dedupeWorktrees, defaultBaseDir, parseRemoteOwner } from './repo-discovery.js';
 
 describe('dedupeWorktrees', () => {
   it('L-7: keeps the MAIN worktree even when it is not first in the list', () => {
@@ -106,5 +109,27 @@ describe('parseRemoteOwner', () => {
   it('parses ssh and https remotes', () => {
     expect(parseRemoteOwner('git@github.com:owner/repo.git')).toBe('owner');
     expect(parseRemoteOwner('https://github.com/owner/repo.git')).toBe('owner');
+  });
+});
+
+describe('defaultBaseDir', () => {
+  it('prefers ~/Developer when it exists', () => {
+    const home = mkdtempSync(join(tmpdir(), 'dm-home-'));
+    try {
+      mkdirSync(join(home, 'Developer'));
+      mkdirSync(join(home, 'Documents'));
+      expect(defaultBaseDir(home)).toBe(join(home, 'Developer'));
+    } finally {
+      rmSync(home, { recursive: true, force: true });
+    }
+  });
+
+  it('falls back to ~/Documents when ~/Developer does not exist', () => {
+    const home = mkdtempSync(join(tmpdir(), 'dm-home-'));
+    try {
+      expect(defaultBaseDir(home)).toBe(join(home, 'Documents'));
+    } finally {
+      rmSync(home, { recursive: true, force: true });
+    }
   });
 });
