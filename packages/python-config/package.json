@@ -1,6 +1,6 @@
 {
   "name": "@devground/python-config",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Configuracion devground para proyectos Python y FastAPI: ruff, pytest y pre-commit, cosechados de un repo en produccion",
   "bin": {
     "devground-python": "./setup.js"
