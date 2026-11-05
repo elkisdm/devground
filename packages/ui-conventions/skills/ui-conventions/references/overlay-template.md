@@ -43,7 +43,7 @@ librería o CSS puro, ninguna]
   **Ejemplo correcto:** `ruta/al/archivo.ext:línea`
   **Antipatrón:** [qué evita]
 
-> Helper preferente si el repo no tiene uno propio: @devground/chile-formats.
+> Si el repo no tiene un helper propio, créalo una vez (RUT, teléfono, moneda) y úsalo en todos los formularios.
 
 ## 7. Sistema de diseño (valores)
 

@@ -87,7 +87,7 @@ overlay tiene precedencia sobre lo que dice aquí.
   duplican en cada lugar que lo usa.
 - `prefers-reduced-motion` se respeta siempre: si la animación es CSS, usa el prefijo o
   gate correspondiente (`motion-safe:` o un override global en `prefers-reduced-motion:
-  reduce`); si la animación es JS/imperativa, verifica la preferencia del sistema antes de
+reduce`); si la animación es JS/imperativa, verifica la preferencia del sistema antes de
   animar (equivalente a `useReducedMotion()`).
 - El cierre animado de un overlay dispara el `onClose` real cuando termina la animación de
   salida (`onAnimationEnd` o equivalente), nunca antes — si no, el contenido desaparece
@@ -102,8 +102,8 @@ overlay tiene precedencia sobre lo que dice aquí.
 
 ## 6. Región: Chile (es-CL)
 
-> Si el proyecto no tiene helpers propios de RUT/teléfono/moneda, usa o instala
-> `@devground/chile-formats` en vez de reimplementarlos; si ya tiene un helper, respétalo.
+> Si el proyecto no tiene helpers propios de RUT/teléfono/moneda, crea
+> un único helper del proyecto en vez de reimplementarlos en cada formulario; si ya tiene un helper, respétalo.
 
 - **RUT**: usa un único helper de formateo (puntos y guion) y de validación (módulo 11);
   aplica la máscara en el `onChange` pero persiste siempre el valor limpio, sin puntos ni

@@ -48,9 +48,9 @@ explicitly.
    asking) using `references/mining-prompt.md`, producing a `docs/ui-conventions.md` in the
    format of `references/overlay-template.md`.
 
-## Relationship with design-taste / design-audit
+## Relationship with aesthetics skills / design-audit
 
-`@devground/design-taste` owns aesthetics — layout, typography, motion, spacing taste.
+Aesthetics skills (e.g. `frontend-design`) own aesthetics — layout, typography, motion, spacing taste.
 `ui-conventions` is a different layer: correctness and consistency (input semantics,
 focus management, error states) applied while the code is being written. A later
 design-audit remains a safety net, but with this skill loaded up front there should be
