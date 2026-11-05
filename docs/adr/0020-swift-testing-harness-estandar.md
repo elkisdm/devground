@@ -1,6 +1,7 @@
 # ADR-0020: Swift Testing + swift-dependencies como harness estándar
 
-- **Estado**: Aceptado
+- **Estado**: Reemplazado por ADR-0047 (paquetes Swift retirados)
+- **Nota**: el paquete `@devground/swift-test-harness` nunca llegó a existir.
 - **Fecha**: 2026-07-04
 - **Decisor**: edaza
 - **Aplica a**: `@devground/swift-test-harness` y todo repo Swift scaffoldeado por devground
@@ -23,11 +24,13 @@ La investigación ([informe §2.3](../../research/ios-swift-engineering/informe-
 ## Consecuencias
 
 **Positivas**
+
 - Reproducibilidad total: cero no-determinismo, tests que no dependen del reloj de pared.
 - Un solo harness consistente entre repos Swift; la disciplina de DI viene por defecto.
 - Alinea testabilidad con arquitectura: inyectar tras protocolos ([ADR-0019](0019-isolation-por-capa-swift.md) y el core portable) es lo mismo que hace los tests deterministas.
 
 **Negativas / Trade-offs**
+
 - El paralelismo in-process de Swift Testing filtra estado global; exige higiene (o el trait `.serialized`). Mitigación: documentado en la plantilla.
 - Dependencia de packages del ecosistema Point-Free (`swift-dependencies`, `swift-clocks`), que está en evolución. Mitigación: `swift-dependencies` es la pieza más estable y desacoplada de TCA; se adopta sola, sin TCA.
 - Snapshot tests frágiles a cambios de OS/dispositivo. Mitigación: fijar tamaño y traits en la plantilla.

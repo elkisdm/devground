@@ -1,6 +1,6 @@
 # ADR-0036: El code review es parte de la Definition of Done en spec-flow
 
-- **Estado**: Aceptado
+- **Estado**: Reemplazado por ADR-0039 (el gate de review); los tests en el DoD siguen en ADR-0029
 - **Fecha**: 2026-09-07
 - **Decisor**: edaza
 - **Aplica a**: `@devground/sdd` (skill spec-flow), `@devground/dev-metrics` (parser de telemetría)
@@ -40,12 +40,12 @@ proporcionalidad por tier que ya rige la ceremonia (Step 2) y los tests (ADR-002
 
 2. **Implementación (Step 4)** — nuevo bloque "Review as the closing gate":
 
-   | Tier | Review |
-   | --- | --- |
-   | 0 | ninguna (preserva la promesa "no artifacts") |
-   | 1 | `/code-review medium` sobre el diff |
-   | 2 | `/code-review high` |
-   | 3 | `/code-review max`, o `deepcheck` si el cambio cruza módulos |
+   | Tier | Review                                                       |
+   | ---- | ------------------------------------------------------------ |
+   | 0    | ninguna (preserva la promesa "no artifacts")                 |
+   | 1    | `/code-review medium` sobre el diff                          |
+   | 2    | `/code-review high`                                          |
+   | 3    | `/code-review max`, o `deepcheck` si el cambio cruza módulos |
 
    La regla de cierre: **corre la revisión del tier y cierra todos los hallazgos.** Un hallazgo se
    cierra arreglándolo, o con una línea que diga por qué no es real o no es ahora. Un cambio con
@@ -61,7 +61,7 @@ proporcionalidad por tier que ya rige la ceremonia (Step 2) y los tests (ADR-002
    de métricas.
 
    **Este campo es el punto del ADR, no un accesorio.** Es el tercer gauge, y responde una pregunta
-   que los otros dos no pueden: *¿los cambios están saliendo más limpios?* Los hallazgos por cambio
+   que los otros dos no pueden: _¿los cambios están saliendo más limpios?_ Los hallazgos por cambio
    deberían **bajar** con el tiempo si el flujo mejora. Si no bajan, spec-flow está produciendo
    briefs que parecen completos y no lo son — y eso es exactamente lo que hoy no se sabe.
    `findings > resolved` al cierre es deuda, y está pensado para verse.

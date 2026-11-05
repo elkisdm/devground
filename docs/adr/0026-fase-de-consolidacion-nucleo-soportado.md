@@ -1,6 +1,6 @@
 # ADR-0026: Declarar el núcleo soportado y entrar en fase de consolidación
 
-- **Estado**: Reemplazado por ADR-0033
+- **Estado**: Reemplazado en parte por ADR-0033 (siguen vigentes el compromiso del núcleo §1 y la graduación §2)
 - **Fecha**: 2026-07-13
 - **Decisor**: edaza
 - **Aplica a**: todo el monorepo (alcance de paquetes, versionado, criterio de entrada de trabajo nuevo)

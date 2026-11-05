@@ -1,6 +1,6 @@
 # ADR-0027: Empaquetar la regla de orquestación en `@devground/sdd`
 
-- **Estado**: Aceptado
+- **Estado**: Aceptado — enmendado por ADR-0028 y ADR-0030; en Tier 2–3 rige ADR-0040
 - **Fecha**: 2026-07-13
 - **Decisor**: edaza
 - **Aplica a**: `@devground/sdd`, flujo de trabajo con agentes en Claude Code (regla dura de orquestación)
