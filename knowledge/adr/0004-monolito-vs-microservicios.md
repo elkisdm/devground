@@ -6,9 +6,9 @@
 
 ## Contexto
 
-Desde ~2014 la industria adoptó microservicios como default cultural. Estudios posteriores muestran que **~37% de las migraciones a microservicios son solo parcialmente exitosas**: el fallo es contextual (equipo pequeño, dominios acoplados, falta de DevOps), no técnico.
+Desde ~2014 la industria adoptó microservicios como default cultural. Estudios posteriores muestran que **~37% de las migraciones a microservicios son solo parcialmente exitosas** (dato de mayo de 2026, sin fuente enlazada; verificar antes de citar): el fallo es contextual (equipo pequeño, dominios acoplados, falta de DevOps), no técnico.
 
-El monolito carga estigma injustificado. Lo que llamamos "monolito malo" suele ser un *giant ball of mud* — un monolito sin estructura interna. El problema es la falta de modularidad, no el modelo de despliegue.
+El monolito carga estigma injustificado. Lo que llamamos "monolito malo" suele ser un _giant ball of mud_ — un monolito sin estructura interna. El problema es la falta de modularidad, no el modelo de despliegue.
 
 ## Decisión
 
@@ -22,6 +22,7 @@ El monolito carga estigma injustificado. Lo que llamamos "monolito malo" suele s
 4. Requisitos de tecnología incompatibles entre módulos (ej. un módulo necesita Go por rendimiento, el resto es Node).
 
 **No** justifica microservicios:
+
 - "Es lo moderno".
 - "Lo que hace Netflix / Amazon".
 - "Por si crecemos".
@@ -30,6 +31,7 @@ El monolito carga estigma injustificado. Lo que llamamos "monolito malo" suele s
 ## Consecuencias
 
 **Positivas**
+
 - Velocidad de desarrollo alta en MVP y primeros años.
 - Despliegue simple (un binario, un pipeline).
 - Debugging directo, transacciones locales con ACID.
@@ -37,6 +39,7 @@ El monolito carga estigma injustificado. Lo que llamamos "monolito malo" suele s
 - Coste operacional bajo.
 
 **Negativas / Trade-offs**
+
 - Si el equipo crece a >15 personas en el mismo monolito, los merge conflicts y los deploy bloqueantes se vuelven dolorosos.
 - Cualquier crash tumba todo (vs solo un servicio).
 - Escalado horizontal escala todo, no solo lo que lo necesita.
@@ -45,12 +48,12 @@ El monolito carga estigma injustificado. Lo que llamamos "monolito malo" suele s
 
 1. **Microservicios desde día 1**: requiere equipo experimentado (>5 senior con DevOps maduro), infraestructura (k8s, service mesh, observability), y dominios genuinamente desacoplados. Sin esto = fracaso garantizado.
 
-2. **Monolito sin modularidad**: el clásico *ball of mud*. Es lo que la gente recuerda cuando dice "los monolitos no escalan". El problema no es el monolito, es la falta de bounded contexts.
+2. **Monolito sin modularidad**: el clásico _ball of mud_. Es lo que la gente recuerda cuando dice "los monolitos no escalan". El problema no es el monolito, es la falta de bounded contexts.
 
 3. **Serverless functions desde día 1**: ortogonal — serverless es despliegue, no arquitectura. Aun usando Lambdas se puede tener "monolito en una función" o microservicios distribuidos.
 
 ## Cita de respaldo
 
-> **Martin Fowler**: *"Nunca deberías empezar con arquitectura de microservicios, sino que primero deberías empezar con un monolito, hacerlo modular y luego separarlo en microservicios cuando sea realmente un problema."* — [patron arq.md](../sources/patron%20arq.md)
+> **Martin Fowler**: _"Nunca deberías empezar con arquitectura de microservicios, sino que primero deberías empezar con un monolito, hacerlo modular y luego separarlo en microservicios cuando sea realmente un problema."_ — [patron arq.md](../sources/patron%20arq.md)
 
-> **Sam Newman**: *"Implementar microservicios en un equipo pequeño es un riesgo muy alto. Los beneficios no compensan todo el coste técnico."* — [patron arq.md](../sources/patron%20arq.md)
+> **Sam Newman**: _"Implementar microservicios en un equipo pequeño es un riesgo muy alto. Los beneficios no compensan todo el coste técnico."_ — [patron arq.md](../sources/patron%20arq.md)

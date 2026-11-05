@@ -13,7 +13,7 @@ import { info, success, warn } from '@devground/logger';
 export interface InitArgs {
   /** Where to write the config (default: ./dev-metrics.config.json). */
   configPath?: string;
-  /** Base dir to scan for repos (default: ~/Documents). */
+  /** Base dir to scan for repos (default: ~/Developer, or ~/Documents if it does not exist). */
   baseDir?: string;
   /** Max scan depth below baseDir. */
   maxDepth?: number;
@@ -46,9 +46,7 @@ export function runInit(args: InitArgs): InitResult {
   const baseDir = args.baseDir ?? defaultBaseDir();
 
   if (existsSync(path) && args.force !== true) {
-    warnings.push(
-      `${path} already exists. Re-run with --force to overwrite, or edit it by hand.`,
-    );
+    warnings.push(`${path} already exists. Re-run with --force to overwrite, or edit it by hand.`);
     return {
       config: { repos: [], identities: [] },
       path,
@@ -63,7 +61,9 @@ export function runInit(args: InitArgs): InitResult {
   warnings.push(...gh.warnings);
   const ownUsernames = new Set(gh.accounts.map((a) => a.login.toLowerCase()));
   if (gh.accounts.length > 0) {
-    info(`Found ${gh.accounts.length} GitHub account(s): ${gh.accounts.map((a) => a.login).join(', ')}`);
+    info(
+      `Found ${gh.accounts.length} GitHub account(s): ${gh.accounts.map((a) => a.login).join(', ')}`,
+    );
   }
 
   // 2. Discover repos under baseDir.
@@ -89,7 +89,9 @@ export function runInit(args: InitArgs): InitResult {
     }
     repos = kept;
     if (excluded > 0) {
-      info(`Excluded ${excluded} repo(s) whose origin owner is not one of your GitHub accounts (use --include-forks to keep them).`);
+      info(
+        `Excluded ${excluded} repo(s) whose origin owner is not one of your GitHub accounts (use --include-forks to keep them).`,
+      );
     }
   }
   info(`Discovered ${repos.length} repo(s).`);

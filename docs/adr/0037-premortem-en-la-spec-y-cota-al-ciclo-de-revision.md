@@ -1,6 +1,6 @@
 # ADR-0037: Pre-mortem en la spec y cota al ciclo de revisión
 
-- **Estado**: Aceptado
+- **Estado**: Aceptado — protocolo de pasadas reemplazado por ADR-0039; el pre-mortem pasó a 9 filas
 - **Fecha**: 2026-09-14
 - **Decisor**: edaza
 - **Aplica a**: `@devground/sdd` (skill spec-flow v0.6), `@devground/dev-metrics` (parser y reporte de telemetría)

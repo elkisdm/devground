@@ -1,6 +1,6 @@
 # ADR-0019: Isolation por capa como default de las plantillas Swift
 
-- **Estado**: Aceptado
+- **Estado**: Reemplazado por ADR-0047 (paquetes Swift retirados)
 - **Fecha**: 2026-07-04
 - **Decisor**: edaza
 - **Aplica a**: `@devground/swift-package-template` y todo repo Swift scaffoldeado por devground
@@ -23,11 +23,13 @@ El default de la plantilla es el correcto por construcción; el consumidor no ti
 ## Consecuencias
 
 **Positivas**
+
 - Evita el error de concurrencia más costoso desde el día 1.
 - Mantiene las capas base `nonisolated`+`Sendable`, que es también la **frontera de portabilidad** hacia Android (core Swift puro).
 - La plantilla enseña la práctica correcta con el ejemplo, no con un documento aparte.
 
 **Negativas / Trade-offs**
+
 - La plantilla es más opinada y requiere que el consumidor entienda por qué UI y capas base difieren. Mitigación: comentario en el `Package.swift` generado que enlaza a este ADR.
 - Si el proyecto no separa capas (app trivial monolítica), la distinción añade estructura que quizá no necesita. Mitigación: la separación por capas es justamente lo que devground promueve; un proyecto que no la quiere puede editar la plantilla.
 

@@ -40,7 +40,7 @@ correction pass a design-audit would otherwise require becomes unnecessary.
 
 ## 4. Relationship with other skills
 
-`design-taste` / `frontend-design` own aesthetics — layout, typography, motion, spacing
+`frontend-design` (and similar aesthetics skills) own aesthetics — layout, typography, motion, spacing
 taste. This skill is a different layer: correctness and consistency (does the input have
 the right `type`/`inputMode`, does the modal trap focus, is the RUT validated). A later
 design-audit still acts as a safety net, but with this skill loaded up front there should

@@ -1,6 +1,6 @@
 # ADR-0013: Adoptar un sistema de agentes de auditoría auto-mejorable (deepcheck)
 
-- **Estado**: Aceptado <!-- Propuesto | Aceptado | Rechazado | Reemplazado por ADR-XXXX | Obsoleto -->
+- **Estado**: Aceptado
 - **Fecha**: 2026-06-03
 - **Decisor**: @elkisdm
 - **Aplica a**: el paquete `@devground/deepcheck` y, a futuro, cualquier proyecto que lo instale para auditar sus flujos.
@@ -43,12 +43,14 @@ adversarial (un hallazgo sin confirmar no entra al reporte) y la transparencia
 ## Consecuencias
 
 **Positivas**
+
 - Verificación profunda y repetible que **acumula conocimiento por flujo** en una
   skill destilada → menos iteraciones sobre el mismo código.
 - Bajo ruido por diseño: la confirmación adversarial filtra falsos positivos.
 - Dogfooding: audita usando los propios estándares de devground (ADRs 0007–0012).
 
 **Negativas / Trade-offs**
+
 - **Costo en tokens alto** (~2.3–2.8M por flujo). Mitigación: la deduplicación
   reduce verificaciones redundantes; reservar el sistema para PRs grandes,
   pre-release o flujos críticos, no para cada commit.

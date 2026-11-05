@@ -9,7 +9,7 @@ el tier de la petición. Ver [ADR-0027](../../../docs/adr/0027-empaquetar-regla-
 **Sin esta capa no hay delegación automática.** El flujo por defecto de `@devground/sdd`
 —`spec-flow` clasifica, tú ejecutas, los subagentes se lanzan solo si el usuario los pide—
 es el de [ADR-0030](../../../docs/adr/0030-delegacion-opt-in-por-peticion.md), salvo el plan
-de ejecución de Tier 2–3 de spec-flow 0.8, que despacha los tres `ejecutor*` sin hooks
+de ejecución de Tier 2–3 de spec-flow 0.8+, que despacha los tres `ejecutor*` sin hooks
 ([ADR-0040](../../../docs/adr/0040-plan-de-ejecucion-por-agentes-y-contexto-acotado.md)).
 Todo lo que sigue describe qué cambia si activas la capa a propósito.
 

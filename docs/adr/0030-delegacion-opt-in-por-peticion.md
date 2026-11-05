@@ -1,6 +1,6 @@
 # ADR-0030: La delegación a subagentes es opt-in por petición, no un default de sesión
 
-- **Estado**: Aceptado
+- **Estado**: Aceptado — para Tier 2–3 reemplazado por ADR-0040
 - **Fecha**: 2026-07-27
 - **Decisor**: edaza
 - **Aplica a**: `~/.claude/CLAUDE.md` (regla viva), `@devground/sdd` (capa `orchestration/`), flujo de trabajo con agentes en Claude Code
@@ -19,12 +19,12 @@ registran `orchestrator-gate.sh` u `orchestrator-context.sh`, y `MODO ORQUESTADO
 Lo que ese ADR no tocó fue la instrucción en `CLAUDE.md`, y ahí estaba el disparador real.
 Conteo sobre los transcripts del 23 al 27 de julio:
 
-| Subagente | Lanzamientos en 4 días |
-|---|---|
-| `ejecutor` | 183 |
-| `planner` | 33 |
-| `planner-deep` | 16 |
-| **Total** | **232** |
+| Subagente      | Lanzamientos en 4 días |
+| -------------- | ---------------------- |
+| `ejecutor`     | 183                    |
+| `planner`      | 33                     |
+| `planner-deep` | 16                     |
+| **Total**      | **232**                |
 
 Concentrados en HCLP (200), Redify web (13), sesiones desde `~` (11) y atlasengine (6).
 Ninguno pedido por el usuario.
@@ -52,9 +52,9 @@ asignar tier, producir el brief. Lo que cambia es que el tier vuelve a graduar l
 
 El cambio es de texto, en los dos lugares donde vive la regla:
 
-| Artefacto | Cambio |
-|---|---|
-| `~/.claude/CLAUDE.md` (regla viva) | La cláusula de ruteo por tier a subagentes se reemplaza por delegación bajo pedido. |
+| Artefacto                                                          | Cambio                                                                                                                                                                           |
+| ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `~/.claude/CLAUDE.md` (regla viva)                                 | La cláusula de ruteo por tier a subagentes se reemplaza por delegación bajo pedido.                                                                                              |
 | `packages/sdd/orchestration/CLAUDE.rule.md` (extracto distribuido) | Se parte en dos bullets: el **base**, que pega cualquiera y no delega; y el **add-on**, que solo pega quien activó la capa a propósito y conserva el ruteo por tier de ADR-0027. |
 
 El add-on conserva Tier 0-1 en la delegación —el pendiente #3 de ADR-0028 sigue abierto—
@@ -70,6 +70,7 @@ propósito obtiene el comportamiento de ADR-0027; quien no la active no hereda n
 ## Consecuencias
 
 **Positivas**
+
 - Los lanzamientos no pedidos bajan a cero por construcción: no hay condición automática
   que los dispare.
 - El tier recupera su significado original —cuánta spec merece el cambio— en vez de servir
@@ -78,6 +79,7 @@ propósito obtiene el comportamiento de ADR-0027; quien no la active no hereda n
   extracto distribuido dice cuál de los dos bullets le corresponde.
 
 **Negativas / Trade-offs**
+
 - Un cambio Tier 3 (migración, contrato externo, seguridad) puede ejecutarse en el main
   loop sin el plan previo de `planner-deep`. Antes eso estaba forzado. La mitigación es
   que el modelo lo **proponga** ante un cambio riesgoso; la decisión queda en el usuario,

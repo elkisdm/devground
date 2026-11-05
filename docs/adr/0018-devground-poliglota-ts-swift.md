@@ -1,6 +1,6 @@
 # ADR-0018: devground políglota — workspace TS + Swift
 
-- **Estado**: Aceptado
+- **Estado**: Reemplazado por ADR-0047 (paquetes Swift retirados)
 - **Fecha**: 2026-07-04
 - **Decisor**: edaza
 - **Aplica a**: el monorepo (`packages/`, `packages/cli`)
@@ -9,7 +9,7 @@
 
 devground es hoy un monorepo pnpm de estándares de desarrollo **TS-first**: configs compartidas (eslint, prettier, tsconfig, commitlint, husky, vitest), más un aparato de proceso de nivel superior (spec-flow, model-orchestrator, knowledge/adr, dev-metrics, deepcheck, agents-md). Surge la necesidad de soportar el desarrollo de apps iPhone en Swift con el mismo rigor.
 
-La investigación fundacional ([`research/ios-swift-engineering/informe-fundacion.md`](../../research/ios-swift-engineering/informe-fundacion.md), §5) verificó que **~60-70% del valor de devground es proceso, y el proceso ya es agnóstico del stack**: spec-flow (intake de cambios), model-orchestrator (routing por complejidad), knowledge/adr (método de decisión) y dev-metrics (git + transcripts) aplican a Swift sin reescribir su núcleo. Lo que falta es el tooling: el equivalente Swift de `eslint-config`/`tsconfig`/`vitest-config`. La pregunta es *dónde* vive ese tooling.
+La investigación fundacional ([`research/ios-swift-engineering/informe-fundacion.md`](../../research/ios-swift-engineering/informe-fundacion.md), §5) verificó que **~60-70% del valor de devground es proceso, y el proceso ya es agnóstico del stack**: spec-flow (intake de cambios), model-orchestrator (routing por complejidad), knowledge/adr (método de decisión) y dev-metrics (git + transcripts) aplican a Swift sin reescribir su núcleo. Lo que falta es el tooling: el equivalente Swift de `eslint-config`/`tsconfig`/`vitest-config`. La pregunta es _dónde_ vive ese tooling.
 
 ## Decisión
 
@@ -21,11 +21,13 @@ La investigación fundacional ([`research/ios-swift-engineering/informe-fundacio
 ## Consecuencias
 
 **Positivas**
+
 - Reutiliza el 60-70% del aparato (proceso) sin reescribirlo; el salto a Swift es barato.
 - Un solo lugar para los estándares multi-stack: una fuente de verdad, un flujo de changesets, un CI.
 - La filosofía "estándares como paquetes, un comando" se mantiene intacta; solo se amplía el catálogo.
 
 **Negativas / Trade-offs**
+
 - El workspace mezcla dos toolchains (Node/pnpm + Swift/SPM); el CI debe correr ambos. Mitigación: los `swift-*` de config son npm puros; solo un eventual core Swift real necesitaría toolchain Swift en CI.
 - La CLI debe ramificar por stack (ver [ADR-0021](0021-deteccion-stack-cli.md)).
 - Riesgo de que el repo se perciba como "de dos cosas". Mitigación: documentar la frontera en el README y agrupar los `swift-*` por prefijo.

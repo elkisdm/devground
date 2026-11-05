@@ -1,6 +1,6 @@
 # ADR-0028: La capa de orquestación es opt-in y queda desactivada por defecto
 
-- **Estado**: Aceptado
+- **Estado**: Aceptado — en Tier 2–3 rige ADR-0040
 - **Fecha**: 2026-07-22
 - **Decisor**: edaza
 - **Aplica a**: `@devground/sdd` (capa `orchestration/`), flujo de trabajo con agentes en Claude Code

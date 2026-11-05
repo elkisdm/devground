@@ -2,11 +2,11 @@
 
 Decisiones arquitectónicas del propio repo `devground-1`.
 
-A diferencia de [knowledge/adr/](../../knowledge/adr/) — que contiene templates genéricos derivados de transcripciones externas — estos ADRs documentan **decisiones reales tomadas en este repo**, con estado `Aceptado`.
+A diferencia de [knowledge/adr/](../../knowledge/adr/) — que contiene templates genéricos derivados de transcripciones externas — estos ADRs documentan **decisiones reales tomadas en este repo**, con su estado en la línea `Estado` de cada archivo.
 
 ## Formato
 
-Sigue el mismo formato que [knowledge/adr/README.md](../../knowledge/adr/README.md): Michael Nygard, una decisión por ADR, inmutables.
+Sigue el mismo formato que [knowledge/adr/README.md](../../knowledge/adr/README.md): Michael Nygard, una decisión por ADR. Un ADR no se reescribe: solo cambia su línea de Estado cuando otro lo reemplaza o enmienda.
 
 ## Crear un ADR nuevo
 
@@ -15,11 +15,11 @@ siguiente número de la secuencia, rellénalo y añádelo al índice de abajo.
 
 ## Índice
 
-- [ADR-0001 — pnpm workspace en lugar de npm/yarn](0001-pnpm-workspace.md)
-- [ADR-0002 — Changesets para versionado y publicación](0002-changesets-versioning.md)
-- [ADR-0003 — ESLint v9 Flat Config](0003-eslint-flat-config.md)
-- [ADR-0004 — TypeScript strict por defecto](0004-typescript-strict.md)
-- [ADR-0005 — Husky + lint-staged para git hooks](0005-husky-lint-staged.md)
+- [ADR-0001 — pnpm workspace en lugar de npm/yarn](0001-pnpm-workspace.md) (Aceptado)
+- [ADR-0002 — Changesets para versionado y publicación](0002-changesets-versioning.md) (Aceptado)
+- [ADR-0003 — ESLint v9 Flat Config](0003-eslint-flat-config.md) (Aceptado)
+- [ADR-0004 — TypeScript strict por defecto](0004-typescript-strict.md) (Aceptado)
+- [ADR-0005 — Husky + lint-staged para git hooks](0005-husky-lint-staged.md) (Aceptado)
 - [ADR-0006 — dev-metrics: serie temporal de "codificar con agentes"](0006-dev-metrics.md) (Aceptado)
 - [ADR-0007 — Rate-limiting distribuido obligatorio](0007-rate-limiting-distribuido.md) (Aceptado)
 - [ADR-0008 — Higiene de secretos (gitleaks pre-commit + política de .gitignore)](0008-higiene-de-secretos.md) (Aceptado)
@@ -31,32 +31,39 @@ siguiente número de la secuencia, rellénalo y añádelo al índice de abajo.
 - [ADR-0014 — Medición de impacto de spec-flow](0014-medicion-impacto-spec-flow.md) (Aceptado)
 - [ADR-0015 — Costo de orientación (tokens antes del primer edit)](0015-costo-de-orientacion.md) (Aceptado)
 - [ADR-0016 — spec-flow se distribuye como `@devground/sdd`](0016-spec-flow-como-paquete-sdd.md) (Aceptado)
-- [ADR-0017 — Routing de modelos por complejidad (model-orchestrator)](0017-model-orchestrator-routing.md) (Aceptado)
-- [ADR-0018 — devground políglota: workspace TS + Swift](0018-devground-poliglota-ts-swift.md) (Aceptado)
-- [ADR-0019 — Isolation por capa como default de las plantillas Swift](0019-isolation-por-capa-swift.md) (Aceptado)
-- [ADR-0020 — Swift Testing + swift-dependencies como harness estándar](0020-swift-testing-harness-estandar.md) (Aceptado)
+- [ADR-0017 — Routing de modelos por complejidad (model-orchestrator)](0017-model-orchestrator-routing.md) (Aceptado — skill congelada por ADR-0032 (solo bajo petición); la fuente del ruteo de modelos es ADR-0044)
+- [ADR-0018 — devground políglota: workspace TS + Swift](0018-devground-poliglota-ts-swift.md) (Reemplazado por ADR-0047 (paquetes Swift retirados))
+- [ADR-0019 — Isolation por capa como default de las plantillas Swift](0019-isolation-por-capa-swift.md) (Reemplazado por ADR-0047 (paquetes Swift retirados))
+- [ADR-0020 — Swift Testing + swift-dependencies como harness estándar](0020-swift-testing-harness-estandar.md) (Reemplazado por ADR-0047 (paquetes Swift retirados))
 - [ADR-0021 — Detección de stack en `@devground/cli`](0021-deteccion-stack-cli.md) (Aceptado)
 - [ADR-0022 — Jerarquía de orquestación de agentes en sesiones interactivas](0022-jerarquia-de-orquestacion.md) (Reemplazado por ADR-0027)
 - [ADR-0023 — ui-conventions: convenciones de UI como contexto antes de generar](0023-ui-conventions-contexto-antes.md) (Aceptado)
 - [ADR-0024 — Integración del ecosistema ui-conventions](0024-integracion-ecosistema-ui-conventions.md) (Aceptado)
 - [ADR-0025 — Ratchet de cobertura global + gate en CI](0025-coverage-ratchet.md) (Aceptado)
-- [ADR-0026 — Declarar el núcleo soportado y entrar en fase de consolidación](0026-fase-de-consolidacion-nucleo-soportado.md) (Reemplazado por ADR-0033)
-- [ADR-0027 — Empaquetar la regla de orquestación en @devground/sdd](0027-empaquetar-regla-de-orquestacion.md) (Aceptado)
-- [ADR-0028 — La capa de orquestación es opt-in y queda desactivada por defecto](0028-orquestacion-opt-in-desactivada-por-defecto.md) (Aceptado)
+- [ADR-0026 — Declarar el núcleo soportado y entrar en fase de consolidación](0026-fase-de-consolidacion-nucleo-soportado.md) (Reemplazado en parte por ADR-0033 (siguen vigentes el compromiso del núcleo §1 y la graduación §2))
+- [ADR-0027 — Empaquetar la regla de orquestación en @devground/sdd](0027-empaquetar-regla-de-orquestacion.md) (Aceptado — enmendado por ADR-0028 y ADR-0030; en Tier 2–3 rige ADR-0040)
+- [ADR-0028 — La capa de orquestación es opt-in y queda desactivada por defecto](0028-orquestacion-opt-in-desactivada-por-defecto.md) (Aceptado — en Tier 2–3 rige ADR-0040)
 - [ADR-0029 — Tests como Definition of Done en spec-flow](0029-tests-como-definition-of-done.md) (Aceptado)
-- [ADR-0030 — La delegación a subagentes es opt-in por petición](0030-delegacion-opt-in-por-peticion.md) (Aceptado) — para Tier 2–3 reemplazado por ADR-0040
+- [ADR-0030 — La delegación a subagentes es opt-in por petición](0030-delegacion-opt-in-por-peticion.md) (Aceptado — para Tier 2–3 reemplazado por ADR-0040)
 - [ADR-0031 — Al delegar, el modelo del subagente va explícito por naturaleza de la tarea](0031-modelo-explicito-al-delegar.md) (Aceptado)
 - [ADR-0032 — Veredicto de los 11 experimentales al cierre del ciclo de 8 semanas](0032-veredictos-experimentales.md) (Aceptado)
 - [ADR-0033 — Cerrar la fase de consolidación y reabrir la expansión hacia los stacks reales](0033-salida-de-consolidacion.md) (Aceptado)
 - [ADR-0034 — Instalar el estándar una vez por máquina, no una vez por proyecto](0034-instalacion-por-maquina.md) (Aceptado)
 - [ADR-0035 — Cubrir Python/FastAPI y TanStack cosechando configuración ya rodada](0035-cobertura-python-y-tanstack.md) (Aceptado)
-- [ADR-0036 — El code review es parte de la Definition of Done en spec-flow](0036-review-como-definition-of-done.md) (Aceptado)
-- [ADR-0037 — Pre-mortem en la spec y cota al ciclo de revisión](0037-premortem-en-la-spec-y-cota-al-ciclo-de-revision.md) (Aceptado; protocolo de pasadas reemplazado por ADR-0039)
-- [ADR-0038 — Agrupar el trabajo en builds con un gate de salida verificable](0038-trabajo-por-builds-con-gate-verificable.md) (Propuesto) — reemplazado en parte por ADR-0042
+- [ADR-0036 — El code review es parte de la Definition of Done en spec-flow](0036-review-como-definition-of-done.md) (Reemplazado por ADR-0039 (el gate de review); los tests en el DoD siguen en ADR-0029)
+- [ADR-0037 — Pre-mortem en la spec y cota al ciclo de revisión](0037-premortem-en-la-spec-y-cota-al-ciclo-de-revision.md) (Aceptado — protocolo de pasadas reemplazado por ADR-0039; el pre-mortem pasó a 9 filas)
+- [ADR-0038 — Agrupar el trabajo en builds con un gate de salida verificable](0038-trabajo-por-builds-con-gate-verificable.md) (Retirado — nunca se aceptó; los principios que siguen vigentes están en ADR-0042)
 - [ADR-0039 — El review pasa a ser opt-in; el gate de cierre es la spec](0039-review-opt-in-y-spec-como-gate.md) (Aceptado)
 - [ADR-0040 — Plan de ejecución por agentes y contexto acotado](0040-plan-de-ejecucion-por-agentes-y-contexto-acotado.md) (Aceptado)
 - [ADR-0041 — Desplegar un servicio solo cuando cambia lo que entra a su build](0041-desplegar-solo-cuando-cambia-el-codigo-del-servicio.md) (Aceptado)
 - [ADR-0042 — Plan de ejecución unificado con Pauta](0042-plan-de-ejecucion-unificado-con-pauta.md) (Aceptado)
+- [ADR-0043 — Mapa de artefactos y encaje con Agile](0043-mapa-de-artefactos-y-encaje-con-agile.md) (Aceptado)
+- [ADR-0044 — Gobierno de agentes: seguridad, costo y modelos](0044-gobierno-de-agentes-seguridad-costo-y-modelos.md) (Aceptado)
+- [ADR-0045 — Toolchain 2026: Node 22+, versiones mayores al día](0045-toolchain-2026.md) (Aceptado)
+- [ADR-0046 — Núcleo público y capa de organización](0046-nucleo-publico-y-capa-de-organizacion.md) (Aceptado)
+- [ADR-0047 — Retiro de paquetes sin consumidores](0047-retiro-de-paquetes-sin-consumidores.md) (Aceptado)
+
+> `knowledge/adr/` es otra serie (conocimiento de arquitectura general). Para no confundir, se cita como KB-0001…KB-0012; los de esta carpeta, como ADR-NNNN.
 
 ## Estándares con enforcement automático
 
@@ -68,3 +75,6 @@ Estos ADRs no son solo documentación: tienen control automático en el repo.
 | 0010 | Reglas `max-lines` (400) y `max-lines-per-function` (80) como `warn`                                                 | `packages/eslint-config/index.mjs`, `next.mjs`                                 |
 | 0011 | `@typescript-eslint/no-explicit-any` (`warn`) + `no-restricted-syntax` para `any` en base                            | `packages/eslint-config/next.mjs`, `index.mjs`                                 |
 | 0024 | Preset opt-in `./ui`: `jsx-a11y` (`error`) + `no-restricted-syntax`/`no-restricted-imports` parametrizables (`warn`) | `packages/eslint-config/ui.mjs`                                                |
+| 0025 | Ratchet de cobertura global + hook pre-push que lo ejecuta                                                           | `packages/vitest-config/index.mjs`, `packages/husky-config/hooks/pre-push.sh`  |
+| 0034 | Instalación del estándar por máquina con `devground-init machine`                                                    | `packages/cli/src/machine-command.ts`                                          |
+| 0035 | Config ESLint para TanStack (cobertura Python y TanStack)                                                            | `packages/eslint-config/tanstack.mjs`                                          |

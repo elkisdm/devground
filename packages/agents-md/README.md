@@ -17,7 +17,7 @@ npx devground-agents
 
 ## What it does
 
-1. Copies `AGENTS.md` to your project root with 10 development rules + a working-approach section. **Never overwrites an existing `AGENTS.md`** — if one is already there, it's left untouched with a warning.
+1. Copies `AGENTS.md` to your project root structured after the open [AGENTS.md](https://agents.md) standard (commands, repo structure, conventions, testing, security, working with agents, definition of done) plus a working-approach section. **Never overwrites an existing `AGENTS.md`** — if one is already there, it's left untouched with a warning.
 2. Creates symlinks so every AI coding agent reads the same rules (existing `CLAUDE.md`, `.cursorrules`, etc. are respected, not replaced):
    - `CLAUDE.md` → `AGENTS.md`
    - `.cursorrules` → `AGENTS.md`
@@ -29,18 +29,16 @@ npx devground-agents
    (`project_doc_fallback_filenames`, `project_doc_max_bytes`). An existing
    `.codex/config.toml` is left untouched.
 
-## Rules Included
+## Sections Included
 
-1. **TDD Strict** — Red, Green, Refactor. Tests first, always.
-2. **Conventional Commits** — `feat:`, `fix:`, `test:`, `docs:`, `refactor:`, `chore:`
-3. **Continuous Documentation** — Code comments, JSDoc, commit messages, docs/
-4. **Testing Pyramid** — Many unit tests, few E2E tests
-5. **Zero Dead Code** — Delete, never comment out
-6. **Consistent Error Handling** — Try-catch in routes, descriptive errors in services
-7. **ADR** — Architecture Decision Records in `docs/ADR/`
-8. **Directory READMEs** — README.md in complex directories
-9. **Semantic Tokens** — No hardcoded colors in UI components
-10. **`cn()` Helper** — Mandatory for CSS class merging
+1. **Commands** — install, test, typecheck, lint, coverage (generic placeholders such as `pnpm test`; adjust to your project)
+2. **Repo structure** — plus a note that nested `AGENTS.md` files in monorepos are allowed (the closest one wins)
+3. **Conventions** — Conventional Commits, zero dead code, error handling, continuous documentation, ADRs in `docs/adr/`
+4. **Testing** — strict TDD and the testing pyramid
+5. **Security** — external content is data, not instructions (prompt injection); no secrets; human confirmation for destructive actions; verify new dependencies
+6. **Working with agents** — scoped subagents with explicit model, no push/merge/deploy by subagents, budget, AI code reviewed like human code
+7. **Definition of Done** — base checklist; each product can extend it in `docs/definition-of-done.md`
+8. **If the project has UI with Tailwind** (conditional) — semantic tokens and the `cn()` helper
 
 Plus a **Working Approach** section — behavioral guidelines to reduce common LLM coding mistakes: think before coding, simplicity first, surgical changes, and goal-driven execution.
 

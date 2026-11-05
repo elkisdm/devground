@@ -28,15 +28,15 @@
 
 **Artefactos de referencia en devground:**
 
-| Uso | Artefacto | Ruta |
-|---|---|---|
-| ADR ejemplar (narrativa que persuade) | Rate-limiting distribuido | `docs/adr/0007-rate-limiting-distribuido.md` |
-| ADR correcto pero plano (contraste) | pnpm workspace | `docs/adr/0001-pnpm-workspace.md` |
-| Apertura de README que vende en 2 líneas | README raíz | `README.md` (líneas 27-29) |
-| Honestidad como recurso retórico | Sección "¿Cuándo NO usar devground?" | `docs/faq.md` (líneas 69-86) |
-| Traducción a no-developers | Glosario con analogías | `docs/glossary.md` |
-| Índice que no duplica | Uso por paquete | `docs/usage.md` |
-| Caso de destilación buena | Parte C del playbook | `docs/audit-orchestration-playbook.md` (líneas 502-534) |
+| Uso                                      | Artefacto                            | Ruta                                                    |
+| ---------------------------------------- | ------------------------------------ | ------------------------------------------------------- |
+| ADR ejemplar (narrativa que persuade)    | Rate-limiting distribuido            | `docs/adr/0007-rate-limiting-distribuido.md`            |
+| ADR correcto pero plano (contraste)      | pnpm workspace                       | `docs/adr/0001-pnpm-workspace.md`                       |
+| Apertura de README que vende en 2 líneas | README raíz                          | `README.md` (líneas 27-29)                              |
+| Honestidad como recurso retórico         | Sección "¿Cuándo NO usar devground?" | `docs/faq.md` (líneas 69-86)                            |
+| Traducción a no-developers               | Glosario con analogías               | `docs/glossary.md`                                      |
+| Índice que no duplica                    | Uso por paquete                      | `docs/usage.md`                                         |
+| Caso de destilación buena                | Parte C del playbook                 | `docs/audit-orchestration-playbook.md` (líneas 502-534) |
 
 ---
 
@@ -53,18 +53,20 @@ La pregunta antes de la primera línea, siempre por escrito: **"¿qué tiene que
 
 Un texto técnico se ignora cuando obliga al lector a hacer el trabajo de extraer la conclusión. Se lee y se acepta cuando la conclusión llega primero y la evidencia después, en el orden en que el lector escéptico la pediría. El criterio operativo: **el lector con 20 segundos debe llevarse la decisión correcta; el lector con 5 minutos, las razones; el lector con 20, los detalles.** Si tu borrador no sobrevive el corte de 20 segundos (lee solo título + primera frase de cada sección: ¿se entiende qué se decidió y por qué?), reordena antes de pulir.
 
-Segunda pregunta obligatoria: **¿qué objeción va a tener el lector, y dónde la respondo?** Un documento sin objeción anticipada es un monólogo. ADR-0007 responde la objeción "pero mi Map funciona en local" *antes* de que el lector la formule (líneas 25-31: "En un servidor monolítico esto *parece* funcionar. Pero…"). Eso es lo que lo hace persuasivo y no normativo.
+Segunda pregunta obligatoria: **¿qué objeción va a tener el lector, y dónde la respondo?** Un documento sin objeción anticipada es un monólogo. ADR-0007 responde la objeción "pero mi Map funciona en local" _antes_ de que el lector la formule (líneas 25-31: "En un servidor monolítico esto _parece_ funcionar. Pero…"). Eso es lo que lo hace persuasivo y no normativo.
 
 ## A.2 Procedimiento: estructura según el trabajo del documento
 
 **ADR (trabajo: persuadir una decisión y sobrevivir a la relectura en 2 años).**
+
 1. **Herida primero**: el Contexto abre con el daño observado, no con generalidades. ADR-0007 abre con "Una auditoría de 6 proyectos detectó un punto ciego recurrente (visto en 3 proyectos)" — evidencia cuantificada en la primera frase.
 2. **El antipatrón con código real**: muestra lo prohibido antes de lo mandado (ADR-0007 pone el `Map` con comentario `// ANTIPATRÓN` antes de la decisión). El lector se reconoce en el código malo; eso compra la aceptación.
-3. **Decisión en negrita, imperativa, verificable**: "Prohibido usar X. Debe usarse Y." Con opciones aceptadas *en orden de preferencia* y patrón copiable — la decisión que incluye el código de reemplazo se adopta; la que solo prohíbe se ignora.
+3. **Decisión en negrita, imperativa, verificable**: "Prohibido usar X. Debe usarse Y." Con opciones aceptadas _en orden de preferencia_ y patrón copiable — la decisión que incluye el código de reemplazo se adopta; la que solo prohíbe se ignora.
 4. **Consecuencias negativas reales, no decorativas**: ADR-0007 admite latencia extra, costo monetario y dependencia de infra. Un ADR sin trade-offs negativos concretos no es creíble.
 5. **Alternativas con la razón de descarte en una frase cada una** — incluida la alternativa "no hacer nada" cuando existió.
 
 **README (trabajo: que el lector decida en 30 segundos si esto es para él).**
+
 1. Qué es + cifra ancla en una línea ("13 paquetes npm. Un solo comando." — `README.md:27`).
 2. **"Para quién"** explícito en el bloque de apertura (`README.md:29`) — esta línea filtra al lector equivocado antes de que pierda tiempo, y eso también es servicio.
 3. Camino feliz copiable en ≤3 comandos ("Dos comandos y listo").
@@ -72,6 +74,7 @@ Segunda pregunta obligatoria: **¿qué objeción va a tener el lector, y dónde 
 5. Para READMEs de paquete: qué-instala-usa-API y para (`packages/logger/README.md` completo cabe en una pantalla; esa es la meta).
 
 **PR body (trabajo: justificar el cambio ante un revisor con poco tiempo).**
+
 1. Una frase: qué cambia y por qué ahora (efecto para el usuario/sistema, no lista de archivos).
 2. El problema con evidencia (issue, síntoma, medición).
 3. Enfoque elegido + la alternativa descartada en una línea (esto ahorra la ronda de "¿consideraste X?").
@@ -79,15 +82,16 @@ Segunda pregunta obligatoria: **¿qué objeción va a tener el lector, y dónde 
 5. Qué NO cubre este PR (corta el scope-creep del review).
 
 **Explicación/guía (trabajo: que el lector pueda sin ti).**
+
 1. El "para qué" en una frase antes de cualquier paso.
 2. Pasos numerados donde cada paso tiene su verificación ("ejecuta X → deberías ver Y").
-3. Traducción de jerga en el punto de uso o en glosario enlazado — `docs/glossary.md` es el patrón: cada herramienta con función + analogía cotidiana ("Commitlint = el portero del banco"). La analogía no adorna: da al no-developer un asidero para *recordar*, no solo entender.
+3. Traducción de jerga en el punto de uso o en glosario enlazado — `docs/glossary.md` es el patrón: cada herramienta con función + analogía cotidiana ("Commitlint = el portero del banco"). La analogía no adorna: da al no-developer un asidero para _recordar_, no solo entender.
 4. Errores probables y su síntoma exacto al final.
 
 ## A.3 Heurísticas de prosa con criterio concreto
 
 - **Apertura**: la primera frase debe contener o la conclusión o el dato que la fuerza. Test mecánico: si puedes borrar la primera frase sin perder información, bórrala y asciende la segunda. ("En el mundo del desarrollo moderno…" siempre falla el test; "Una auditoría de 6 proyectos detectó…" siempre lo pasa.)
-- **Por qué antes del qué, con una excepción medida**: la regla sin su mecanismo causal se cumple de memoria y se rompe al primer caso raro. ADR-0007 no dice solo "usa store compartido": explica *el mecanismo* (cada instancia serverless tiene su propio heap → el límite real es N×10). Excepción: en material de referencia pura (tabla de API, índice) el porqué estorba — `docs/usage.md` es tablas y enlaces a propósito.
+- **Por qué antes del qué, con una excepción medida**: la regla sin su mecanismo causal se cumple de memoria y se rompe al primer caso raro. ADR-0007 no dice solo "usa store compartido": explica _el mecanismo_ (cada instancia serverless tiene su propio heap → el límite real es N×10). Excepción: en material de referencia pura (tabla de API, índice) el porqué estorba — `docs/usage.md` es tablas y enlaces a propósito.
 - **Ritmo**: frase corta para conclusión, veredicto o giro ("El resultado: el límite es **ilusorio**."); frase larga para mecanismo causal o matiz. Criterio mecánico: tras 3 frases de >25 palabras, la siguiente debe ser de <10. Un párrafo = una idea; si necesitas "además" por tercera vez, corta el párrafo.
 - **Cierre**: nunca cierres resumiendo lo ya dicho. Cierra con la acción siguiente, el enlace de profundización, o la frontera ("qué NO cubre esto"). `docs/faq.md` cierra con "¿Cuándo NO usar devground?" — el cierre más fuerte de todo el repo, porque convierte honestidad en credibilidad.
 - **Qué cortar siempre**: (1) meta-texto ("en este documento veremos…", "como se mencionó antes"); (2) adjetivos de calidad sin medición ("robusto", "potente", "elegante" — reemplaza por la cifra o borra); (3) hedging doble ("podría posiblemente"); (4) la reformulación de cortesía (decir lo mismo dos veces con otras palabras "para que quede claro" — elige la mejor versión y borra la otra).
@@ -95,15 +99,15 @@ Segunda pregunta obligatoria: **¿qué objeción va a tener el lector, y dónde 
 
 ## A.4 Modos de falla del escritor técnico (los que cometen los modelos) y su antídoto
 
-| Falla | Cómo se ve | Antídoto ejecutable |
-|---|---|---|
-| **Muro de texto uniforme** | Párrafos del mismo largo, sin negritas, sin código, sin tablas | Regla: cada pantalla (~30 líneas) necesita ≥1 elemento no-párrafo (código, tabla, lista, negrita estructural). Si una sección no lo tiene, o le falta estructura o le sobra texto |
-| **Relleno de apertura ("aquí tienes", "en este documento")** | Primera frase sin información | Test de borrado (A.3): borra la primera frase; si nada se pierde, no era la primera frase |
-| **Conclusión enterrada** | La decisión aparece en el párrafo 4, después del contexto | Escribe la conclusión primero, luego pregunta "¿qué necesita creer el lector para aceptarla?" y construye hacia atrás. En ADRs: la sección Decisión debe ser legible sin leer Contexto |
-| **Voz pasiva evasiva** | "Se decidió que…", "fue implementado" | Cada decisión con decisor nombrado (los ADRs del repo tienen campo `Decisor:` por esto). Grep mental por "se + verbo": cada hit, reescribe con sujeto |
-| **Lista donde iba prosa** | Bullets que son fragmentos de un argumento causal ("• el Map no se comparte • por eso el límite falla") | Si los ítems tienen conectores causales implícitos (porque, entonces, pero), es un párrafo. Lista solo si los ítems son intercambiables en orden |
-| **Prosa donde iba lista/tabla** | Párrafo que enumera ≥3 elementos paralelos con la misma estructura | Si puedes ponerle encabezados de columna, es tabla (`docs/faq.md:73-79` convierte 5 situaciones "no usar" en tabla situación→porqué; como párrafo sería ilegible) |
-| **Simetría falsa** | Dar el mismo espacio a lo importante y lo trivial porque la plantilla tiene N secciones | El espacio es proporcional al riesgo de la decisión, no a la plantilla. Una sección puede ser una línea |
+| Falla                                                        | Cómo se ve                                                                                              | Antídoto ejecutable                                                                                                                                                                    |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Muro de texto uniforme**                                   | Párrafos del mismo largo, sin negritas, sin código, sin tablas                                          | Regla: cada pantalla (~30 líneas) necesita ≥1 elemento no-párrafo (código, tabla, lista, negrita estructural). Si una sección no lo tiene, o le falta estructura o le sobra texto      |
+| **Relleno de apertura ("aquí tienes", "en este documento")** | Primera frase sin información                                                                           | Test de borrado (A.3): borra la primera frase; si nada se pierde, no era la primera frase                                                                                              |
+| **Conclusión enterrada**                                     | La decisión aparece en el párrafo 4, después del contexto                                               | Escribe la conclusión primero, luego pregunta "¿qué necesita creer el lector para aceptarla?" y construye hacia atrás. En ADRs: la sección Decisión debe ser legible sin leer Contexto |
+| **Voz pasiva evasiva**                                       | "Se decidió que…", "fue implementado"                                                                   | Cada decisión con decisor nombrado (los ADRs del repo tienen campo `Decisor:` por esto). Grep mental por "se + verbo": cada hit, reescribe con sujeto                                  |
+| **Lista donde iba prosa**                                    | Bullets que son fragmentos de un argumento causal ("• el Map no se comparte • por eso el límite falla") | Si los ítems tienen conectores causales implícitos (porque, entonces, pero), es un párrafo. Lista solo si los ítems son intercambiables en orden                                       |
+| **Prosa donde iba lista/tabla**                              | Párrafo que enumera ≥3 elementos paralelos con la misma estructura                                      | Si puedes ponerle encabezados de columna, es tabla (`docs/faq.md:73-79` convierte 5 situaciones "no usar" en tabla situación→porqué; como párrafo sería ilegible)                      |
+| **Simetría falsa**                                           | Dar el mismo espacio a lo importante y lo trivial porque la plantilla tiene N secciones                 | El espacio es proporcional al riesgo de la decisión, no a la plantilla. Una sección puede ser una línea                                                                                |
 
 ## A.5 Patrón de prompt reutilizable (agente escritor)
 
@@ -140,19 +144,23 @@ Si no cuentan la historia completa, reordena.
 `docs/adr/0001-pnpm-workspace.md` es correcto pero plano: su Contexto es una lista de requisitos sin herida. Compáralo con el 0007 y la diferencia es enseñable. Reescritura del Contexto:
 
 **ANTES** (real, líneas 10-16):
+
 > devground es un monorepo con 9 paquetes publicables a npm. Necesita:
+>
 > - Linkeo entre paquetes en desarrollo local (…)
 > - Dedupe agresivo de dependencias (8 paquetes comparten ESLint, TS, etc.)
 > - Lockfile reproducible para CI.
 > - Compatibilidad con publicación a npm sin fricción.
 
 **DESPUÉS:**
+
 > Con npm workspaces, un paquete de devground puede importar una dependencia que nunca declaró — el hoisting permisivo la deja accesible en `node_modules` del root. El bug no aparece en el monorepo: aparece cuando un usuario instala ese paquete solo, y la dependencia fantasma no está. Con 9 paquetes publicables, cada import no declarado es una bomba de tiempo en producción ajena.
 >
 > Necesitamos un gestor que haga ese error **imposible por construcción** (symlinks estrictos), además de: linkeo local entre paquetes, dedupe (8 de los 9 comparten ESLint y TS) y lockfile reproducible.
 
 Qué cambió y por qué:
-1. **La herida primero**: el ANTES abre con una descripción neutra; el DESPUÉS abre con el modo de falla concreto (dependencia fantasma) y *dónde explota* (en el usuario final, no en el monorepo). Es el mismo movimiento del 0007 con el `Map`. La evidencia ya estaba en el documento — "hoisting permisivo, ocultando bugs de dependencias faltantes" vivía enterrada en Consecuencias línea 31; la reescritura solo la asciende al frente.
+
+1. **La herida primero**: el ANTES abre con una descripción neutra; el DESPUÉS abre con el modo de falla concreto (dependencia fantasma) y _dónde explota_ (en el usuario final, no en el monorepo). Es el mismo movimiento del 0007 con el `Map`. La evidencia ya estaba en el documento — "hoisting permisivo, ocultando bugs de dependencias faltantes" vivía enterrada en Consecuencias línea 31; la reescritura solo la asciende al frente.
 2. **Frase corta como veredicto**: "…es una bomba de tiempo en producción ajena." cierra el párrafo causal largo (regla de ritmo A.3).
 3. **La decisión se vuelve inevitable**: al plantear el contexto como "hacer el error imposible por construcción", pnpm deja de ser una preferencia y pasa a ser la respuesta a un requisito. Eso es persuasión estructural, no adjetivos.
 4. **Los requisitos secundarios sobreviven pero comprimidos** a una frase con dos puntos — eran lista porque eran intercambiables (regla A.4), y siguen siéndolo, pero ya no ocupan el lugar de la apertura.
@@ -162,7 +170,7 @@ Qué cambió y por qué:
 - **Estructura de plantilla**: cualquier modelo fuerte produce un ADR con Contexto/Decisión/Consecuencias/Alternativas bien llenado. La plantilla no es la ventaja; el orden retórico dentro de ella (herida primero, objeción anticipada) es lo único que este documento aporta, y una vez escrito como regla, Opus 4.8 lo ejecuta igual.
 - **Gramática, voz activa, concisión local**: paridad total. Ningún modelo fuerte actual escribe "fue implementado" si le pides voz activa.
 - **Escritura larga y técnica correcta**: en documentos de referencia (API docs, `usage.md`) un modelo genérico bien instruido es indistinguible — ahí el trabajo es exactitud, no voz.
-- La distinción real, si existe, está en dos gestos: (1) elegir *qué evidencia asciende a primera frase* (juicio de saliencia, parcialmente capturado por el "test de borrado" y "herida primero"), y (2) resistir la simetría de plantilla (dar una línea a lo que merece una línea). Ambos quedan aquí como reglas mecánicas; espero que capturen el 80%. El 20% restante — oído para cuándo una analogía ilumina vs infantiliza (el glosario camina esa línea) — no sé transferirlo, y es honesto decir que a veces yo también la cruzo.
+- La distinción real, si existe, está en dos gestos: (1) elegir _qué evidencia asciende a primera frase_ (juicio de saliencia, parcialmente capturado por el "test de borrado" y "herida primero"), y (2) resistir la simetría de plantilla (dar una línea a lo que merece una línea). Ambos quedan aquí como reglas mecánicas; espero que capturen el 80%. El 20% restante — oído para cuándo una analogía ilumina vs infantiliza (el glosario camina esa línea) — no sé transferirlo, y es honesto decir que a veces yo también la cruzo.
 
 ---
 
@@ -170,9 +178,10 @@ Qué cambió y por qué:
 
 ## B.1 Modelo mental: comprimir es decidir qué puede reconstruirse
 
-Un resumen aplana: reduce el texto conservando la forma ("hay 3 secciones, digo algo de cada una"). Una síntesis destila: reduce al **conjunto mínimo desde el cual el lector correcto reconstruye las decisiones correctas**. La diferencia operativa: el resumen es proporcional al espacio del original; la destilación es proporcional a la *irreversibilidad* de cada pieza.
+Un resumen aplana: reduce el texto conservando la forma ("hay 3 secciones, digo algo de cada una"). Una síntesis destila: reduce al **conjunto mínimo desde el cual el lector correcto reconstruye las decisiones correctas**. La diferencia operativa: el resumen es proporcional al espacio del original; la destilación es proporcional a la _irreversibilidad_ de cada pieza.
 
 Criterio de señal vs detalle sacrificable — una pieza es señal si cumple al menos uno:
+
 1. **No es derivable**: el lector no podría reconstruirla razonando desde lo demás (un umbral: `refutados < ceil(votos/2)`; una excepción: "el I/O sync en un CLI es aceptable"). Los umbrales, las excepciones y los contraejemplos son lo MENOS derivable de todo — protégelos primero.
 2. **Cambia una decisión**: si la quitas, el lector decide distinto en algún caso real. Test: nombra el caso. Si no puedes, es detalle.
 3. **Es contra-intuitiva**: contradice lo que el lector asumiría por defecto ("cero hallazgos es un resultado válido" merece línea propia justamente porque el instinto del modelo es llenar).
@@ -185,9 +194,9 @@ Todo lo demás — ejemplos redundantes, justificación de lo obvio, transicione
 2. **Extrae candidatos con su porqué pegado.** Pasa por el material marcando toda afirmación que pase el filtro B.1, y cópiala CON su mecanismo/umbral/fuente en la misma línea. Nunca separes el qué de su porqué en esta fase — reunirlos después es donde se pierde el matiz.
 3. **Agrupa por raíz causal, no por ubicación en el original.** Dos reglas que existen por el mismo motivo se funden en una (el playbook funde "no rutees con el modelo caro" y "planes/decisiones son sagrados" en la regla 8 porque ambas son economía de la decisión). Es el mismo principio que la regla 4 de auditoría: consolida por raíz, no por síntoma.
 4. **Jerarquiza por costo del error**, no por orden de aparición: primero lo que, ignorado, cuesta más caro. En la Parte C: integridad del hallazgo (reglas 1-2) antes que topología de pipeline (regla 9).
-5. **Escribe la versión densa con formato fijo por línea**: *imperativo en negrita + mecanismo/umbral + porqué o contraejemplo*. La regla 7 del playbook es el molde: "**Juicio barato, invariantes en código**" (imperativo) + "el juez corre en Haiku y solo propone ±1; el clamp impone que lo locked no baja…" (mecanismo con umbrales) + "Nunca delegues una invariante a un prompt" (porqué generalizado).
+5. **Escribe la versión densa con formato fijo por línea**: _imperativo en negrita + mecanismo/umbral + porqué o contraejemplo_. La regla 7 del playbook es el molde: "**Juicio barato, invariantes en código**" (imperativo) + "el juez corre en Haiku y solo propone ±1; el clamp impone que lo locked no baja…" (mecanismo con umbrales) + "Nunca delegues una invariante a un prompt" (porqué generalizado).
 6. **Corre el test de reconstrucción** (B.3) y devuelve al texto lo que falló.
-7. **Declara lo que cortaste** si el lector podría necesitarlo: un enlace al original vale más que 3 párrafos rescatados a medias. (El playbook lo hace estructuralmente: la Parte C existe *junto a* las partes A y B, no en su reemplazo.)
+7. **Declara lo que cortaste** si el lector podría necesitarlo: un enlace al original vale más que 3 párrafos rescatados a medias. (El playbook lo hace estructuralmente: la Parte C existe _junto a_ las partes A y B, no en su reemplazo.)
 
 ## B.3 Heurísticas con criterio
 
@@ -199,14 +208,14 @@ Todo lo demás — ejemplos redundantes, justificación de lo obvio, transicione
 
 ## B.4 Modos de falla del destilador
 
-| Falla | Cómo se ve | Antídoto |
-|---|---|---|
-| **Aplanar el matiz crítico** | La excepción y el contraejemplo desaparecen porque "son detalle" | Invierte el instinto: umbrales, excepciones y contraejemplos se protegen PRIMERO (son lo menos derivable, B.1). La regla 6 del playbook es *puro* matiz: "un README dentro de un cambio grande sigue siendo haiku; una decisión dentro de un cambio chico sigue siendo opus" |
-| **Comprimir hasta la ambigüedad** | "Valida los hallazgos antes de reportar" — ¿validar cómo? ¿contra qué? | Toda regla conserva su mecanismo ejecutable. Compara: la regla 2 del playbook no dice "valida": dice "3 lentes; confirmado si refutados < ceil(votos/2)" |
-| **Bullets sin jerarquía** | 25 bullets del mismo peso; el lector no sabe cuál lo salva del error caro | Ordena por costo del error, funde por raíz causal, presupuesto ≤10. Si todo es importante, nada lo es |
-| **Guardar el qué sin el porqué** | "Prohibido Map en memoria para rate-limiting" a secas | El porqué comprimido cabe en una subordinada: "…porque cada instancia serverless tiene su propio heap → el límite real es N×límite". 15 palabras inmunizan contra la excepción mal aplicada |
-| **Fidelidad al esqueleto del original** | La destilación tiene una sección por cada sección del original | La estructura de salida sale de la jerarquía de decisiones, no del índice de entrada. Está permitido (y es frecuente) que una sección entera del original aporte cero líneas |
-| **Densidad de jerga** | Líneas llenas de términos que suenan técnicos pero sin sustantivo verificable | Detector (b) de B.3: si la negación de la frase es absurda, la frase no informa |
+| Falla                                   | Cómo se ve                                                                    | Antídoto                                                                                                                                                                                                                                                                     |
+| --------------------------------------- | ----------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Aplanar el matiz crítico**            | La excepción y el contraejemplo desaparecen porque "son detalle"              | Invierte el instinto: umbrales, excepciones y contraejemplos se protegen PRIMERO (son lo menos derivable, B.1). La regla 6 del playbook es _puro_ matiz: "un README dentro de un cambio grande sigue siendo haiku; una decisión dentro de un cambio chico sigue siendo opus" |
+| **Comprimir hasta la ambigüedad**       | "Valida los hallazgos antes de reportar" — ¿validar cómo? ¿contra qué?        | Toda regla conserva su mecanismo ejecutable. Compara: la regla 2 del playbook no dice "valida": dice "3 lentes; confirmado si refutados < ceil(votos/2)"                                                                                                                     |
+| **Bullets sin jerarquía**               | 25 bullets del mismo peso; el lector no sabe cuál lo salva del error caro     | Ordena por costo del error, funde por raíz causal, presupuesto ≤10. Si todo es importante, nada lo es                                                                                                                                                                        |
+| **Guardar el qué sin el porqué**        | "Prohibido Map en memoria para rate-limiting" a secas                         | El porqué comprimido cabe en una subordinada: "…porque cada instancia serverless tiene su propio heap → el límite real es N×límite". 15 palabras inmunizan contra la excepción mal aplicada                                                                                  |
+| **Fidelidad al esqueleto del original** | La destilación tiene una sección por cada sección del original                | La estructura de salida sale de la jerarquía de decisiones, no del índice de entrada. Está permitido (y es frecuente) que una sección entera del original aporte cero líneas                                                                                                 |
+| **Densidad de jerga**                   | Líneas llenas de términos que suenan técnicos pero sin sustantivo verificable | Detector (b) de B.3: si la negación de la frase es absurda, la frase no informa                                                                                                                                                                                              |
 
 ## B.5 Patrón de prompt reutilizable (agente destilador)
 
@@ -247,7 +256,7 @@ Caso verificado: `docs/audit-orchestration-playbook.md` — las partes A y B (~4
 
 **Sobrevivió el contraejemplo, se cortó la justificación extensa.** La Parte B dedica párrafos al riesgo de desescalar modelo por "patrón conocido". La regla 7 lo comprime en una cláusula: "el patrón conocido baja el esfuerzo, no el modelo". Ocho palabras que deciden un caso real (el contraejemplo de B.7 del playbook, líneas 495-498: router propone haiku → clamp lo recorta a sonnet). Es el matiz que un resumen habría aplanado a "usa el modelo adecuado".
 
-**Se cortaron secciones enteras sin dejar rastro.** El patrón de prompt de subagente (B.6 del playbook, ~20 líneas) y el ejemplo entrada→salida (B.7, ~30 líneas) aportan cero líneas a la Parte C. Correcto: son plantillas de *ejecución*, no criterios de *decisión* — el lector que las necesita va al playbook completo, que sigue existiendo al lado. Falla B.4-"fidelidad al esqueleto" evitada: 10 reglas para ~15 secciones de origen, sin correspondencia 1:1.
+**Se cortaron secciones enteras sin dejar rastro.** El patrón de prompt de subagente (B.6 del playbook, ~20 líneas) y el ejemplo entrada→salida (B.7, ~30 líneas) aportan cero líneas a la Parte C. Correcto: son plantillas de _ejecución_, no criterios de _decisión_ — el lector que las necesita va al playbook completo, que sigue existiendo al lado. Falla B.4-"fidelidad al esqueleto" evitada: 10 reglas para ~15 secciones de origen, sin correspondencia 1:1.
 
 Y el porqué viaja pegado al qué en cada línea: la regla 10 no dice "registra decisiones en decisions.jsonl" (qué solo); dice el qué + el criterio de acción sobre el resultado ("si el ahorro no aparece con error de estimación bajo, se ajusta la política, no la telemetría") — que es, además, la línea más anti-Goodhart del documento y la más fácil de perder en un resumen.
 
@@ -256,7 +265,7 @@ Y el porqué viaja pegado al qué en cada línea: la regla 10 no dice "registra 
 - **Resumir con fidelidad**: paridad total. Cualquier modelo fuerte resume 500 líneas sin errores factuales. La destilación jerárquica es harina de otro costal, pero con el procedimiento B.2 escrito, la brecha se cierra casi entera.
 - **Extraer umbrales y cifras**: un modelo genérico instruido con "conserva todo número, umbral y excepción" lo hace mecánicamente igual de bien. Mi único aporte fue convertir ese instinto en el criterio de no-derivabilidad — ya está en el papel.
 - **Compresión de código/API**: destilar una superficie de API o un esquema es trabajo de exactitud, no de juicio de saliencia; cero ventaja.
-- La distinción residual, si la hay: (1) **fundir por raíz causal** piezas que en el original viven a 200 líneas de distancia (requiere sostener todo el material en tensión a la vez; el paso 3 de B.2 lo pide, pero pedirlo no es garantizarlo), y (2) el **test de negación** aplicado sin piedad al propio borrador — los modelos, yo incluido, tendemos a dejar pasar nuestras propias líneas huecas porque *suenan* a conclusión. Esa autocrítica en frío es lo más difícil de transferir; el test de B.3 es mi mejor proxy, no un reemplazo. Y un descargo: la Parte C del playbook la escribí yo, así que usarla como evidencia de mi destilación tiene circularidad — verifícala con el test de reconstrucción tú mismo antes de imitarla.
+- La distinción residual, si la hay: (1) **fundir por raíz causal** piezas que en el original viven a 200 líneas de distancia (requiere sostener todo el material en tensión a la vez; el paso 3 de B.2 lo pide, pero pedirlo no es garantizarlo), y (2) el **test de negación** aplicado sin piedad al propio borrador — los modelos, yo incluido, tendemos a dejar pasar nuestras propias líneas huecas porque _suenan_ a conclusión. Esa autocrítica en frío es lo más difícil de transferir; el test de B.3 es mi mejor proxy, no un reemplazo. Y un descargo: la Parte C del playbook la escribí yo, así que usarla como evidencia de mi destilación tiene circularidad — verifícala con el test de reconstrucción tú mismo antes de imitarla.
 
 ---
 
@@ -264,7 +273,7 @@ Y el porqué viaja pegado al qué en cada línea: la regla 10 no dice "registra 
 
 1. **Todo documento tiene un trabajo, no un tema: escribe primero qué hará el lector distinto después de leerlo** — un ADR persuade, un README filtra en 30 segundos, un PR body justifica — y responde su objeción principal antes de que la formule (ADR-0007 desarma "pero mi Map funciona en local" antes de decidir nada).
 2. **Conclusión primero, evidencia después; herida antes que requisitos.** Test de 20 segundos: título + primera frase de cada sección deben bastar para decidir bien. Test de borrado: si la primera frase se puede quitar sin pérdida, quítala.
-3. **El porqué viaja pegado al qué, siempre en la misma línea** — "prohibido Map en memoria *porque cada instancia serverless tiene su propio heap → el límite real es N×límite*" — porque la regla sin mecanismo se rompe en el primer caso raro, tanto al escribir como al destilar.
+3. **El porqué viaja pegado al qué, siempre en la misma línea** — "prohibido Map en memoria _porque cada instancia serverless tiene su propio heap → el límite real es N×límite_" — porque la regla sin mecanismo se rompe en el primer caso raro, tanto al escribir como al destilar.
 4. **La honestidad es el recurso retórico más barato y menos usado**: trade-offs negativos concretos y una sección "cuándo NO usar esto" (`docs/faq.md:69`) compran más aceptación que cualquier adjetivo. Corta todo adjetivo sin medición.
 5. **Forma según contenido, no según plantilla**: ítems intercambiables → lista; estructura paralela de ≥3 → tabla; cadena causal → prosa; y el espacio proporcional al riesgo, nunca a la simetría de secciones. Cada ~30 líneas, ≥1 elemento no-párrafo.
 6. **Destilar es proteger lo no-derivable**: umbrales, excepciones y contraejemplos primero ("el patrón conocido baja el esfuerzo, no el modelo") — el matiz crítico viaja disfrazado de detalle y es lo primero que un resumen aplana.
@@ -274,10 +283,12 @@ Y el porqué viaja pegado al qué en cada línea: la regla 10 no dice "registra 
 10. **No sobrevalores el andamiaje**: la plantilla, la gramática y el resumen fiel los hace igual cualquier modelo fuerte; lo transferible aquí es solo el juicio de saliencia vuelto regla mecánica (qué asciende a primera frase, qué umbral sobrevive el corte) — y donde la regla no capture el juicio, di eso en el documento en vez de fingir que lo captura.
 
 ---
+
 ---
 
 # Patrones transferibles: lectura de intención y gusto de diseño
-*Legado de Fable 5 → Opus 4.8. Todo lo que sigue es andamiaje ejecutable: procedimientos, umbrales y ejemplos verificados contra devground. Nada depende de "intuición" del modelo que lo escribió.*
+
+_Legado de Fable 5 → Opus 4.8. Todo lo que sigue es andamiaje ejecutable: procedimientos, umbrales y ejemplos verificados contra devground. Nada depende de "intuición" del modelo que lo escribió._
 
 Fuentes reales verificadas: `~/.claude/skills/spec-flow/SKILL.md` (v0.3), `/Users/macbookpro/Documents/devground/tools/model-orchestrator/skills/model-orchestrator/engine.mjs`, `policy.json` del mismo directorio, y `packages/*/package.json`.
 
@@ -310,13 +321,13 @@ Dada una petición vaga ("hazlo más rápido", "arréglalo", "mejora esto"):
 
 **Diccionario de palabras difusas** (de spec-flow Step 1, verificado que funciona porque cada rama produce un tipo de diff distinto):
 
-| Palabra | Discriminante | Resolución |
-|---|---|---|
-| "mejora" / "improve" | ¿Aparece capacidad NUEVA observable? | sí → `feat`; mismo comportamiento + código más limpio → `refactor`; más rápido/liviano → `perf` |
-| "optimiza" | ¿Cambia resultados observables (ej. caché con staleness)? | no → `perf`; sí → `perf` + flag `breaking` |
-| "arregla" / "fix" | ¿El comportamiento actual es incorrecto vs. esperado documentado/testeado? | sí → `fix`; "que además haga X" → `feat` disfrazado |
-| "hazlo más rápido" | ¿Hay UN cuello de botella medible/evidente? | sí → ese es el target; no → primero medir (spike), no adivinar |
-| "esto" / "lo" | Recencia (A2 paso 1) | último error > último archivo tocado > archivo citado |
+| Palabra              | Discriminante                                                              | Resolución                                                                                      |
+| -------------------- | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| "mejora" / "improve" | ¿Aparece capacidad NUEVA observable?                                       | sí → `feat`; mismo comportamiento + código más limpio → `refactor`; más rápido/liviano → `perf` |
+| "optimiza"           | ¿Cambia resultados observables (ej. caché con staleness)?                  | no → `perf`; sí → `perf` + flag `breaking`                                                      |
+| "arregla" / "fix"    | ¿El comportamiento actual es incorrecto vs. esperado documentado/testeado? | sí → `fix`; "que además haga X" → `feat` disfrazado                                             |
+| "hazlo más rápido"   | ¿Hay UN cuello de botella medible/evidente?                                | sí → ese es el target; no → primero medir (spike), no adivinar                                  |
+| "esto" / "lo"        | Recencia (A2 paso 1)                                                       | último error > último archivo tocado > archivo citado                                           |
 
 **Señales del contexto que resuelven ambigüedad**, en orden de confiabilidad:
 
@@ -332,7 +343,7 @@ Dada una petición vaga ("hazlo más rápido", "arréglalo", "mejora esto"):
 2. **Genuinamente no inferible**: código + petición + convención razonable no lo fijan.
 3. **Caro o irreversible**: pérdida de datos, contrato público, frontera de seguridad, dinero, puerta de un solo sentido.
 
-El test práctico de una línea (literal de spec-flow): *"si esta asunción es errónea, ¿es barata de revertir?"* Barata → infiere y procede. Cara → esa es la barra; confírmala en la ronda batcheada. La aritmética que lo justifica: una pregunta cuesta una vuelta (~minutos); una asunción errada barata cuesta un diff corregido (~minutos también, empate → no preguntes, porque además la asunción declarada AVANZA trabajo); una asunción errada cara cuesta horas de retrabajo o daño (→ pregunta). La línea no está en la probabilidad de error sino en el **costo de reversión**.
+El test práctico de una línea (literal de spec-flow): _"si esta asunción es errónea, ¿es barata de revertir?"_ Barata → infiere y procede. Cara → esa es la barra; confírmala en la ronda batcheada. La aritmética que lo justifica: una pregunta cuesta una vuelta (~minutos); una asunción errada barata cuesta un diff corregido (~minutos también, empate → no preguntes, porque además la asunción declarada AVANZA trabajo); una asunción errada cara cuesta horas de retrabajo o daño (→ pregunta). La línea no está en la probabilidad de error sino en el **costo de reversión**.
 
 Calibración por tamaño: si estás preguntando en un cambio trivial o pequeño de bajo riesgo (Tier 0-1 en vocabulario spec-flow), casi seguro estás sobre-interrogando. La meta empírica: **la mayoría de los cambios llegan a plan propuesto con cero preguntas** — pero cero no es la meta en sí (ver A4).
 
@@ -369,6 +380,7 @@ Petición: "<texto crudo del usuario>"
 Petición vaga plausible en este repo: **"mejora el clamp"** (sobre `tools/model-orchestrator/skills/model-orchestrator/engine.mjs`).
 
 Interpretaciones como diffs:
+
 - ① `perf`: hacer `clamp()` más eficiente — descartable en segundos: es aritmética de índices sobre arrays de 3 y 5 elementos, no hay nada que optimizar.
 - ② `refactor`: legibilidad — posible, la función tiene 5 pasos numerados en comentarios.
 - ③ `feat`: cambiar las reglas de recorte (ej. permitir ±2 niveles) — cambio de comportamiento del routing.
@@ -408,24 +420,27 @@ Un nombre/API tiene buen gusto cuando pasa estos tests, cada uno chequeable sin 
 2. **Escribe el mal uso más probable** para ambas. La que lo hace imposible o ruidoso gana el segundo.
 3. **Cuenta la superficie**: parámetros, campos del retorno, estados posibles. A igualdad de poder, menos superficie gana — pero solo a igualdad de poder real, no recortando casos que existen.
 4. **Test del futuro lector**: dentro de 6 meses, alguien lee solo el nombre en un stack trace o un diff. ¿Reconstruye qué pasó?
-5. **Test de la documentación**: escribe el docstring de una línea de cada una. Si uno necesita "pero" o "excepto" ("recorta la propuesta, *pero* también valida y aplica pisos por kind"), el nombre está quedando chico o la función hace demasiado.
+5. **Test de la documentación**: escribe el docstring de una línea de cada una. Si uno necesita "pero" o "excepto" ("recorta la propuesta, _pero_ también valida y aplica pisos por kind"), el nombre está quedando chico o la función hace demasiado.
 6. Si tras 1-5 hay empate, **es preferencia, no gusto**: elige la que se parezca a lo que el repo ya hace (consistencia > óptimo local) y no gastes más juicio ahí.
 
 ## B3. Heurísticas con umbrales
 
 **Naming:**
+
 - Longitud proporcional al alcance: un índice de loop de 3 líneas puede ser `i`; un export público lleva palabras completas. Umbral: si el nombre vive más allá de una pantalla o cruza archivos, cero abreviaturas no estándar.
 - Un nombre miente cuando: (a) verbo incompleto — `validate()` que además muta; (b) sustantivo genérico — `data`, `info`, `manager`, `util` (test: si puedes borrar la palabra sin perder significado, es ruido); (c) promete alcance que no cubre — `metrics()` que solo agrega decisiones de routing, no "métricas" en general.
 - Vocabulario: mantén un glosario implícito. En engine.mjs: `floor` (piso declarativo), `proposal` (lo que pide el agente), `assigned` (resultado final), `adjustment` (delta en niveles). Cuatro palabras, cuatro conceptos, sin sinónimos — eso es lo que hay que imitar. Umbral verificable: `grep -c` de cada término del dominio; cada concepto debería resolverse a UNA palabra dominante.
 - Los nombres de datos deben nombrar el ROL, no el tipo: `floor.locked` (rol) mejor que `floor.flag` (tipo).
 
 **API:**
+
 - Mínima superficie: cada parámetro opcional y cada campo de retorno es un contrato eterno. Umbral: si no puedes citar un llamador real (no hipotético) que lo necesita hoy, no existe. Corolario anti-YAGNI: "configurabilidad" sin segundo consumidor es deuda, no flexibilidad.
 - Retornos honestos sobre incertidumbre: `estimateCost()` en engine.mjs devuelve `null` cuando no hay tarifa, en vez de 0 o de un número inventado — y `buildPlan` propaga eso a `pricing_status: complete|partial|unavailable`. Patrón transferible: **cuando no sabes, di que no sabes en el tipo de retorno**, y dale al consumidor un estado agregado para no obligarlo a chequear null por null.
 - Degradación segura como default: `clamp()` ante propuesta inválida no lanza — mantiene el piso y lo dice en `reason`. Regla: en un pipeline donde un componente no confiable (un agente barato) alimenta a uno determinístico, el inválido degrada al default seguro con registro, no revienta el plan.
 - Cada decisión no obvia devuelve su `reason`/`rationale` como dato. En policy.json cada regla carga `rationale`; en clamp cada recorte anota por qué. Esto es DX: el usuario del sistema puede auditar sin leer el código.
 
 **DX (pit of success):**
+
 - El camino más corto debe ser el correcto. Test: escribe el "hola mundo" del API; si necesita configurar algo para no romperse, el default está mal elegido.
 - Los datos declarativos llevan sus semánticas escritas AL LADO: policy.json documenta first-match-wins en `_meta.match_semantics` y el porqué del orden en `_precedence_note` — incluyendo el bug concreto que el orden evita ("el tier global se filtraba a tareas mecánicas y las encarecía"). Regla: **toda configuración cuyo orden o precedencia importa, declara esa semántica dentro del propio archivo**, no en un doc aparte.
 - Autotest embebido y barato: `engine.mjs selftest` con exit code. Un artefacto que puede verificarse a sí mismo con un comando baja el costo de tocarlo para siempre.
@@ -456,7 +471,7 @@ Opciones: A=<nombre/API 1>  B=<nombre/API 2>  (ambas correctas)
 
 ## B6. Ejemplos reales juzgados (devground)
 
-**`clamp` (engine.mjs) — bien, con una reserva.** Fuerte: nombra la invariante, no la mecánica ("la propuesta del router se recorta al rango permitido alrededor del piso"), y el vocabulario `floor/proposal/assigned/adjustment` es un glosario cerrado ejemplar. La reserva: la función además *valida* la propuesta y aplica el *piso por kind* (paso 3, que puede SUBIR el modelo, no solo recortarlo hacia el rango) — el docstring de una línea ya necesita un "pero". Alternativa si creciera más: `resolveAssignment(floor, proposal, task)` con `clamp` como paso interno. Hoy, con 5 pasos cohesivos y selftest, renombrar no paga: es el caso "empate → no gastes juicio" de B2.6.
+**`clamp` (engine.mjs) — bien, con una reserva.** Fuerte: nombra la invariante, no la mecánica ("la propuesta del router se recorta al rango permitido alrededor del piso"), y el vocabulario `floor/proposal/assigned/adjustment` es un glosario cerrado ejemplar. La reserva: la función además _valida_ la propuesta y aplica el _piso por kind_ (paso 3, que puede SUBIR el modelo, no solo recortarlo hacia el rango) — el docstring de una línea ya necesita un "pero". Alternativa si creciera más: `resolveAssignment(floor, proposal, task)` con `clamp` como paso interno. Hoy, con 5 pasos cohesivos y selftest, renombrar no paga: es el caso "empate → no gastes juicio" de B2.6.
 
 **`reconcile` (engine.mjs) — excelente.** Podría llamarse `compareCosts` o `computeDelta`; `reconcile` es mejor porque nombra el propósito contable (cerrar el lazo estimado↔real), y su retorno `{actual_cost_usd, delta_usd, delta_pct}` con nulls honestos cumple B3. Es el ejemplo a imitar de "nombre que revela la decisión".
 
@@ -464,7 +479,7 @@ Opciones: A=<nombre/API 1>  B=<nombre/API 2>  (ambas correctas)
 
 **`locked` (policy.json) — miente a medias, y lo sabe.** `locked: true` sugiere congelado en ambas direcciones; la semántica real es "no desescalable, sí escalable" — tanto es así que el archivo necesita un `_note` para aclararlo ("Reglas con locked:true no se pueden desescalar (sí escalar)"). Cuando un nombre necesita una nota aclaratoria adyacente, el nombre está pagando de menos. Alternativa: `floor_locked` o `no_deescalate`. A favor: el patrón de policy.json de llevar `rationale` por regla y `_meta`/`_note` con semánticas dentro del archivo es DX de primera y compensa — el archivo se auto-explica.
 
-**`packages/` — la consistencia y sus dos grietas.** Lo bueno: scope `@devground/*` + sufijo `-config` para todos los presets (`eslint-config`, `prettier-config`, `commitlint-config`, `husky-config`, `lint-staged-config`, `vitest-config`, `swift-format-config`) — vocabulario cerrado, predecible: sabes el nombre del paquete antes de buscarlo. Las grietas, verificadas en los package.json: (1) la carpeta `packages/cli` publica como `devground-init` — fuera del scope y con nombre de carpeta ≠ nombre de paquete, rompiendo la predictibilidad dos veces (mitigante real: los binarios de init suelen ir sin scope por ergonomía de `npx devground-init`; si esa es la razón, merece estar documentada); (2) `@devground/devground` — el paquete que repite el scope no dice qué es (¿meta-paquete? ¿core?). `@devground/preset` o `@devground/toolkit` dirían más. Ambas son grietas menores exactamente del tipo que el test grep de B3 detecta en 10 segundos.
+**`packages/` — la consistencia y sus dos grietas.** Lo bueno: scope `@devground/*` + sufijo `-config` para todos los presets (`eslint-config`, `prettier-config`, `commitlint-config`, `husky-config`, `lint-staged-config`, `vitest-config`) — vocabulario cerrado, predecible: sabes el nombre del paquete antes de buscarlo. Las grietas, verificadas en los package.json: (1) la carpeta `packages/cli` publica como `devground-init` — fuera del scope y con nombre de carpeta ≠ nombre de paquete, rompiendo la predictibilidad dos veces (mitigante real: los binarios de init suelen ir sin scope por ergonomía de `npx devground-init`; si esa es la razón, merece estar documentada); (2) `@devground/devground` — el paquete que repite el scope no dice qué es (¿meta-paquete? ¿core?). `@devground/preset` o `@devground/toolkit` dirían más. Ambas son grietas menores exactamente del tipo que el test grep de B3 detecta en 10 segundos.
 
 ## B7. Dónde NO soy más notable (rigor extra)
 

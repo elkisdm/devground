@@ -1,6 +1,7 @@
 # ADR-0040: Plan de ejecución por agentes y contexto acotado
 
 - **Estado**: Aceptado
+- **Nota**: la asignación de modelo y esfuerzo la manda la definición de cada agente, no `policy.json` (ADR-0044).
 - **Fecha**: 2026-10-01
 - **Decisor**: edaza
 - **Aplica a**: `@devground/sdd` (skill spec-flow v0.8, agentes `ejecutor*`, instalador), configuración de Claude Code (`autoCompactWindow`, hook `Stop`)

@@ -61,7 +61,7 @@ versionable. **Degrada con gracia** en cada paso (si `gh` no está, si no hay
 repos, si un repo no tiene remote: no crashea, avisa).
 
 ```bash
-dev-metrics init                       # escanea ~/Documents, escribe ./dev-metrics.config.json
+dev-metrics init                       # escanea ~/Developer (o ~/Documents), escribe ./dev-metrics.config.json
 dev-metrics init --base-dir ~/code --max-depth 3
 dev-metrics init --include-forks       # no excluir forks de terceros
 dev-metrics init --force               # sobrescribir un config existente
@@ -92,14 +92,14 @@ Qué hace:
 
 El config resultante es **editable a mano** (override manual de repos/identidades).
 
-| Opción                   | Default                     | Descripción                          |
-| ------------------------ | --------------------------- | ------------------------------------ |
-| `--config <path>`        | `./dev-metrics.config.json` | Dónde escribir el config.            |
-| `--base-dir <dir>`       | `~/Documents`               | Carpeta a escanear.                  |
-| `--max-depth <n>`        | `2`                         | Profundidad máxima de escaneo.       |
-| `--excludes <fragments>` | —                           | Fragmentos de ruta a excluir (coma). |
-| `--include-forks`        | (excluye forks)             | Conservar forks de terceros.         |
-| `--force`                | (no sobrescribe)            | Sobrescribir un config existente.    |
+| Opción                   | Default                         | Descripción                          |
+| ------------------------ | ------------------------------- | ------------------------------------ |
+| `--config <path>`        | `./dev-metrics.config.json`     | Dónde escribir el config.            |
+| `--base-dir <dir>`       | `~/Developer` (o `~/Documents`) | Carpeta a escanear.                  |
+| `--max-depth <n>`        | `2`                             | Profundidad máxima de escaneo.       |
+| `--excludes <fragments>` | —                               | Fragmentos de ruta a excluir (coma). |
+| `--include-forks`        | (excluye forks)                 | Conservar forks de terceros.         |
+| `--force`                | (no sobrescribe)                | Sobrescribir un config existente.    |
 
 ### `collect`
 
@@ -128,7 +128,7 @@ dev-metrics collect \
 | `--no-seed-events`     | (siembra activa)            | No auto-sembrar `events.json` con marcadores detectados.              |
 
 Si no pasas `--repos`/`--emails` y no hay config, `collect` **auto-detecta**
-(escanea `~/Documents` por repos e infiere identidades del `git log`). El log
+(escanea `~/Developer`, o `~/Documents` si no existe, por repos e infiere identidades del `git log`). El log
 imprime de qué fuente salió cada campo (`flag`/`config`/`auto`).
 
 Salida: `snapshots/<fecha-iso>.json`.

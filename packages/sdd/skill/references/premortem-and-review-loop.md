@@ -50,7 +50,7 @@ it before code exists, when a gap costs one line.
 | **Consumidores** (consumers) | For every field, state, enum value or flag you add or change: grep its readers. For each `file:line`, does its behavior change? Unchanged, or a scenario. | C cross-file tracer · B removed-behavior | populating `ad_id` made the assignment email render an Ad Library link for GHL leads; a new `buzon` outcome silently broke a cadence graph matched on exact conditions; `saldos()` kept showing the last balance of a provider no longer polled |
 | **Datos reales** (real data) | What shape does the data **already** have where it lives — empty strings vs `null`, non-strings, historical rows, rows another writer produced? Sample it read-only when you can; otherwise write the assumption as a risk. | D language pitfalls · gap sweep | production GHL leads carrying `utm_content: ''` reached the CRM mixed with `null`; a non-string UTM raised a `ValidationError` swallowed as `no_contact` |
 | **Variantes** (variants) | Which env vars, flags, providers or modes select this same path? Each one covered or out. | C · gap sweep | a gate keyed on `TELEFONIA_PROVEEDOR` while the own-telephony bridge reached Telnyx through a separate `TELEFONIA=telnyx` |
-| **Afirmaciones** (claims) | Which docs, contracts, README, UI copy or PR text describe this behavior? Update them, and claim no more than the code does. | conventions · altitude | "the CRM receives them on every delivery" + "757 back-filled" when the drain sends each lead once; the Atlas→CRM contract still listing two keys after six were added |
+| **Afirmaciones** (claims) | Which docs, contracts, README, UI copy or PR text describe this behavior? Update them, and claim no more than the code does. | conventions · altitude | "the CRM receives them on every delivery" + "757 back-filled" when the drain sends each lead once; the API→CRM contract still listing two keys after six were added |
 
 Format in the brief: one bullet per row, ~20 lines total. **Tier 1** answers only
 Consumidores and Fallas (3–4 lines, with a real grep); Tier 2+ answers all nine.
@@ -151,7 +151,7 @@ session, that a "fix" had never applied because the replace did not match.
 Fakes carry a contract: if the real dependency selects, filters or rejects, the fake must
 do the same for the inputs the test cares about.
 
-## Worked case: ad-level attribution for GHL leads (atlas, 2026-09)
+## Worked case: ad-level attribution for GHL leads (a lead-routing API, 2026-09)
 
 Request: *store the Meta ad level (campaign / adset / ad) of leads arriving through GHL so
 each lead can be attributed to its ad.* Classified Tier 2 · feat · medium · risk med.
@@ -169,7 +169,7 @@ list was capped. Every one of them is a row above:
 | `utmContent` non-string crashes the lead as `no_contact` | Fallas — malformed input |
 | `utm_content` `''` reaches the CRM mixed with `null` | Fallas — shape at the boundary |
 | Email template links Ad Library for GHL leads without a gate | Caminos — templates |
-| Contract Atlas→CRM does not document the six new keys | Caminos — sync contract |
+| Contract API→CRM does not document the six new keys | Caminos — sync contract |
 | `--apply` scans `lead_raw_events` twice without an index | (efficiency) |
 | `backfill_ghl_attribution.py` left without the new fields | Reutilización — extend, don't fork |
 

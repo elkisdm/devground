@@ -18,7 +18,7 @@ description: >
 license: MIT
 metadata:
   author: edaza
-  version: "0.8"
+  version: "0.9"
 ---
 
 ## What this is
@@ -106,6 +106,11 @@ There are three sources of standing knowledge. Read whichever exist:
 2. **Decision records** — ADRs (`docs/adr/`, `knowledge/adr/`) for *why* things are the
    way they are, and `AGENTS.md`/`CLAUDE.md` for project conventions.
 3. **Memory** — durable cross-session facts already in context.
+4. **Organization overlay (ADR-0046)** — if `~/.claude/spec-flow-overlay.md` exists, read
+   it; if the project has `docs/process/spec-flow-overlay.md`, read it too (it wins). An
+   overlay **adds** steps (registering the change in a work tracker, approvals, evidence,
+   extra brief columns) and DoD rows; it never removes a step of this skill. No overlay →
+   nothing to do.
 
 Then — and this is non-negotiable — **verify before you commit to paths.** The map tells
 you to look at, say, three files. Confirm those three actually exist and still do what
@@ -187,6 +192,7 @@ the plan; a spec without them is a wish.
 
 **Classification**: feat · small · low risk · known · touches `src/auth/`
 **Tier**: 1 — Light
+**Origen**: <Tier 2–3: the PRD (`docs/prd/<iniciativa>.md`) or epic this change belongs to, or `—` if it stands alone — ADR-0043>
 
 ### Goal
 <one or two sentences: what the user gets and why it matters>
@@ -260,6 +266,22 @@ the plan; a spec without them is a wish.
 | # | Tarea | Destino | Estimación | Agente | Modelo · esfuerzo | Archivos | Entrega |
 ```
 
+### Definition of Ready (Tier 2–3, ADR-0043)
+
+Before the first Edit, tick these at the end of the brief — a checklist, not a new stage:
+
+- [ ] Goal and acceptance criteria are verifiable.
+- [ ] Files and routes verified against the code (not only the map).
+- [ ] High-impact assumptions confirmed, or stated as such.
+- [ ] External dependencies identified (services, access, other people).
+- [ ] Applicable NFRs marked from `knowledge/nfr-catalogo.md` (devground) or the project's
+      equivalent — security, performance, resilience, cost, privacy, accessibility.
+
+Anything unticked gets fixed in the brief before coding. On Tier 0–1 the short brief is the
+DoR. A change that is part of a larger initiative (several changes toward one business goal)
+links its PRD in `**Origen**`; write the PRD with `references/prd-template.md` only when the
+initiative does not have one — a standalone change never needs a PRD.
+
 After writing the brief, **do not wait for permission on low tiers**. For Tier 0–1,
 state the classification and the assumptions and **proceed to implement**, telling the
 user they can stop you if an assumption is wrong. For Tier 2–3, present the brief and
@@ -290,19 +312,11 @@ on Tier 2 (no Tasks section) group **Files & routes to touch** into tasks right 
 | 3 | README y changelog | api | 30m | ejecutor-mecanico | haiku · low | `README.md` | diff |
 ```
 
-**Destino and Estimación (ADR-0042)** — they feed Pauta; outside a Pauta project, leave
-them out.
+**Destino and Estimación** are optional columns: include them only when an overlay asks
+for them (e.g. a work tracker that estimates per platform); otherwise leave them out.
 
-- **Destino** = the project's platform in Pauta (api, web, mcp…). Each task belongs to one
-  destino; a destino can have several tasks.
-- **Estimación** per task, fixed scale: **XS 30m · S 2h · M 1d · L 3d** (1d = 8h). Bigger
-  than L → split it before dispatching. The destino's estimate is the sum of its tasks.
-- **Agent and model stay in the brief only**: Pauta's owner is the orchestrating session
-  (`claude`), not the subagents.
-- Tier 1 has no table: estimate each destino directly.
-
-Assign by the task's nature, not the change's tier — the floor in
-`~/.claude/skills/model-orchestrator/policy.json` (ADR-0031):
+Assign by the task's nature, not the change's tier. The source of truth is each agent's
+own definition (`~/.claude/agents/`, ADR-0044); this table summarizes it:
 
 | Task nature | Agent | Model · effort |
 |---|---|---|
@@ -338,31 +352,17 @@ the full suite, and does the closing check (Step 4). A deviation goes back to th
 first ("the spec moves first"), then to a follow-up task — never patched blind.
 
 `model-orchestrator` (with its `model-router` ±1 adjustment and cost estimate) is still
-available when the user asks for it; this table is its floor policy applied inline,
-without the extra router call. If it is requested, also write
+available when the user asks for it; its `policy.json` applies only then, never to the
+default flow (ADR-0044). If it is requested, also write
 `docs/specs/<change>.tasks.json` per
 `~/.claude/skills/model-orchestrator/references/tasks-input.schema.json`.
 
-### Registro en Pauta (ADR-0042)
+### Work tracker (overlay)
 
-Applies **only** when the repo/project is registered in Pauta (today `ATL` = Atlas,
-`CLA` = Claudia IA). If the `pauta` MCP is unavailable, do not block: continue and
-register afterwards. A spec-flow change is a Pauta item; the ADR stays the source of
-decisions.
-
-| Tier | In Pauta |
-|---|---|
-| 0 | No item (a comment if it touches an existing one) |
-| 1 | Item with the short brief as its text |
-| 2–3 | Item with the full brief attached (`adjuntar_informe`, title `Brief · <título>`); if the brief changes, `proponer_version_de_documento` |
-
-Lifecycle: brief ready → `crear_item` (or reuse: `listar_items` first), `adjuntar_informe`
-(Tier 2–3), `estimar` per destino, `asignar` to `claude`, `agregar_al_sprint` if a Build is
-active. Task dispatched → `cambiar_estado` `in_progress`. Task integrated → `comentar`, one
-line. Decision → `registrar_decision`. PR open/merged but not deployed → a comment; the
-destino stays open. In production → `cerrar_destino` with the REAL level reached (Step 4).
-Naming: the key goes in the branch (`feat/ATL-12-slug`), the commits (`(ATL-12)`) and the
-PR title.
+If the team registers work in a tracker (backlog, epics, sprints — the Agile layer,
+ADR-0043), the overlay from Step 0 says how: which item to create per tier, what to attach,
+how to name branches and commits, and how to close. Follow it; if the tracker is
+unavailable, do not block — continue and register afterwards. Without an overlay, skip this.
 
 ## Step 3.6 — Design gate: review the spec before the first Edit (Tier 2–3)
 
@@ -453,10 +453,12 @@ Done is proven against the spec, not discovered by a reviewer. Fill the brief's
    code. Each one is "unchanged" or has its scenario.
 4. Full test suite, typecheck and lint green; Tier 2+ invariant tests verified both ways.
 
-In a Pauta project, the evidence level for `cerrar_destino` comes from this check as it
-really ran, never the desired one (`compiles` < `measured_in_code` < `tested` <
-`measured_in_prod`; `minor_change` for Tier 0 text/style). Merging is not deploying: the
-destino stays open until it is in production.
+5. **Product DoD (ADR-0043)**: if the repo has `docs/definition-of-done.md`, each of its
+   rows → its evidence. It adds rows to this check; it never removes one.
+
+When a tracker records the closing evidence (overlay), report the level as this check
+really ran, never the desired one. Merging is not deploying: a change is in production
+only once checked on the domain the user sees.
 
 This runs in the main loop with no subagents. It costs minutes; it replaces a review whose
 loop cost hundreds of dollars per change and still closed with open debt in 65 of 88
@@ -547,7 +549,7 @@ requested. Never write a `review` event for a review that did not run.
  "premortem":{"na":1}|false|"n/a",
  "spec_review":{"gaps_found":3,"gaps_adopted":2}|"n/a",
  "tests":"verified|added|updated|n/a|deferred",
- "spec_flow_version":"0.8"}
+ "spec_flow_version":"0.9"}
 ```
 
 `premortem` from Tier 2 up is `{"na": <rows answered n/a, 0–5>}` when the section was
@@ -567,7 +569,7 @@ here, not JSON; a line that doesn't parse is silently dropped.)
  "findings":10,"findings_capped":true,"found_total":13,
  "induced":0,"resolved":11,"open":2,"redesigned":false,
  "tests":"verified|added|updated|n/a|deferred",
- "spec_flow_version":"0.8"}
+ "spec_flow_version":"0.9"}
 ```
 
 **`findings` is the first pass only** — the one number comparable across changes;
@@ -610,7 +612,7 @@ user corrects it, or rework proves it — append a second line tied to the same 
 {"event":"assumption_reversed","ts":"<ISO-8601 with tz>","date":"<YYYY-MM-DD>",
  "change":"<same kebab-name as the spec event>","task_id":2,
  "assumption":"<the inferred thing that was wrong>",
- "cost":"trivial|rework|redesign","spec_flow_version":"0.8"}
+ "cost":"trivial|rework|redesign","spec_flow_version":"0.9"}
 ```
 
 This is what makes "asked 0 questions, built the wrong thing" register as the failure it is,

@@ -1,5 +1,7 @@
 # Caso de Estudio — Aplicando BEST-PRACTICES al propio devground
 
+> Nota (2026-11-05): Caso escrito en junio de 2026; el estado actual está en el README del repo. Las cifras de paquetes y configuraciones de abajo son las de esa fecha.
+
 Ejercicio de validación: recorrer el checklist de 6 pasos de [BEST-PRACTICES.md](BEST-PRACTICES.md) sobre el repo `devground-1` y documentar **qué aplica, qué no, y por qué**.
 
 El objetivo no es forzar el conocimiento a encajar — es **probar la guía** detectando dónde ayuda y dónde sobra.
@@ -9,6 +11,7 @@ El objetivo no es forzar el conocimiento a encajar — es **probar la guía** de
 ## Contexto del repo
 
 `devground-1` es un monorepo pnpm de **9 paquetes npm de tooling**:
+
 - 7 configuraciones compartidas (ESLint, Prettier, TypeScript, commitlint, lint-staged, husky, AGENTS.md).
 - 1 paquete meta `@devground/devground` que las orquesta.
 - 1 CLI `devground-init` para scaffolding interactivo.
@@ -19,14 +22,15 @@ El objetivo no es forzar el conocimiento a encajar — es **probar la guía** de
 
 ## Paso 1 — Mapear dominios
 
-| Dominio identificado | Existe en el repo |
-|---|---|
-| Configuración estática (presets) | Sí: 7 paquetes de configs |
-| Orquestación / scaffolding interactivo | Sí: `devground-init` CLI |
-| Distribución (publish a npm) | Sí: Changesets workflow |
-| Documentación (README, AGENTS.md) | Sí, transversal |
+| Dominio identificado                   | Existe en el repo         |
+| -------------------------------------- | ------------------------- |
+| Configuración estática (presets)       | Sí: 7 paquetes de configs |
+| Orquestación / scaffolding interactivo | Sí: `devground-init` CLI  |
+| Distribución (publish a npm)           | Sí: Changesets workflow   |
+| Documentación (README, AGENTS.md)      | Sí, transversal           |
 
 **No aplica del checklist genérico**:
+
 - Catálogo de productos, pagos, usuarios, sesiones → no hay dominio de negocio.
 - Eventos / tracking / telemetría → el CLI no tiene analytics.
 - Autenticación / autorización → no hay usuarios.
@@ -37,11 +41,11 @@ El objetivo no es forzar el conocimiento a encajar — es **probar la guía** de
 
 ## Paso 2 — Identificar patrones de acceso
 
-| Subsistema | Lectura/Escritura | Volumen | Latencia crítica |
-|---|---|---|---|
-| Configs estáticas | Read-only para consumidores | Bajo (1 lectura en cada `tsc`/`eslint` run) | No |
-| CLI interactivo | Escritura una vez (instalación) | Muy bajo (1 ejecución por proyecto) | No |
-| npm registry | Lectura externa | Bajo en publish, alto agregado en install | Externa, fuera de nuestro control |
+| Subsistema        | Lectura/Escritura               | Volumen                                     | Latencia crítica                  |
+| ----------------- | ------------------------------- | ------------------------------------------- | --------------------------------- |
+| Configs estáticas | Read-only para consumidores     | Bajo (1 lectura en cada `tsc`/`eslint` run) | No                                |
+| CLI interactivo   | Escritura una vez (instalación) | Muy bajo (1 ejecución por proyecto)         | No                                |
+| npm registry      | Lectura externa                 | Bajo en publish, alto agregado en install   | Externa, fuera de nuestro control |
 
 **Patrón dominante**: **tráfico esporádico, sin estado, sin concurrencia**.
 
@@ -68,6 +72,7 @@ Aplicar Clean/Hexagonal a un paquete de 50 líneas de config sería ridículo. V
 ## Paso 4 — Elegir BDs por dominio
 
 **No aplica**. No hay base de datos. El "estado persistente" del proyecto vive en:
+
 - `package.json` (versiones, dependencias).
 - `pnpm-lock.yaml` (lockfile).
 - Archivos generados por Changesets en `.changeset/`.
@@ -80,14 +85,14 @@ Todos son archivos de texto versionados en git. El propio git es la "BD" del pro
 
 ## Paso 5 — Resiliencia y escalado
 
-| Estrategia genérica | Aplica a devground |
-|---|---|
-| CDN | No (npm registry ya cumple esta función) |
-| Caché (Redis) | No |
-| Read replicas | No |
-| Message queue | No |
+| Estrategia genérica               | Aplica a devground                                                                                         |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| CDN                               | No (npm registry ya cumple esta función)                                                                   |
+| Caché (Redis)                     | No                                                                                                         |
+| Read replicas                     | No                                                                                                         |
+| Message queue                     | No                                                                                                         |
 | **Timeouts en llamadas externas** | **SÍ** — el CLI hace `pnpm add` que llama al registry; un timeout razonable evita colgarse en redes lentas |
-| **Circuit breakers** | No es necesario en CLI puntual (el usuario reintenta manualmente) |
+| **Circuit breakers**              | No es necesario en CLI puntual (el usuario reintenta manualmente)                                          |
 
 **Hallazgo**: solo 1 de las 6 estrategias aplica. Y es una aplicación parcial (timeout en `pnpm add` del CLI). La guía es claramente diseñada para servicios long-running, no para herramientas puntuales.
 
@@ -103,16 +108,16 @@ Esta es la sección de la guía que más valor aporta a un proyecto de tooling. 
 
 ## Síntesis del ejercicio
 
-| Sección de BEST-PRACTICES | Aplicabilidad a devground |
-|---|---|
-| Paso 1 — Mapear dominios | **Parcial** (simplificado a 4 áreas técnicas) |
-| Paso 2 — Patrones de acceso | **Sí** (informa la decisión de "CLI npm vs SaaS") |
-| Paso 3 — Arquitectura | **Sí** (el algoritmo correctamente predice "no apliques Clean") |
-| Paso 4 — BDs | **No aplica** (no hay datos persistentes externos) |
-| Paso 5 — Resiliencia | **Casi nada** (1 de 6 estrategias) |
-| Paso 6 — Documentar | **Sí, alto valor** (motivó los 12 ADRs propios) |
+| Sección de BEST-PRACTICES   | Aplicabilidad a devground                                       |
+| --------------------------- | --------------------------------------------------------------- |
+| Paso 1 — Mapear dominios    | **Parcial** (simplificado a 4 áreas técnicas)                   |
+| Paso 2 — Patrones de acceso | **Sí** (informa la decisión de "CLI npm vs SaaS")               |
+| Paso 3 — Arquitectura       | **Sí** (el algoritmo correctamente predice "no apliques Clean") |
+| Paso 4 — BDs                | **No aplica** (no hay datos persistentes externos)              |
+| Paso 5 — Resiliencia        | **Casi nada** (1 de 6 estrategias)                              |
+| Paso 6 — Documentar         | **Sí, alto valor** (motivó los 12 ADRs propios)                 |
 
-**Conclusión**: la guía cumple con **3 de 6 pasos** en proyectos de tooling. No es un fracaso — es coherente con el principio rector: *"no existe arquitectura mejor en abstracto, depende del contexto"*. La guía está optimizada para apps con dominio de negocio, BD y tráfico de usuarios. Para herramientas, hay que ejercer juicio.
+**Conclusión**: la guía cumple con **3 de 6 pasos** en proyectos de tooling. No es un fracaso — es coherente con el principio rector: _"no existe arquitectura mejor en abstracto, depende del contexto"_. La guía está optimizada para apps con dominio de negocio, BD y tráfico de usuarios. Para herramientas, hay que ejercer juicio.
 
 ---
 

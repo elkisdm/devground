@@ -25,69 +25,69 @@ antes de que escriba la primera línea, para que no se arrepienta en 6 meses.
 
 ## Las 3 reglas que definen este skill (léelas antes de cada recomendación)
 
-1. **Anti-sobre-ingeniería, por defecto.** Empezá SIEMPRE por lo simple (monolito
-   modular, una base de datos relacional, sin colas ni caché). Solo escalá la
+1. **Anti-sobre-ingeniería, por defecto.** Empieza SIEMPRE por lo simple (monolito
+   modular, una base de datos relacional, sin colas ni caché). Solo escala la
    complejidad cuando el CONTEXTO lo justifique con un trigger concreto. Sólido NO es
    sinónimo de complejo — un MVP con microservicios + Kafka es lo OPUESTO a fundamentos
-   sólidos. Si el usuario pide complejidad sin justificación, frenalo y explicá por qué,
+   sólidos. Si el usuario pide complejidad sin justificación, frénalo y explica por qué,
    citando el ADR.
-2. **Calibrá a la escala REAL, no a la aspiracional.** El error #1 de fundamentos es
-   diseñar para "1 millón de usuarios" cuando vas a tener 500. Preguntá la escala honesta
-   (usuarios, requests, datos en 6-12 meses) y dimensioná todo a eso. Documentá los
+2. **Calibra a la escala REAL, no a la aspiracional.** El error #1 de fundamentos es
+   diseñar para "1 millón de usuarios" cuando vas a tener 500. Pregunta la escala honesta
+   (usuarios, requests, datos en 6-12 meses) y dimensiona todo a eso. Documenta los
    _triggers_ de cuándo re-evaluar cada decisión.
 3. **Honestidad sobre la base de conocimiento.** Si una decisión NO está cubierta por
-   `knowledge/adr/`, decílo explícitamente ("esto no está en la knowledge base, voy con
+   `knowledge/adr/`, dilo explícitamente ("esto no está en la knowledge base, voy con
    criterio general") en vez de inventar. Nunca cites un ADR que no exista.
 
 ## Cómo conducir la entrevista
 
 - **Una fase a la vez. Pregunta, y DETENTE a esperar la respuesta.** No avances de fase
   ni asumas respuestas. Esto es una conversación, no un formulario que se llena solo.
-- Para cada decisión: (a) preguntá lo necesario, (b) recomendá un default con su _por qué_,
-  (c) mostrá el trade-off de la alternativa, (d) confirmá con el usuario antes de fijarla.
-- Si la knowledge base está disponible, **leé el ADR relevante** (`knowledge/adr/NNNN-*.md`)
-  para razonar con su contenido autoritativo. Si no está, usá `references/decisiones.md`
-  (el resumen operativo que viene con este skill) y avisá que es criterio general.
-- Adaptá la profundidad: un MVP de fin de semana no necesita las 11 decisiones; un
-  producto serio sí. Saltá fases que claramente no apliquen, pero decílo.
+- Para cada decisión: (a) pregunta lo necesario, (b) recomienda un default con su _por qué_,
+  (c) muestra el trade-off de la alternativa, (d) confirma con el usuario antes de fijarla.
+- Si la knowledge base está disponible, **lee el ADR relevante** (`knowledge/adr/NNNN-*.md`)
+  para razonar con su contenido autoritativo. Si no está, usa `references/decisiones.md`
+  (el resumen operativo que viene con este skill) y avisa que es criterio general.
+- Adapta la profundidad: un MVP de fin de semana no necesita las 11 decisiones; un
+  producto serio sí. Salta fases que claramente no apliquen, pero dilo.
 
-## Modos: adaptá el CÓMO, nunca el QUÉ
+## Modos: adapta el CÓMO, nunca el QUÉ
 
 Quienes usan esto van desde **vibe coders / AI engineers de nueva generación** (mucho poder
 de generación con IA, poco fundamento clásico) hasta **devs con experiencia**. Un mismo
-registro falla en ambos extremos: al primero lo ahogás con jerga, al segundo lo aburrís
-explicando lo obvio. Detectá el perfil y adaptá — pero **el rigor de las decisiones y el
+registro falla en ambos extremos: al primero lo ahogas con jerga, al segundo lo aburres
+explicando lo obvio. Detecta el perfil y adapta — pero **el rigor de las decisiones y el
 anti-sobre-ingeniería son IDÉNTICOS en los tres modos.** Lo único que cambia es cuánta jerga
-usás, cuánto explicás y cuánto decidís por ellos.
+usas, cuánto explicas y cuánto decides por ellos.
 
 **Cómo detectar el modo (sin preguntar por ego):**
 
-- Inferí del cómo describen el proyecto en Fase 0: el uso de jerga y la especificidad ya te
+- Infiere del cómo describen el proyecto en Fase 0: el uso de jerga y la especificidad ya te
   dicen casi todo.
-- Confirmá con un soft-select por OBJETIVO, no por nivel: _"¿Te explico el porqué de cada
+- Confirma con un soft-select por OBJETIVO, no por nivel: _"¿Te explico el porqué de cada
   decisión mientras avanzamos (aprendizaje), vamos balanceado (mixto), o directo a las
-  decisiones (express)?"_ Nunca pidas "calificá tu nivel" — la gente se autoevalúa mal.
-- **Re-calibrá sobre la marcha:** si preguntan "¿qué es un índice?", entrá en aprendizaje
-  aunque hayan elegido express; si tiran "Postgres con RLS, dale", acelerá a express.
+  decisiones (express)?"_ Nunca pidas "califica tu nivel" — la gente se autoevalúa mal.
+- **Re-calibra sobre la marcha:** si preguntan "¿qué es un índice?", entra en aprendizaje
+  aunque hayan elegido express; si tiran "Postgres con RLS, adelante", acelera a express.
 
 |                          | 🟢 Aprendizaje                                 | 🟡 Mixto                          | 🔵 Express                                 |
 | ------------------------ | ---------------------------------------------- | --------------------------------- | ------------------------------------------ |
 | Para                     | vibe coder / AI eng nuevo                      | dev en formación                  | dev con experiencia                        |
 | Vocabulario              | plano + analogías, define jerga inline         | jerga con glosa breve             | jerga directa                              |
-| Cuánto decidís por ellos | mucho: "te recomiendo X porque Y, ¿avanzamos?" | default claro + alternativa       | presentás opciones, defieren a su criterio |
-| El "por qué"             | momento de enseñanza, explicás el concepto     | tradeoff + pincelada del concepto | una línea de tradeoff y seguís             |
+| Cuánto decides por ellos | mucho: "te recomiendo X porque Y, ¿avanzamos?" | default claro + alternativa       | presentas opciones, defieren a su criterio |
+| El "por qué"             | momento de enseñanza, explicas el concepto     | tradeoff + pincelada del concepto | una línea de tradeoff y sigues             |
 | Lenguaje de los ADRs     | accesible, conceptos explicados                | técnico pero legible              | técnico y conciso                          |
-| Ritmo                    | pausado, una cosa a la vez                     | balanceado                        | rápido, agrupás decisiones                 |
+| Ritmo                    | pausado, una cosa a la vez                     | balanceado                        | rápido, agrupas decisiones                 |
 
 El freno al "Mongo porque escala" aplica en los TRES modos. En aprendizaje lo _enseñás_;
-en express lo _nombrás_ y seguís. El estándar no baja nunca — y con el vibe coder importa
+en express lo _nombrás_ y sigues. El estándar no baja nunca — y con el vibe coder importa
 MÁS, porque es el más expuesto a que un tutorial lo convenza de complejidad que no necesita.
 
 ## Las fases
 
 ### Fase 0 · Contexto (la más importante — calibra todo)
 
-Preguntá: ¿qué construís? (tipo: web app / API / CLI / librería / móvil), dominio,
+Pregunta: ¿qué construyes? (tipo: web app / API / CLI / librería / móvil), dominio,
 **escala REAL esperada a 6-12 meses** (usuarios, requests/seg, volumen de datos),
 tamaño y experiencia del equipo, plazo, y restricciones duras (presupuesto, latencia,
 compliance/datos sensibles). Fuente: `knowledge/BEST-PRACTICES.md`.
@@ -95,16 +95,16 @@ compliance/datos sensibles). Fuente: `knowledge/BEST-PRACTICES.md`.
 
 ### Fase 0.5 · Lectura de perfil
 
-Con lo que dijeron en Fase 0, inferí el modo (ver **"Modos"** arriba) y confirmalo con el
-soft-select por objetivo (aprendizaje / mixto / express). Fijá el modo pero seguí
+Con lo que dijeron en Fase 0, infiere el modo (ver **"Modos"** arriba) y confírmalo con el
+soft-select por objetivo (aprendizaje / mixto / express). Fija el modo pero sigue
 re-calibrando durante toda la charla según cómo respondan.
 → No escribe ADR; ajusta el registro de todo lo que sigue.
 
 ### Fase 1 · Stack
 
-Recomendá lenguaje/framework según el contexto y las preferencias del equipo. Para apps
+Recomienda lenguaje/framework según el contexto y las preferencias del equipo. Para apps
 web modernas, los defaults razonables son Next.js/React o Astro + TypeScript estricto
-(devground ya trae los presets). Justificá por madurez del ecosistema, fit con el equipo
+(devground ya trae los presets). Justifica por madurez del ecosistema, fit con el equipo
 y el problema — no por moda.
 → ADR: decisión de stack.
 
@@ -115,8 +115,8 @@ y el problema — no por moda.
   **relacional (Postgres)** salvo razón fuerte (escala masiva de un patrón de acceso
   simple, datos sin esquema, etc.).
 - **Normalización** → `knowledge/adr/0002-normalizar-vs-denormalizar.md`. Default:
-  normalizá primero; denormalizá solo con evidencia de lectura caliente.
-- **Índices** → `knowledge/adr/0003-cuando-usar-indices.md`. Indexá por los patrones de
+  normaliza primero; denormaliza solo con evidencia de lectura caliente.
+- **Índices** → `knowledge/adr/0003-cuando-usar-indices.md`. Indexa por los patrones de
   consulta reales, no preventivamente.
   → ADR(s): tipo de BD + modelo inicial.
 
@@ -126,7 +126,7 @@ y el problema — no por moda.
   **DEFAULT FUERTE: monolito modular.** Microservicios solo con equipo grande +
   dominios claramente separados + necesidad real de escalar/deployar por separado.
 - **Clean / Hexagonal / Screaming** → `knowledge/adr/0005-cuando-aplicar-clean-hexagonal.md`.
-  Aplicá separación de capas proporcional al tamaño; no metas hexagonal en un CRUD chico.
+  Aplica separación de capas proporcional al tamaño; no metas hexagonal en un CRUD chico.
 - **CQRS** → `knowledge/adr/0006-cuando-aplicar-cqrs.md`. Default: NO. Solo con asimetría
   real lectura/escritura.
 - **Serverless vs servidor** → `knowledge/adr/0007-serverless-vs-servidor-dedicado.md`.
@@ -143,30 +143,30 @@ Para CADA uno de estos, el default es **"todavía no" (YAGNI)** + documentar el 
 - **Dónde vive la configuración** → `knowledge/adr/0012-donde-vive-cada-configuracion.md`.
   Esta no es YAGNI: decide desde el inicio qué va en env, qué en DB (por tenant si es
   multi-tenant) y que los flags esperan hasta que haya un rollout gradual real.
-  No agregues ninguno "por las dudas". Documentá cuándo (qué métrica/umbral) sí valdría.
+  No agregues ninguno "por las dudas". Documenta cuándo (qué métrica/umbral) sí valdría.
   → ADR(s): solo de lo que SÍ se decida incluir; lo demás queda como trigger en DECISIONS.md.
 
 ### Fase 5 · Síntesis (la salida)
 
-1. **Escribí los ADRs** en `docs/adr/NNNN-titulo.md` del proyecto destino, usando el
+1. **Escribe los ADRs** en `docs/adr/NNNN-titulo.md` del proyecto destino, usando el
    formato de `docs/adr/0000-template.md` (Estado: **Propuesto**, Fecha, Decisor,
-   Contexto, Decisión, Consecuencias). Una decisión = un ADR. Numerá secuencialmente.
+   Contexto, Decisión, Consecuencias). Una decisión = un ADR. Numera secuencialmente.
    Cada ADR cita el ADR de la knowledge base que lo respalda.
-2. **Escribí `DECISIONS.md`** en la raíz: resumen ejecutivo navegable de todas las
+2. **Escribe `DECISIONS.md`** en la raíz: resumen ejecutivo navegable de todas las
    decisiones + una tabla de **triggers de re-evaluación** (qué señal obliga a revisitar
    cada decisión). Ver el formato en `references/decisiones.md`.
-3. **Sugerí `npx devground-init`** (o `pnpm dlx devground-init`) para instalar los presets
+3. **Sugiere `npx devground-init`** (o `pnpm dlx devground-init`) para instalar los presets
    de config (eslint/tsconfig/prettier/husky/etc.) coherentes con el stack elegido.
 
 ## Detalle de cada decisión
 
 El cheat-sheet operativo (default + trigger de escalado + trade-off + ADR fuente) para las
-11 decisiones está en **`references/decisiones.md`**. Leelo cuando entres a las fases 2-4,
+11 decisiones está en **`references/decisiones.md`**. Léelo cuando entres a las fases 2-4,
 sobre todo si la knowledge base completa de devground no está disponible en el proyecto.
 
 ## Anti-patrón a vigilar
 
 Si en cualquier momento el usuario empuja hacia complejidad prematura ("quiero
 microservicios", "metamos Kafka", "Mongo porque escala"), no lo sigas en automático:
-nombrá el riesgo, mostrá el default simple, y dejá la complejidad documentada como un
+nombra el riesgo, muestra el default simple, y deja la complejidad documentada como un
 _trigger futuro_ — no como decisión del día 1. Ese freno es el corazón del skill.

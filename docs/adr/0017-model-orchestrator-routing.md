@@ -1,6 +1,6 @@
 # ADR-0017: Routing de modelos por complejidad (model-orchestrator)
 
-- **Estado**: Aceptado
+- **Estado**: Aceptado — skill congelada por ADR-0032 (solo bajo petición); la fuente del ruteo de modelos es ADR-0044
 - **Fecha**: 2026-06-30
 - **Decisor**: edaza
 - **Aplica a**: `tools/model-orchestrator/`
@@ -28,11 +28,13 @@ Se crea `model-orchestrator` como harness en `tools/`, invocable en Claude Code 
 ## Consecuencias
 
 **Positivas**
+
 - La decisión de routing es auditable y reproducible: el piso y el clamp son código, no juicio opaco.
 - El juez barato aporta flexibilidad (±1 nivel) sin poder violar las reglas duras.
 - El costo se presenta antes de gastar; sin tarifa verificada, se reporta "pendiente" en vez de un número falso.
 
 **Negativas / límites**
+
 - Dos artefactos a sincronizar: la copia versionada en `tools/model-orchestrator/` y la fuente activa en `~/.claude/skills/model-orchestrator/` + `~/.claude/agents/model-router.md`. Sincronización manual por ahora.
 - `pricing.json` requiere mantenimiento con fecha: Sonnet 5 está en precio introductorio ($2/$10) hasta 2026-08-31 y sube a estándar ($3/$15) el 2026-09-01 — hay que actualizarlo entonces.
 - Vive en `tools/`, no en `packages/`: no se publica como paquete ni entra al flujo de changesets.
