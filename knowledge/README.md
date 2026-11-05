@@ -1,8 +1,12 @@
 # Knowledge Base — Arquitectura, Datos y Sistemas
 
+Última revisión: 2026-11-05.
+
 Conocimiento estructurado extraído de 3 transcripciones de YouTube. Diseñado para ser consultable por humanos y agentes de IA antes de tomar decisiones técnicas en proyectos reales.
 
 > **Fuente de verdad**: este directorio `knowledge/` en la raíz del repo es la **FUENTE ÚNICA** de esta base de conocimiento. La copia en `packages/architecture-guide/knowledge/` es un **espejo sincronizado**: el script `packages/architecture-guide/scripts/sync-knowledge.js` la regenera (copia `knowledge/` raíz → package) en el hook `prepublishOnly`. **No edites la copia del package a mano** — se sobreescribe al publicar. Para cambiar cualquier archivo de la base, **edita siempre `knowledge/` raíz**.
+
+> **Numeración**: los ADR de esta carpeta (`knowledge/adr/`) se citan como **KB-NNNN**; los ADR de decisiones de devground (`docs/adr/`) se citan como **ADR-NNNN**. Son series distintas: KB-0008 (caché) no es ADR-0008 (secretos).
 
 ## Origen
 
@@ -24,6 +28,8 @@ Las fuentes primarias están en `sources/`:
 | ¿Cómo escalo lecturas/escrituras? ¿Cuándo uso caché, queues, circuit breakers? | [03-systems-design.md](03-systems-design.md)                 |
 | Empiezo un proyecto desde cero, ¿qué hago primero?                             | [BEST-PRACTICES.md](BEST-PRACTICES.md)                       |
 | ¿Esto va en `.env`, en la DB o como feature flag?                              | [adr/0012](adr/0012-donde-vive-cada-configuracion.md)        |
+| ¿Cómo trabajo con agentes de IA (SDD, AGENTS.md, seguridad)?                   | [04-desarrollo-con-agentes.md](04-desarrollo-con-agentes.md) |
+| ¿Qué atributos de calidad (NFR) debo revisar y dónde se decidieron?            | [nfr-catalogo.md](nfr-catalogo.md)                           |
 | Necesito justificar una decisión técnica concreta                              | [adr/](adr/)                                                 |
 | ¿Esta guía realmente sirve? Caso real aplicado                                 | [CASE-STUDY-devground.md](CASE-STUDY-devground.md)           |
 
@@ -41,6 +47,8 @@ knowledge/
 ├── 01-database-architecture.md     síntesis de bd.md
 ├── 02-architectural-patterns.md    síntesis de patron arq.md
 ├── 03-systems-design.md            síntesis de sistemas.md
+├── 04-desarrollo-con-agentes.md    spec-driven development, AGENTS.md y gobierno de agentes
+├── nfr-catalogo.md                 índice de atributos de calidad
 ├── BEST-PRACTICES.md               síntesis cruzada + checklist
 ├── CASE-STUDY-devground.md         la guía aplicada al propio repo
 ├── sources/                        fuentes originales (bd, patrones, sistemas, configuración)

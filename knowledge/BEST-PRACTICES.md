@@ -128,6 +128,10 @@ Por cada decisión no trivial, crea un ADR en `/docs/adr/` del proyecto. Formato
 
 ---
 
+### Paso 7 (si trabajas con agentes de IA) — Reglas para agentes
+
+Siembra `AGENTS.md` (la constitución del proyecto) y aplica las reglas de seguridad, costo y herramientas de [ADR-0044](../docs/adr/0044-gobierno-de-agentes-seguridad-costo-y-modelos.md). Detalle en [04-desarrollo-con-agentes.md](04-desarrollo-con-agentes.md); los atributos de calidad a revisar están en [nfr-catalogo.md](nfr-catalogo.md).
+
 ## Cheatsheet de decisión rápida
 
 ```

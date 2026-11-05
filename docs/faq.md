@@ -29,7 +29,7 @@ export default [
   ...nextConfig(),
   {
     rules: {
-      'no-console': 'off',           // tu override
+      'no-console': 'off', // tu override
       'react-hooks/exhaustive-deps': 'warn',
     },
   },
@@ -64,21 +64,34 @@ Filosofia: cada herramienta usa **su archivo nativo**. ESLint usa `eslint.config
 
 **No compite con ellos.** devground es una **capa de orquestacion**: une ESLint + Prettier + TS + commitlint + hooks + ADRs en una sola decision. Si prefieres Biome, podes reemplazar el modulo de ESLint/Prettier y mantener el resto.
 
+### ¿devground es spec-driven development?
+
+En lo esencial, si: la skill spec-flow convierte un pedido en un brief con criterios de aceptación y spec antes de escribir código, equivalente al flujo de GitHub Spec Kit. La diferencia es que gradúa la ceremonia por tier segun riesgo. Ver [04-desarrollo-con-agentes](../knowledge/04-desarrollo-con-agentes.md) y [ADR-0043](adr/0043-mapa-de-artefactos-y-encaje-con-agile.md).
+
+### ¿Como encaja con Agile/Scrum?
+
+Son capas distintas: Agile decide que se trabaja y en que orden (backlog, sprints); devground define como se especifica y se demuestra que esta terminado. El punto de contacto es el DoD, que Scrum exige y devground verifica. Ver [ADR-0043](adr/0043-mapa-de-artefactos-y-encaje-con-agile.md) §2.
+
+### ¿Que reglas de seguridad trae para agentes?
+
+La plantilla de `AGENTS.md` y [ADR-0044](adr/0044-gobierno-de-agentes-seguridad-costo-y-modelos.md): el contenido externo es dato y no instruccion, los subagentes no hacen push ni deploy, no heredan MCP, no se imprimen secretos y las dependencias nuevas se verifican en el registro. Ver tambien el [catalogo de NFR](../knowledge/nfr-catalogo.md).
+
 ---
 
 ## ¿Cuando NO usar devground?
 
 Ser honesto sobre el alcance importa. **devground no es para todos los casos.**
 
-| Situacion | Por que no |
-|-----------|------------|
-| **Proyecto con 2+ años y convenciones consolidadas** | Instalarlo genera ruido y choques con tu config. Mejor adoptar **solo `agents-md`** si te interesa la parte de IA |
-| **Stack muy especifico no cubierto** (Deno, Bun-only, Rust, Go) | Los presets estan pensados para Node/TypeScript/Next.js. Otros stacks tienen sus propios estandares |
-| **Equipo que ya usa Biome / xo como linter unico** | Hay solape directo. Elige uno |
-| **Proyecto puramente de configuracion / scripts cortos** | Si tu repo son 3 scripts de bash, ESLint + Husky + commitlint es overkill |
-| **No quieres opiniones impuestas** | devground es **opinado a proposito**. Si necesitas neutralidad total, no es el toolkit indicado |
+| Situacion                                                       | Por que no                                                                                                        |
+| --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| **Proyecto con 2+ años y convenciones consolidadas**            | Instalarlo genera ruido y choques con tu config. Mejor adoptar **solo `agents-md`** si te interesa la parte de IA |
+| **Stack muy especifico no cubierto** (Deno, Bun-only, Rust, Go) | Los presets estan pensados para Node/TypeScript/Next.js. Otros stacks tienen sus propios estandares               |
+| **Equipo que ya usa Biome / xo como linter unico**              | Hay solape directo. Elige uno                                                                                     |
+| **Proyecto puramente de configuracion / scripts cortos**        | Si tu repo son 3 scripts de bash, ESLint + Husky + commitlint es overkill                                         |
+| **No quieres opiniones impuestas**                              | devground es **opinado a proposito**. Si necesitas neutralidad total, no es el toolkit indicado                   |
 
 **Caso donde si vale la pena:**
+
 - Empezas un proyecto nuevo Node/TS/React/Next.
 - Equipo de 2+ personas que necesita convenciones compartidas.
 - Trabajas con agentes de IA y querias un `AGENTS.md` ya armado.
