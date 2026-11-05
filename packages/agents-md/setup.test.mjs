@@ -39,3 +39,11 @@ test('fallback de copia resuelve contra el proyecto, no el padre (#17)', () => {
   const { resolveCopySource } = require('./setup.js');
   assert.equal(resolveCopySource('/proj'), join('/proj', 'AGENTS.md'));
 });
+
+test('la plantilla AGENTS.md incluye las secciones Seguridad, Trabajo con agentes y Definition of Done', () => {
+  const md = readFileSync(join(import.meta.dirname, 'AGENTS.md'), 'utf8');
+  for (const h of ['## Comandos', '## Seguridad', '## Trabajo con agentes', '## Definition of Done']) {
+    assert.ok(md.includes(h), `falta la sección ${h}`);
+  }
+  assert.ok(!md.includes('docs/ADR/'), 'debe usar docs/adr/');
+});
