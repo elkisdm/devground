@@ -44,7 +44,7 @@
   ],
   "license": "MIT",
   "engines": {
-    "node": ">=22"
+    "node": ">=22.22.1"
   },
   "publishConfig": {
     "access": "public",
@@ -74,11 +74,11 @@
   },
   "dependencies": {
     "@devground/logger": "workspace:*",
-    "commander": "^15.0.0"
+    "commander": "^15.1.0"
   },
   "devDependencies": {
     "@devground/vitest-config": "workspace:*",
-    "@types/node": "^26",
+    "@types/node": "^26.6.6",
     "typescript": "^6.0.3",
     "vitest": "^5.1.0"
   }
