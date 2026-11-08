@@ -15,7 +15,9 @@ export default baseConfig({
     '**/dist',
     '**/node_modules',
     '**/snapshots',
-    'coverage',
+    '**/coverage',
+    // Worktrees locales de agentes: son copias del repo, no código propio.
+    '.claude',
     // Scripts de la herramienta `Workflow`: el body usa `return` de nivel
     // superior (valido en ese runtime async, no como modulo ES). `eslint .`
     // los parsea como modulos y falla con "'return' outside of function".
