@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { success, warn } from '@devground/logger';
 import { resolveOps } from './ops.js';
+import { findExistingConfig, withExts } from './config-detect.js';
 import type { InstallerOptions, InstallResult } from '../types.js';
 
 export function install(options: InstallerOptions): InstallResult {
@@ -11,8 +12,17 @@ export function install(options: InstallerOptions): InstallResult {
   // Honor "no sobreescribe nada existente": if the config is already there,
   // skip the whole installer — including the dependency install — so we don't
   // leave a dirty tree while claiming to have left things untouched.
-  if (ops.fileExists(configPath)) {
-    warn(`ESLint config skipped: ${configPath} already exists (left untouched).`);
+  // Reconoce flat config (todas las extensiones) y las variantes legacy.
+  const existing = findExistingConfig(ops, targetDir, {
+    files: [
+      ...withExts('eslint.config', ['js', 'mjs', 'cjs', 'ts', 'mts', 'cts']),
+      '.eslintrc',
+      ...withExts('.eslintrc', ['js', 'cjs', 'json', 'yaml', 'yml']),
+    ],
+    pkgKey: 'eslintConfig',
+  });
+  if (existing) {
+    warn(`ESLint config skipped: ${existing} already exists (left untouched).`);
     return 'skipped';
   }
 
