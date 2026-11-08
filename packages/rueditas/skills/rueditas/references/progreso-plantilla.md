@@ -1,6 +1,8 @@
 # Progreso (modo rueditas)
 
 Etapa actual: 1 — Definir
+Modo: guiado
+Vueltas completas: 0
 
 ## Etapas
 
