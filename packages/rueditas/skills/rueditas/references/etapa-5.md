@@ -30,4 +30,4 @@ Decisión: seguir / cambiar <qué> / replantear
 - [ ] `[revisas]` `producto/validacion.md` tiene sus respuestas y dónde se trabó.
 - [ ] `[decide]` Hay una decisión escrita: seguir, cambiar o replantear.
 
-Al cerrar esta etapa, felicita a la persona: terminó y probó su primer producto. Pregúntale si quiere empezar otra vuelta o quitar las rueditas.
+Al cerrar esta etapa, suma 1 a `Vueltas completas` y felicita a la persona: terminó y probó su producto. Pregúntale si quiere otra vuelta guiada, seguir sin guía o quitar todo.

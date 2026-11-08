@@ -105,3 +105,49 @@ describe('reglas aprendidas de errores reales', () => {
     expect(etapa4).toMatch(/publicado[^\n]*dirección real[^\n]*cambio nuevo/i);
   });
 });
+
+describe('modos y graduación', () => {
+  const skill = read(path.join(skillDir, 'SKILL.md'));
+  const plantilla = read(path.join(refs, 'progreso-plantilla.md'));
+  const etapa5 = read(etapas[4]);
+  const siempre = skill.split('## Siempre, en cualquier modo')[1]?.split(/\n## /)[0] ?? '';
+
+  it('se reactiva con el paquete con scope, que sí existe en npm', () => {
+    // `npx devground-rueditas` da 404 fuera de un proyecto que ya lo tenga
+    // instalado, y el nombre sin scope lo podría registrar cualquiera.
+    expect(skill).toContain('npx @devground/rueditas');
+    expect(skill).not.toMatch(/npx devground-rueditas/);
+  });
+
+  it('la plantilla de progreso arranca en modo guiado y sin vueltas', () => {
+    expect(plantilla).toMatch(/^Modo: guiado$/m);
+    expect(plantilla).toMatch(/^Vueltas completas: 0$/m);
+  });
+
+  it('el modo libre conserva las reglas que protegen', () => {
+    expect(skill).toMatch(/Modo `libre`[^\n]*Siempre, en cualquier modo/);
+    expect(siempre).toMatch(/mismo error[^\n]*dos veces/i);
+    expect(siempre).toMatch(/irreversible/i);
+    expect(siempre).toMatch(/funcionando/i);
+    expect(siempre).toContain('--no-verify');
+  });
+
+  it('quitar las rueditas ofrece seguir sin guía o quitar todo', () => {
+    const quitar = skill.split('## Quitar las rueditas')[1];
+    expect(quitar).toMatch(/Seguir sin guía[^\n]*`libre`/);
+    expect(quitar).toMatch(/Quitar todo/);
+    expect(quitar).toMatch(/pon las rueditas[^\n]*`guiado`/);
+  });
+
+  it('propone seguir sin guía con un criterio que se puede comprobar en el archivo', () => {
+    const cuando = skill.split('## Cuándo proponer seguir sin guía')[1]?.split(/\n## /)[0] ?? '';
+    expect(cuando).toContain('Vueltas completas');
+    expect(cuando).toContain('(etapa N)');
+    expect(skill).toContain('`- <término> (etapa N)`');
+  });
+
+  it('la etapa 5 suma una vuelta completa y ofrece las tres salidas', () => {
+    expect(etapa5).toMatch(/suma 1 a `Vueltas completas`/);
+    expect(etapa5).toMatch(/otra vuelta guiada, seguir sin guía o quitar todo/);
+  });
+});
