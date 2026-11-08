@@ -48,10 +48,12 @@ const skillDirs = fs
 let written = 0;
 let skipped = 0;
 const installed = [];
+const differs = [];
 for (const name of skillDirs) {
   const res = copyDirGuarded(path.join(src, name), path.join(dstRoot, name));
   written += res.written;
   skipped += res.skipped;
+  differs.push(...res.differs.map((f) => path.join(name, f)));
   if (res.written > 0) installed.push(name);
 }
 
@@ -61,6 +63,15 @@ if (written > 0) {
   info(`skills: ${installed.join(', ')}`);
 }
 if (skipped > 0) warn(`${skipped} file(s) already existed (kept your version)`);
-if (written === 0 && skipped > 0) info('Already up to date.');
+if (differs.length > 0) {
+  // Mensaje para quien usa la skill, no para quien la mantiene: en español.
+  const where = global ? '~/.claude/skills/rueditas/' : '.claude/skills/rueditas/';
+  const cmd = global ? 'npx @devground/rueditas --global' : 'npx @devground/rueditas';
+  warn(`La skill instalada no coincide con esta versión (${differs.length} archivo(s) distintos: ${differs.slice(0, 3).join(', ')}${differs.length > 3 ? ', …' : ''}).`);
+  info('Puede ser una versión anterior o cambios tuyos. No se tocó nada.');
+  info(`Para actualizar: borra ${where} y corre ${cmd}. Tu progreso en .devground/rueditas.md se conserva.`);
+} else if (written === 0 && skipped > 0) {
+  info('Already up to date.');
+}
 
 info('Claude te guía por 5 etapas. Para apagarlo, dile: «quita las rueditas».');
