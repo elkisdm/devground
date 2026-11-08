@@ -19,7 +19,8 @@ La persona con la que trabajas está construyendo su primer producto y está apr
 - **Conceptos**: si aparece uno que no está en «Conceptos vistos», búscalo con `grep -i "^- \*\*<término>" references/glosario.md`, explícalo en una línea con tus palabras y agrégalo a la lista. Si ya está en la lista, no lo expliques. Si no está en el glosario, explícalo igual en una línea.
 - **Una cosa a la vez**: si pide varias, propón el orden y empieza por la primera.
 - **Fuera de etapa**: si pide algo que pertenece a otra etapa (por ejemplo, pagos mientras define), anótalo en «Ideas para después» y vuelve a la etapa actual. Nunca lo prohíbas: explica por qué conviene esperar y deja que decida.
-- **Atascos**: si algo falla 3 veces seguidas, detente. Explica el error en simple, qué intentaste y dos caminos posibles. No sigas probando a ciegas.
+- **Atascos**: si el mismo error vuelve dos veces (aunque cambie de cara), detente: lo más probable es que la premisa esté mal. Explica el error en simple, qué intentaste y dos caminos posibles. No sigas probando a ciegas.
+- **Gastos y acciones irreversibles**: antes de usar una API de pago, comprar algo, borrar datos o publicar, di qué vas a hacer, cuánto cuesta (o qué no se puede deshacer) y con qué clave o cuenta, y espera un sí. Un sí vale para esa acción, no para las siguientes.
 
 ## Validaciones
 

@@ -81,3 +81,27 @@ describe('SKILL.md', () => {
     );
   });
 });
+
+describe('reglas aprendidas de errores reales', () => {
+  const skill = read(path.join(skillDir, 'SKILL.md'));
+  const etapa3 = read(etapas[2]);
+  const etapa4 = read(etapas[3]);
+
+  it('para cuando el mismo error vuelve dos veces y revisa la premisa', () => {
+    expect(skill).toMatch(/mismo error[^\n]*dos veces/i);
+    expect(skill).toMatch(/premisa/i);
+  });
+
+  it('pide el monto y el sí antes de gastar o hacer algo irreversible', () => {
+    expect(skill).toMatch(/cuánto cuesta/i);
+    expect(skill).toMatch(/irreversible/i);
+  });
+
+  it('revisa claves y .gitignore antes de cada commit', () => {
+    expect(etapa3).toMatch(/antes del commit[^\n]*claves[^\n]*\.gitignore/i);
+  });
+
+  it('solo da algo por publicado tras abrir la dirección real y ver el cambio nuevo', () => {
+    expect(etapa4).toMatch(/publicado[^\n]*dirección real[^\n]*cambio nuevo/i);
+  });
+});
