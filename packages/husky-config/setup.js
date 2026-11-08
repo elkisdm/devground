@@ -33,33 +33,27 @@ function installHooks(huskyDir) {
   }
 }
 
-// `husky init` on a fresh project writes its own placeholder .husky/pre-commit
-// ("npm test"). That's not a real user hook — remove it (and only it, by exact
-// content match) so installHooks() writes our actual hook instead of skipping
-// it as "already exists".
-function removeHuskyInitPlaceholder(huskyDir) {
-  const placeholderPreCommit = path.join(huskyDir, 'pre-commit');
-  if (fs.existsSync(placeholderPreCommit) && fs.readFileSync(placeholderPreCommit, 'utf8') === 'npm test\n') {
-    fs.unlinkSync(placeholderPreCommit);
-  }
-}
-
 function main() {
   const targetDir = process.cwd();
   const huskyDir = path.join(targetDir, '.husky');
   const pkgPath = path.join(targetDir, 'package.json');
 
-  // Initialize husky
+  // Activate husky WITHOUT `husky init`: init overwrites scripts.prepare and
+  // .husky/pre-commit unconditionally, destroying the user's config before
+  // installHooks() can respect it. `husky` with no args only sets
+  // core.hooksPath and writes the gitignored .husky/_ runtime — it touches
+  // neither package.json nor user hooks. Not logged with ✓: it writes no
+  // artifact of the project, so a re-run stays an honest "skipped" for the CLI.
+  fs.mkdirSync(huskyDir, { recursive: true });
+  let huskyOutput;
   try {
-    execSync('npx husky init', { cwd: targetDir, stdio: 'pipe' });
-    log('Initialized husky');
-    removeHuskyInitPlaceholder(huskyDir);
-  } catch {
-    if (fs.existsSync(huskyDir)) {
-      warn('Husky already initialized');
-    } else {
-      throw new Error('Failed to initialize husky. Is it installed?');
-    }
+    huskyOutput = execSync('npx --no-install husky', { cwd: targetDir, stdio: 'pipe' }).toString().trim();
+  } catch (err) {
+    const detail = (err.stderr && err.stderr.toString().trim()) || err.message;
+    throw new Error(`Failed to run husky. Is it installed?\n${detail}`);
+  }
+  if (huskyOutput) {
+    warn(`husky: ${huskyOutput}`);
   }
 
   installHooks(huskyDir);
@@ -86,4 +80,4 @@ if (require.main === module) {
   main();
 }
 
-module.exports = { installHooks, removeHuskyInitPlaceholder };
+module.exports = { installHooks, main };

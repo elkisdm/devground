@@ -1,7 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
-import { readFileSync, mkdtempSync, mkdirSync, writeFileSync, existsSync } from 'node:fs';
+import { readFileSync, mkdtempSync, mkdirSync, writeFileSync, existsSync, symlinkSync, realpathSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -31,25 +32,63 @@ test('installHooks no sobreescribe un hook preexistente (#3 companion)', () => {
   assert.equal(readFileSync(join(huskyDir, 'pre-commit'), 'utf8'), '# hook propio\n');
 });
 
-test('removeHuskyInitPlaceholder borra solo el placeholder de "husky init", no un hook real (bug hallado en e2e)', () => {
-  const require = createRequire(import.meta.url);
-  const { removeHuskyInitPlaceholder } = require('./setup.js');
+// Regresión de main() COMPLETO, no solo de installHooks(): el bug real era que
+// `npx husky init` corría ANTES y ya había pisado `prepare` y .husky/pre-commit
+// cuando installHooks() comprobaba qué respetar. Corre setup.js en un proceso
+// aparte (main usa process.cwd()) contra un repo git temporal con husky real.
+const huskyPkg = realpathSync(join(here, 'node_modules', 'husky'));
 
-  // Sin el fix: "npx husky init" en un proyecto nuevo escribe .husky/pre-commit
-  // con "npm test", e installHooks() lo trataba como un hook real del usuario
-  // y nunca instalaba lint-staged + gitleaks (#3).
-  const dirPlaceholder = mkdtempSync(join(tmpdir(), 'husky-'));
-  const huskyDirPlaceholder = join(dirPlaceholder, '.husky');
-  mkdirSync(huskyDirPlaceholder);
-  writeFileSync(join(huskyDirPlaceholder, 'pre-commit'), 'npm test\n');
-  removeHuskyInitPlaceholder(huskyDirPlaceholder);
-  assert.equal(existsSync(join(huskyDirPlaceholder, 'pre-commit')), false);
+function makeProject(pkg) {
+  const dir = mkdtempSync(join(tmpdir(), 'husky-main-'));
+  execFileSync('git', ['init', '-q'], { cwd: dir });
+  writeFileSync(join(dir, 'package.json'), JSON.stringify(pkg, null, 2) + '\n');
+  mkdirSync(join(dir, 'node_modules', '.bin'), { recursive: true });
+  symlinkSync(huskyPkg, join(dir, 'node_modules', 'husky'));
+  symlinkSync(join(huskyPkg, 'bin.js'), join(dir, 'node_modules', '.bin', 'husky'));
+  return dir;
+}
 
-  // Un hook real del usuario (contenido distinto al placeholder) no se toca.
-  const dirReal = mkdtempSync(join(tmpdir(), 'husky-'));
-  const huskyDirReal = join(dirReal, '.husky');
-  mkdirSync(huskyDirReal);
-  writeFileSync(join(huskyDirReal, 'pre-commit'), '# hook propio\n');
-  removeHuskyInitPlaceholder(huskyDirReal);
-  assert.equal(readFileSync(join(huskyDirReal, 'pre-commit'), 'utf8'), '# hook propio\n');
+function runSetup(dir) {
+  return execFileSync(process.execPath, [join(here, 'setup.js')], {
+    cwd: dir,
+    encoding: 'utf8',
+    env: { ...process.env, npm_config_offline: 'true', HUSKY: '' },
+  });
+}
+
+test('main() respeta un "prepare" y un .husky/pre-commit propios', () => {
+  const dir = makeProject({ name: 'x', version: '1.0.0', scripts: { prepare: 'node custom-prepare.js' } });
+  mkdirSync(join(dir, '.husky'));
+  writeFileSync(join(dir, '.husky', 'pre-commit'), 'echo MI HOOK\n');
+
+  runSetup(dir);
+
+  const pkg = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8'));
+  assert.equal(pkg.scripts.prepare, 'node custom-prepare.js');
+  assert.equal(readFileSync(join(dir, '.husky', 'pre-commit'), 'utf8'), 'echo MI HOOK\n');
+  // Los hooks que faltaban sí se instalan.
+  assert.ok(existsSync(join(dir, '.husky', 'commit-msg')));
+  assert.ok(existsSync(join(dir, '.husky', 'pre-push')));
+});
+
+test('main() en un proyecto nuevo agrega "prepare" e instala los tres hooks reales', () => {
+  const dir = makeProject({ name: 'x', version: '1.0.0' });
+
+  runSetup(dir);
+
+  const pkg = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8'));
+  assert.equal(pkg.scripts.prepare, 'husky');
+  assert.match(readFileSync(join(dir, '.husky', 'pre-commit'), 'utf8'), /lint-staged/);
+  assert.match(readFileSync(join(dir, '.husky', 'commit-msg'), 'utf8'), /commitlint/);
+  assert.ok(existsSync(join(dir, '.husky', 'pre-push')));
+  assert.equal(execFileSync('git', ['config', 'core.hooksPath'], { cwd: dir, encoding: 'utf8' }).trim(), '.husky/_');
+});
+
+test('main() en una segunda pasada no reporta escrituras (sin ✓) para que la CLI diga "skipped"', () => {
+  const dir = makeProject({ name: 'x', version: '1.0.0' });
+  runSetup(dir);
+
+  const second = runSetup(dir);
+
+  assert.doesNotMatch(second, /✓/);
 });
