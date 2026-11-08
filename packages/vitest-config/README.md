@@ -46,7 +46,8 @@ export { default } from '@devground/vitest-config';
 
 - `environment: 'node'`
 - `globals: false` — import test APIs explicitly from `vitest`
-- `include: ['src/**/*.test.ts']`
+- `include: ['src/**/*.test.{ts,tsx}']` (tests `.tsx` corren con environment `node`; para componentes con DOM usa `// @vitest-environment jsdom` o sobreescribe `environment`)
+- coverage `include: ['src/**/*.{ts,tsx}']` — código fuera de `src/` (p. ej. `app/`, `lib/`) no se mide salvo que sobreescribas `include`
 - v8 coverage profile (`text` + `html` reporters) that excludes build output,
   declarations, configs and the test files themselves
 
