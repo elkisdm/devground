@@ -1,5 +1,12 @@
 # @devground/devground
 
+## 3.0.5
+
+### Patch Changes
+
+- Updated dependencies [7abfd8e]
+  - devground-init@2.0.4
+
 ## 3.0.4
 
 ### Patch Changes
