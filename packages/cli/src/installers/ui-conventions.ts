@@ -19,10 +19,15 @@ export function install(options: InstallerOptions): InstallResult {
   }
 
   ops.addDevDependency(targetDir, stack.packageManager, '@devground/ui-conventions');
-  const output = ops.run('npx devground-ui-conventions', targetDir);
+  const output = ops.run(
+    'npx --yes --package=@devground/ui-conventions devground-ui-conventions',
+    targetDir,
+  );
 
   if (!delegateWrote(output)) {
-    warn('UI conventions skill skipped: .claude/skills/ui-conventions already exists (left untouched).');
+    warn(
+      'UI conventions skill skipped: .claude/skills/ui-conventions already exists (left untouched).',
+    );
     return 'skipped';
   }
 

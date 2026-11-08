@@ -14,7 +14,7 @@ export function install(options: InstallerOptions): InstallResult {
   const ops = resolveOps(options);
 
   ops.addDevDependency(targetDir, stack.packageManager, '@devground/rueditas');
-  const output = ops.run('npx devground-rueditas', targetDir);
+  const output = ops.run('npx --yes --package=@devground/rueditas devground-rueditas', targetDir);
 
   if (!delegateWrote(output)) {
     warn('Rueditas skill skipped: .claude/skills/rueditas already exists (left untouched).');

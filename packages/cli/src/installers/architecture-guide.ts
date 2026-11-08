@@ -8,7 +8,10 @@ export function install(options: InstallerOptions): InstallResult {
   const ops = resolveOps(options);
 
   ops.addDevDependency(targetDir, stack.packageManager, '@devground/architecture-guide');
-  const output = ops.run('npx devground-architecture', targetDir);
+  const output = ops.run(
+    'npx --yes --package=@devground/architecture-guide devground-architecture',
+    targetDir,
+  );
 
   if (!delegateWrote(output)) {
     warn('Architecture knowledge base skipped: knowledge/ already exists (left untouched).');
