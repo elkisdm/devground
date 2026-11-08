@@ -1,6 +1,6 @@
 {
   "name": "@devground/rueditas",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Modo rueditas para Claude Code: guía paso a paso a quien construye su primer producto, en 5 etapas, explicando cada concepto una sola vez y gastando pocos tokens. Se apaga diciendo «quita las rueditas».",
   "bin": {
     "devground-rueditas": "./setup.js"

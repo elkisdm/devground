@@ -1,5 +1,28 @@
 # @devground/devground
 
+## 3.0.0
+
+### Major Changes
+
+- e124d86: Los peers se alinean con lo que se prueba: `@commitlint/cli` pasa a `>=21.0.0` y, en `@devground/devground`, `lint-staged` a `>=17.0.0`.
+- e124d86: Sube el mínimo de Node a 22 (`engines.node` pasa de `>=20` a `>=22`) y se prueba en CI con Node 22 y 24. Node 20 salió de soporte en abril de 2026. Si usas Node 20, quédate en la versión anterior o actualiza Node.
+
+### Patch Changes
+
+- Updated dependencies [4130c2d]
+- Updated dependencies [e124d86]
+- Updated dependencies [dc387a9]
+- Updated dependencies [e124d86]
+- Updated dependencies [e124d86]
+  - @devground/agents-md@2.0.0
+  - @devground/commitlint-config@2.0.0
+  - devground-init@2.0.0
+  - @devground/eslint-config@2.0.0
+  - @devground/husky-config@2.0.0
+  - @devground/lint-staged-config@2.0.0
+  - @devground/prettier-config@2.0.0
+  - @devground/tsconfig@3.0.0
+
 ## 2.0.2
 
 ### Patch Changes
