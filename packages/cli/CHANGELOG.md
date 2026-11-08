@@ -1,5 +1,15 @@
 # devground-init
 
+## 2.0.2
+
+### Patch Changes
+
+- bd6e3d1: Los instaladores de eslint, prettier, vitest, commitlint y lint-staged reconocen todas las variantes de config que cada herramienta carga (`.eslintrc*`, `.prettierrc*`, `vitest.config.ts`, `vite.config.*` con `test`, `.commitlintrc*`, `.lintstagedrc*`, claves de package.json), y ya no instalan dependencias ni escriben una config competidora.
+- a5ee105: El preset de Vitest ahora incluye `.tsx`: `test.include` pasa a `src/**/*.test.{ts,tsx}` y `coverage.include` a `src/**/*.{ts,tsx}`. Al actualizar, el porcentaje medido puede bajar (los componentes ahora cuentan) y romper el ratchet, y los tests `.test.tsx` que antes no corrían ahora corren con environment `node`. Para volver a los globs anteriores, sobreescribe `test.include` y `test.coverage.include` en tu config con `src/**/*.test.ts` y `src/**/*.ts`.
+
+  `devground-init` detecta al instalar las raíces de código del proyecto (`src`, `app`, `lib`, `components`, `packages/*/src`) y escribe los globs de test y cobertura con esas raíces (`{ts,tsx}` en TypeScript, `{js,jsx}` en JavaScript) en vez de mirar solo `src/`.
+  - @devground/logger@1.0.0
+
 ## 2.0.1
 
 ### Patch Changes

@@ -1,5 +1,16 @@
 # @devground/devground
 
+## 3.0.2
+
+### Patch Changes
+
+- Updated dependencies [5c25d2f]
+- Updated dependencies [bd6e3d1]
+- Updated dependencies [a5ee105]
+  - @devground/husky-config@2.0.1
+  - devground-init@2.0.2
+  - @devground/eslint-config@2.0.0
+
 ## 3.0.1
 
 ### Patch Changes
