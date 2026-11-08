@@ -42,6 +42,13 @@ export default function nextConfig(options = {}) {
         '@typescript-eslint/no-explicit-any': 'warn',
       },
     },
+    // Los .cjs son CommonJS: `require()` es su sintaxis, no un estilo a
+    // evitar. Sin esto, el lint-staged.config.cjs y el commitlint.config.cjs
+    // que genera devground-init fallan `eslint .` en todo proyecto Next.
+    {
+      files: ['**/*.cjs'],
+      rules: { '@typescript-eslint/no-require-imports': 'off' },
+    },
     { ignores },
   ];
 }
