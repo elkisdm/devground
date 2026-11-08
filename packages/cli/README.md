@@ -10,13 +10,14 @@ npx devground-init
 
 ### Options
 
-| Flag | Description |
-|------|-------------|
-| `--preset full` | Install all tools without prompts |
-| `--preset agents-only` | Install only AGENTS.md + symlinks |
-| `-y, --yes` | Skip prompts, install everything |
-| `-V, --version` | Output version |
-| `-h, --help` | Display help |
+| Flag                   | Description                                                                                                                                               |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--preset full`        | Install all tools without prompts                                                                                                                         |
+| `--preset agents-only` | Install only AGENTS.md + symlinks                                                                                                                         |
+| `--preset rueditas`    | Everything in `full` plus the opt-in `@devground/rueditas` skill (guided mode for first-time builders). `full`, `--yes` and non-TTY runs never install it |
+| `-y, --yes`            | Skip prompts, install everything                                                                                                                          |
+| `-V, --version`        | Output version                                                                                                                                            |
+| `-h, --help`           | Display help                                                                                                                                              |
 
 ### Non-interactive environments (CI, piped stdin, some IDE terminals)
 
@@ -32,18 +33,18 @@ left untouched (see below).
    `--preset`, or in a non-interactive environment.
 3. **Installs and configures** each selected tool:
 
-| Tool | What it does |
-|------|-------------|
-| Prettier | Installs `@devground/prettier-config` and sets `"prettier"` in package.json |
-| ESLint | Installs `@devground/eslint-config`, writes `eslint.config.mjs` (Next.js variant if applicable) |
-| TypeScript | Installs `@devground/tsconfig`, writes `tsconfig.json` (+ `tsconfig.typecheck.json` for Next.js) |
-| Commitlint | Installs `@devground/commitlint-config`, writes `commitlint.config.js` |
-| lint-staged | Installs `@devground/lint-staged-config`, writes `lint-staged.config.cjs` (re-exports the shared config; a bare package.json string is rejected by lint-staged at runtime) |
-| Husky | Installs `@devground/husky-config`, runs `npx devground-husky` to set up hooks |
-| Vitest | Installs `@devground/vitest-config`, writes `vitest.config.mjs` with the coverage ratchet and adds `test`/`test:coverage` scripts |
-| AGENTS.md | Installs `@devground/agents-md`, runs `npx devground-agents` to scaffold AI agent files |
-| Architecture guide | Installs `@devground/architecture-guide`, runs `npx devground-architecture` to scaffold the knowledge base + ADR templates |
-| UI conventions | Installs `@devground/ui-conventions`, runs `npx devground-ui-conventions` to scaffold the skill (React/Next.js projects only) |
+| Tool               | What it does                                                                                                                                                               |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Prettier           | Installs `@devground/prettier-config` and sets `"prettier"` in package.json                                                                                                |
+| ESLint             | Installs `@devground/eslint-config`, writes `eslint.config.mjs` (Next.js variant if applicable)                                                                            |
+| TypeScript         | Installs `@devground/tsconfig`, writes `tsconfig.json` (+ `tsconfig.typecheck.json` for Next.js)                                                                           |
+| Commitlint         | Installs `@devground/commitlint-config`, writes `commitlint.config.js`                                                                                                     |
+| lint-staged        | Installs `@devground/lint-staged-config`, writes `lint-staged.config.cjs` (re-exports the shared config; a bare package.json string is rejected by lint-staged at runtime) |
+| Husky              | Installs `@devground/husky-config`, runs `npx devground-husky` to set up hooks                                                                                             |
+| Vitest             | Installs `@devground/vitest-config`, writes `vitest.config.mjs` with the coverage ratchet and adds `test`/`test:coverage` scripts                                          |
+| AGENTS.md          | Installs `@devground/agents-md`, runs `npx devground-agents` to scaffold AI agent files                                                                                    |
+| Architecture guide | Installs `@devground/architecture-guide`, runs `npx devground-architecture` to scaffold the knowledge base + ADR templates                                                 |
+| UI conventions     | Installs `@devground/ui-conventions`, runs `npx devground-ui-conventions` to scaffold the skill (React/Next.js projects only)                                              |
 
 > **Existing configs are left untouched.** Each config-file installer (ESLint, TypeScript, Commitlint, lint-staged) skips — installing nothing — if its target file already exists; Prettier skips if a `"prettier"` key is already present. The delegating installers (Husky, AGENTS.md, Architecture guide) defer to their own binaries.
 

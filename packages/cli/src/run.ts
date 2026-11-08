@@ -11,6 +11,7 @@ import * as vitest from './installers/vitest.js';
 import * as agentsMd from './installers/agents-md.js';
 import * as architectureGuide from './installers/architecture-guide.js';
 import * as uiConventions from './installers/ui-conventions.js';
+import * as rueditas from './installers/rueditas.js';
 import type { InstallTally } from './tally.js';
 import type { DetectedStack, InstallerOptions, InstallResult, PackageManager } from './types.js';
 
@@ -18,6 +19,8 @@ export interface Installer {
   name: string;
   value: string;
   install: (options: InstallerOptions) => InstallResult;
+  /** Only installed when asked for explicitly: unchecked in the menu, excluded from full/--yes/default. */
+  optIn?: boolean;
 }
 
 export const ALL_INSTALLERS: Installer[] = [
@@ -29,8 +32,22 @@ export const ALL_INSTALLERS: Installer[] = [
   { name: 'Husky pre-commit hooks', value: 'husky', install: husky.install },
   { name: 'Vitest + coverage ratchet', value: 'vitest', install: vitest.install },
   { name: 'AGENTS.md + symlinks', value: 'agents-md', install: agentsMd.install },
-  { name: 'Architecture guide + ADR templates', value: 'architecture-guide', install: architectureGuide.install },
-  { name: 'UI conventions skill (React/Next)', value: 'ui-conventions', install: uiConventions.install },
+  {
+    name: 'Architecture guide + ADR templates',
+    value: 'architecture-guide',
+    install: architectureGuide.install,
+  },
+  {
+    name: 'UI conventions skill (React/Next)',
+    value: 'ui-conventions',
+    install: uiConventions.install,
+  },
+  {
+    name: 'Modo rueditas (guía para quien empieza)',
+    value: 'rueditas',
+    install: rueditas.install,
+    optIn: true,
+  },
 ];
 
 /** Prints the detected framework/TypeScript/package-manager summary. */
@@ -51,7 +68,12 @@ export async function chooseInstallers(
   opts: { preset?: string; yes?: boolean },
   isTTY: boolean,
 ): Promise<Installer[] | null> {
-  const resolution = resolveInstall(ALL_INSTALLERS.map((i) => i.value), opts, isTTY);
+  const resolution = resolveInstall(
+    ALL_INSTALLERS.map((i) => i.value),
+    opts,
+    isTTY,
+    ALL_INSTALLERS.filter((i) => i.optIn).map((i) => i.value),
+  );
 
   if (resolution.kind === 'install') {
     // Either an explicit --yes/--preset, or a non-interactive environment
@@ -60,7 +82,7 @@ export async function chooseInstallers(
     if (resolution.defaulted) {
       info(
         'Non-interactive environment: defaulting to the full preset ' +
-          '(pass --preset <full|agents-only> or --yes to choose explicitly).',
+          '(pass --preset <full|agents-only|rueditas> or --yes to choose explicitly).',
       );
     }
     return ALL_INSTALLERS.filter((i) => resolution.values.includes(i.value));
@@ -73,7 +95,7 @@ export async function chooseInstallers(
     choices: ALL_INSTALLERS.map((i) => ({
       title: i.name,
       value: i.value,
-      selected: true,
+      selected: !i.optIn,
     })),
     hint: '- Space to toggle. Enter to confirm.',
   });
