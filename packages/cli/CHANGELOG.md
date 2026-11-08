@@ -1,5 +1,20 @@
 # devground-init
 
+## 2.0.0
+
+### Major Changes
+
+- e124d86: Sube el mínimo de Node a 22 (`engines.node` pasa de `>=20` a `>=22`) y se prueba en CI con Node 22 y 24. Node 20 salió de soporte en abril de 2026. Si usas Node 20, quédate en la versión anterior o actualiza Node.
+
+### Minor Changes
+
+- dc387a9: Nuevo modo rueditas: una skill de proyecto opt-in que guía a quien construye su primer producto en 5 etapas, explica cada concepto una sola vez y gasta pocos tokens (ADR-0048). Se instala con `devground-init --preset rueditas`, que es todo lo de `full` más la skill; `full`, `--yes` y el modo sin TTY no la instalan. También disponible como `npx @devground/rueditas`. Se apaga diciendo «quita las rueditas», que borra `.claude/skills/rueditas/` y conserva el progreso.
+
+### Patch Changes
+
+- Updated dependencies [e124d86]
+  - @devground/logger@1.0.0
+
 ## 1.5.0
 
 ### Minor Changes
