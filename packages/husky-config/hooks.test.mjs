@@ -92,3 +92,69 @@ test('main() en una segunda pasada no reporta escrituras (sin ✓) para que la C
 
   assert.doesNotMatch(second, /✓/);
 });
+
+// Mensajes para principiantes: cada bloqueo cierra con qué pasó y qué pedirle
+// al agente, sin dejar de bloquear. Se corre el hook real con `npx`/`npm`
+// falsos en un PATH mínimo (sin gitleaks, para no depender de la máquina).
+function stubBin(scripts) {
+  const bin = mkdtempSync(join(tmpdir(), 'hook-bin-'));
+  for (const [name, body] of Object.entries(scripts)) {
+    writeFileSync(join(bin, name), `#!/bin/sh\n${body}\n`, { mode: 0o755 });
+  }
+  symlinkSync(process.execPath, join(bin, 'node'));
+  return bin;
+}
+
+function runHook(hook, bin, args = [], cwd = here) {
+  try {
+    const out = execFileSync('sh', [join(here, 'hooks', hook), ...args], {
+      cwd,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+      env: { PATH: `${bin}:/usr/bin:/bin`, HOME: process.env.HOME ?? '' },
+    });
+    return { code: 0, out };
+  } catch (err) {
+    return { code: err.status, out: `${err.stdout ?? ''}${err.stderr ?? ''}` };
+  }
+}
+
+test('pre-commit: si lint falla, bloquea y explica qué pedirle al agente', () => {
+  const bin = stubBin({ npx: 'exit 1' });
+  const { code, out } = runHook('pre-commit.sh', bin);
+  assert.equal(code, 1);
+  assert.match(out, /Commit detenido/);
+  assert.match(out, /Pídele a tu agente: .*sin desactivar reglas/);
+});
+
+test('pre-commit: si lint pasa, no muestra el mensaje de bloqueo', () => {
+  const bin = stubBin({ npx: 'exit 0' });
+  const { code, out } = runHook('pre-commit.sh', bin);
+  assert.equal(code, 0);
+  assert.doesNotMatch(out, /Commit detenido/);
+});
+
+test('commit-msg: si el mensaje no cumple, bloquea y muestra el formato con un ejemplo', () => {
+  // `commitlint --version` responde; `commitlint --edit` rechaza el mensaje.
+  const bin = stubBin({ npx: 'for a in "$@"; do [ "$a" = "--version" ] && exit 0; done; exit 1' });
+  const { code, out } = runHook('commit-msg.sh', bin, ['.git/COMMIT_EDITMSG']);
+  assert.equal(code, 1);
+  assert.match(out, /tipo: qué cambió/);
+  assert.match(out, /Pídele a tu agente: .*conventional commits/);
+});
+
+test('commit-msg: si el mensaje cumple, sale 0 sin mensaje de bloqueo', () => {
+  const bin = stubBin({ npx: 'exit 0' });
+  const { code, out } = runHook('commit-msg.sh', bin, ['.git/COMMIT_EDITMSG']);
+  assert.equal(code, 0);
+  assert.doesNotMatch(out, /Commit detenido/);
+});
+
+test('pre-push: cobertura bajo umbral avisa qué pedirle al agente y NO bloquea', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'hook-push-'));
+  writeFileSync(join(dir, 'package.json'), JSON.stringify({ scripts: { 'test:coverage': 'x' } }));
+  const bin = stubBin({ npm: 'exit 1' });
+  const { code, out } = runHook('pre-push.sh', bin, [], dir);
+  assert.equal(code, 0);
+  assert.match(out, /Pídele a tu agente: .*sin bajar los umbrales/);
+});
