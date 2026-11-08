@@ -159,6 +159,19 @@ const runtime = JSON.parse(process.env.RUNTIME_DEPS);
 if (Object.keys(runtime).length > 0) pkg.dependencies = runtime;
 fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
 "
+  # pnpm resuelve las dependencias TRANSITIVAS de un tarball contra el
+  # registro, no contra los `file:` hermanos. Tras un bump de versión (PR de
+  # release) @devground/devground pide versiones que aún no están en npm y el
+  # install falla con ERR_PNPM_NO_MATCHING_VERSION. Los overrides fuerzan todo
+  # @devground/* al tarball local también en el árbol transitivo. Van en
+  # pnpm-workspace.yaml: pnpm 11 ya no lee el campo "pnpm" de package.json.
+  if [ "$E2E_PM" = pnpm ]; then
+    DEPS="$DEPS_JSON" node -e "
+const deps = JSON.parse(process.env.DEPS);
+const lines = Object.entries(deps).map(([n, v]) => '  \'' + n + '\': \'' + v + '\'');
+require('fs').writeFileSync('pnpm-workspace.yaml', 'overrides:\n' + lines.join('\n') + '\n');
+"
+  fi
 }
 
 scenario_nuevo() {
