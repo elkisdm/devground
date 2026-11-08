@@ -1,5 +1,12 @@
 # @devground/devground
 
+## 3.0.4
+
+### Patch Changes
+
+- Updated dependencies [4e0fb2c]
+  - @devground/husky-config@2.1.0
+
 ## 3.0.3
 
 ### Patch Changes
