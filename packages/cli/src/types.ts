@@ -20,6 +20,8 @@ export interface InstallerOps {
   readPackageJson: (dir: string) => Record<string, unknown>;
   /** Writes a package.json object to `dir` with 2-space indentation. */
   writePackageJson: (dir: string, data: Record<string, unknown>) => void;
+  /** Reads a file as UTF-8 at an absolute path (opcional: solo lo usa la detección de config de vitest). */
+  readFile?: (path: string) => string;
   /** Writes a file at an absolute path. */
   writeFile: (path: string, content: string) => void;
   /** Returns whether a file already exists at an absolute path. */

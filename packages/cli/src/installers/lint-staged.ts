@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { success, warn } from '@devground/logger';
 import { resolveOps } from './ops.js';
+import { findExistingConfig, withExts } from './config-detect.js';
 import type { InstallerOptions, InstallResult } from '../types.js';
 
 export function install(options: InstallerOptions): InstallResult {
@@ -8,12 +9,25 @@ export function install(options: InstallerOptions): InstallResult {
   const ops = resolveOps(options);
   const configPath = join(targetDir, 'lint-staged.config.cjs');
 
-  if (ops.fileExists(configPath)) {
-    warn(`lint-staged config skipped: ${configPath} already exists (left untouched).`);
+  const existing = findExistingConfig(ops, targetDir, {
+    files: [
+      ...withExts('lint-staged.config', ['js', 'mjs', 'cjs', 'ts', 'mts', 'cts']),
+      '.lintstagedrc',
+      ...withExts('.lintstagedrc', ['json', 'yaml', 'yml', 'mjs', 'cjs', 'js']),
+    ],
+    pkgKey: 'lint-staged',
+  });
+  if (existing) {
+    warn(`lint-staged config skipped: ${existing} already exists (left untouched).`);
     return 'skipped';
   }
 
-  ops.addDevDependency(targetDir, stack.packageManager, '@devground/lint-staged-config', 'lint-staged');
+  ops.addDevDependency(
+    targetDir,
+    stack.packageManager,
+    '@devground/lint-staged-config',
+    'lint-staged',
+  );
 
   // Unlike Prettier (whose loader resolves a string value as a shared-config
   // module name), lint-staged does NOT resolve a string — it rejects it at

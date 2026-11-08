@@ -27,15 +27,16 @@ export const CRITICAL_THRESHOLDS = {
 
 export default defineConfig({
   test: {
-    include: ['src/**/*.test.ts'],
+    include: ['src/**/*.test.{ts,tsx}'],
     environment: 'node',
     globals: false,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html'],
-      include: ['src/**/*.ts'],
+      include: ['src/**/*.{ts,tsx}'],
       exclude: [
         'src/**/*.test.ts',
+        'src/**/*.test.tsx',
         'src/**/*.d.ts',
         '**/dist/**',
         '**/node_modules/**',

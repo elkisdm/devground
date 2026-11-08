@@ -33,6 +33,7 @@ export function makeRecordingOps(
   initialPkg: Record<string, unknown> = {},
   existingFiles: string[] = [],
   runOutput = '',
+  fileContents: Record<string, string> = {},
 ): {
   ops: InstallerOps;
   devDeps: DevDepCall[];
@@ -56,7 +57,8 @@ export function makeRecordingOps(
     writeFile: (path, content) => {
       writes.push({ path, content });
     },
-    fileExists: (path) => existingFiles.includes(path),
+    readFile: (path) => fileContents[path] ?? '',
+    fileExists: (path) => existingFiles.includes(path) || path in fileContents,
     run: (cmd, cwd) => {
       runs.push({ cmd, cwd });
       return runOutput;

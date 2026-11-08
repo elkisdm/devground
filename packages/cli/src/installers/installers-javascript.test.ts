@@ -40,8 +40,10 @@ describe('vitest installer (JavaScript projects)', () => {
     expect(result).toBe('installed');
     const content = writes[0]?.content ?? '';
     // Sin esto, `vitest run` no encuentra un solo test en un repo JS.
-    expect(content).toContain("include: ['src/**/*.test.js', 'packages/*/src/**/*.test.js']");
-    expect(content).toContain("include: ['src/**/*.js', 'packages/*/src/**/*.js']");
+    expect(content).toContain(
+      "include: ['src/**/*.test.{js,jsx}', 'packages/*/src/**/*.test.{js,jsx}']",
+    );
+    expect(content).toContain("include: ['src/**/*.{js,jsx}', 'packages/*/src/**/*.{js,jsx}']");
     expect(content).toContain('autoUpdate: true');
   });
 
@@ -51,6 +53,39 @@ describe('vitest installer (JavaScript projects)', () => {
     vitest.install(optionsFor(NODE_TS_STACK, ops));
 
     expect(writes[0]?.content).not.toContain('include:');
+  });
+
+  it('keeps the preset globs on a TypeScript project whose only root is src', () => {
+    const { ops, writes } = makeRecordingOps({ name: 'app' }, ['/proj/src']);
+
+    vitest.install(optionsFor(NODE_TS_STACK, ops));
+
+    expect(writes[0]?.content).not.toContain('include:');
+  });
+
+  it('uses the detected roots with {ts,tsx} on a TypeScript project with app + components', () => {
+    const { ops, writes } = makeRecordingOps({ name: 'app' }, ['/proj/app', '/proj/components']);
+
+    vitest.install(optionsFor(NODE_TS_STACK, ops));
+
+    const content = writes[0]?.content ?? '';
+    expect(content).toContain(
+      "include: ['app/**/*.test.{ts,tsx}', 'components/**/*.test.{ts,tsx}']",
+    );
+    expect(content).toContain("include: ['app/**/*.{ts,tsx}', 'components/**/*.{ts,tsx}']");
+    expect(content).toContain("'app/**/*.test.{ts,tsx}',\n");
+    expect(content).toContain("'**/*.d.ts'");
+    expect(content).toContain('autoUpdate: true');
+  });
+
+  it('uses the detected roots on a JavaScript project', () => {
+    const { ops, writes } = makeRecordingOps({ name: 'app' }, ['/proj/lib', '/proj/packages']);
+
+    vitest.install(optionsFor(NODE_JS_STACK, ops));
+
+    expect(writes[0]?.content).toContain(
+      "include: ['lib/**/*.{js,jsx}', 'packages/*/src/**/*.{js,jsx}']",
+    );
   });
 
   it('pins @vitest/coverage-v8 to the vitest range the project already declares', () => {
