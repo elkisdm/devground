@@ -1,0 +1,48 @@
+# Glosario para quien empieza
+
+Una línea por término. Se consulta con grep por término, no se lee entero.
+
+- **terminal**: la ventana donde escribes comandos en vez de hacer clic; ahí corre Claude Code.
+- **carpeta del proyecto**: el lugar donde viven todos los archivos de tu producto; un proyecto, una carpeta.
+- **archivo**: un documento del proyecto; el código es texto guardado en archivos.
+- **código**: instrucciones escritas que la computadora sigue al pie de la letra.
+- **frontend**: lo que la persona ve y toca: pantallas, botones, textos.
+- **backend**: lo que pasa por detrás: guarda datos, revisa permisos, conecta servicios.
+- **base de datos**: el lugar ordenado donde se guardan los datos para encontrarlos después, como una planilla muy rápida.
+- **api**: una puerta por la que un programa le pide algo a otro; tu página le pide datos al servidor por una API.
+- **servidor**: un computador encendido todo el día que atiende a quien visita tu producto.
+- **hosting**: el servicio que te presta ese servidor; por ejemplo, Vercel o un VPS.
+- **vps**: un servidor propio arrendado por mes; tú decides qué corre ahí.
+- **dominio**: el nombre de tu producto en internet, como tunegocio.com.
+- **url**: la dirección completa de una página.
+- **deploy**: publicar: subir tu producto a un servidor para que funcione en internet.
+- **local**: tu computador; algo «corre en local» cuando solo lo ves tú.
+- **producción**: la versión publicada que usan las personas reales.
+- **git**: el historial de tu proyecto; guarda cada versión para poder volver atrás.
+- **commit**: una foto guardada del proyecto con una frase que dice qué cambió.
+- **repositorio**: la carpeta del proyecto con todo su historial de git.
+- **github**: un sitio para guardar tu repositorio en internet y compartirlo.
+- **rama**: una copia paralela del proyecto para probar algo sin tocar la versión principal.
+- **dependencia**: código hecho por otros que tu proyecto usa, como una pieza prefabricada.
+- **npm**: la tienda gratuita de dependencias para proyectos JavaScript.
+- **variable de entorno**: un dato de configuración que vive fuera del código, como una clave.
+- **.env**: el archivo donde van las variables de entorno en tu computador; nunca se sube a internet.
+- **clave de api**: una contraseña que te da un servicio para usarlo; si se filtra, otro gasta a tu nombre.
+- **prueba**: código que revisa solo que otra parte funcione como dice el criterio de aceptación.
+- **criterio de aceptación**: la frase «cuando hago esto, entonces pasa esto» que define qué es funcionar.
+- **bug**: un error: el producto hace algo distinto de lo que debería.
+- **log**: el registro de lo que pasó; ahí se busca la pista de un error.
+- **formulario**: la parte de una pantalla donde la persona escribe datos y los envía.
+- **validación**: revisar que un dato tenga sentido antes de guardarlo, como un correo con @.
+- **autenticación**: comprobar quién es la persona; iniciar sesión.
+- **responsive**: que la pantalla se adapte bien a celular, tablet y computador.
+- **framework**: un esqueleto de proyecto que ya trae resuelto lo común, como Next.js.
+- **next.js**: un framework para hacer páginas y aplicaciones web con React.
+- **licencia**: las reglas de uso de un código ajeno; MIT permite venderlo, otras no.
+- **código abierto**: código publicado para que cualquiera lo use según su licencia.
+- **token**: la unidad en que Claude mide texto; cada mensaje y archivo leído gasta tokens.
+- **contexto**: todo lo que Claude tiene a la vista en la conversación; más contexto, más gasto.
+- **skill**: un manual que Claude carga solo cuando lo necesita, como este modo rueditas.
+- **devground**: el arnés que deja tu proyecto ordenado, con pruebas y reglas para la IA.
+- **agents.md**: el archivo con las reglas que la IA sigue en tu proyecto.
+- **mvp**: la versión más pequeña que ya resuelve el problema principal.

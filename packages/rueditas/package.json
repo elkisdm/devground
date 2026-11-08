@@ -1,0 +1,48 @@
+{
+  "name": "@devground/rueditas",
+  "version": "0.1.0",
+  "description": "Modo rueditas para Claude Code: guía paso a paso a quien construye su primer producto, en 5 etapas, explicando cada concepto una sola vez y gastando pocos tokens. Se apaga diciendo «quita las rueditas».",
+  "bin": {
+    "devground-rueditas": "./setup.js"
+  },
+  "files": [
+    "setup.js",
+    "skills/",
+    "lib/",
+    "!lib/*.test.js"
+  ],
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "keywords": [
+    "rueditas",
+    "principiantes",
+    "onboarding",
+    "claude-code",
+    "skill",
+    "devground"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/elkisdm/devground.git",
+    "directory": "packages/rueditas"
+  },
+  "homepage": "https://github.com/elkisdm/devground/tree/main/packages/rueditas#readme",
+  "bugs": {
+    "url": "https://github.com/elkisdm/devground/issues"
+  },
+  "devDependencies": {
+    "@devground/vitest-config": "workspace:*",
+    "vitest": "^5.1.0",
+    "@vitest/coverage-v8": "^5.1.0"
+  }
+}
