@@ -49,6 +49,10 @@ fail() {
 }
 
 echo "== pack de paquetes locales =="
+# architecture-guide copia knowledge/ (ignorada por git) en prepublishOnly, que
+# `pnpm pack` no ejecuta: sin este paso, en un checkout limpio (CI) el tarball
+# sale sin knowledge/ y su instalador aborta. Se replica lo que hace publicar.
+node "$ROOT/packages/architecture-guide/scripts/sync-knowledge.js"
 # Todo @devground/* que agregan los installers de packages/cli/src/installers,
 # más la CLI, devground (devground-setup) y logger (dependencia de la CLI).
 PACK_DIRS=(
