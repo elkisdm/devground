@@ -8,7 +8,7 @@ export function install(options: InstallerOptions): InstallResult {
   const ops = resolveOps(options);
 
   ops.addDevDependency(targetDir, stack.packageManager, '@devground/husky-config', 'husky');
-  const output = ops.run('npx devground-husky', targetDir);
+  const output = ops.run('npx --yes --package=@devground/husky-config devground-husky', targetDir);
 
   if (!delegateWrote(output)) {
     warn('Husky hooks skipped: all hooks already present (left untouched).');

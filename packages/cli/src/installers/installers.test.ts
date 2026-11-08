@@ -300,7 +300,7 @@ describe('husky installer', () => {
     expect(result).toBe('installed');
     expect(devDeps[0]?.packages).toEqual(['@devground/husky-config', 'husky']);
     expect(runs).toHaveLength(1);
-    expect(runs[0]?.cmd).toBe('npx devground-husky');
+    expect(runs[0]?.cmd).toBe('npx --yes --package=@devground/husky-config devground-husky');
     expect(runs[0]?.cwd).toBe('/proj');
   });
 
@@ -323,7 +323,7 @@ describe('agents-md installer', () => {
 
     expect(result).toBe('installed');
     expect(devDeps[0]?.packages).toEqual(['@devground/agents-md']);
-    expect(runs[0]?.cmd).toBe('npx devground-agents');
+    expect(runs[0]?.cmd).toBe('npx --yes --package=@devground/agents-md devground-agents');
     expect(runs[0]?.cwd).toBe('/proj');
   });
 
@@ -344,7 +344,9 @@ describe('architecture-guide installer', () => {
 
     expect(result).toBe('installed');
     expect(devDeps[0]?.packages).toEqual(['@devground/architecture-guide']);
-    expect(runs[0]?.cmd).toBe('npx devground-architecture');
+    expect(runs[0]?.cmd).toBe(
+      'npx --yes --package=@devground/architecture-guide devground-architecture',
+    );
     expect(runs[0]?.cwd).toBe('/proj');
   });
 
@@ -363,7 +365,9 @@ describe('ui-conventions installer', () => {
     const result = uiConventions.install(optionsFor(NEXT_STACK, ops));
     expect(result).toBe('installed');
     expect(devDeps[0]?.packages).toEqual(['@devground/ui-conventions']);
-    expect(runs[0]?.cmd).toBe('npx devground-ui-conventions');
+    expect(runs[0]?.cmd).toBe(
+      'npx --yes --package=@devground/ui-conventions devground-ui-conventions',
+    );
     expect(runs[0]?.cwd).toBe('/proj');
   });
   it('installs for a React project', () => {
@@ -394,7 +398,7 @@ describe('rueditas installer', () => {
       const result = rueditas.install(optionsFor(stack, ops));
       expect(result).toBe('installed');
       expect(devDeps[0]?.packages).toEqual(['@devground/rueditas']);
-      expect(runs[0]?.cmd).toBe('npx devground-rueditas');
+      expect(runs[0]?.cmd).toBe('npx --yes --package=@devground/rueditas devground-rueditas');
       expect(runs[0]?.cwd).toBe('/proj');
     }
   });

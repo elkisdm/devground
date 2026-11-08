@@ -8,7 +8,7 @@ export function install(options: InstallerOptions): InstallResult {
   const ops = resolveOps(options);
 
   ops.addDevDependency(targetDir, stack.packageManager, '@devground/agents-md');
-  const output = ops.run('npx devground-agents', targetDir);
+  const output = ops.run('npx --yes --package=@devground/agents-md devground-agents', targetDir);
 
   if (!delegateWrote(output)) {
     warn('AGENTS.md skipped: already present (left untouched).');
