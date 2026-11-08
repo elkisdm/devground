@@ -1,6 +1,6 @@
 {
   "name": "@devground/prettier-config",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Shared Prettier configuration (single quotes, semicolons, 100 col)",
   "main": "index.json",
   "files": [
