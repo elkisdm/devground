@@ -1,6 +1,6 @@
 {
   "name": "@devground/lint-staged-config",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Shared lint-staged configuration (eslint + prettier on staged files)",
   "main": "index.js",
   "files": [

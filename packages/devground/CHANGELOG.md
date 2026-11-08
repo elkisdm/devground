@@ -1,5 +1,21 @@
 # @devground/devground
 
+## 3.0.3
+
+### Patch Changes
+
+- 060e4ec: `engines.node` ahora es `>=22.22.1`. El mínimo real ya era ese, porque lint-staged 17 exige `>=22.22.1` (y commitlint 21 `>=22.12.0`); con Node 22.0 a 22.22.0 la instalación fallaba con ERESOLVE. Ahora lo declaramos para que el error sea claro. Además se actualizan dependencias (commander 15.1) y las de desarrollo para cerrar avisos de `pnpm audit`.
+- Updated dependencies [060e4ec]
+- Updated dependencies [6a4b8c2]
+  - @devground/agents-md@2.0.1
+  - devground-init@2.0.3
+  - @devground/commitlint-config@2.0.1
+  - @devground/eslint-config@2.0.1
+  - @devground/husky-config@2.0.2
+  - @devground/lint-staged-config@2.0.1
+  - @devground/prettier-config@2.0.1
+  - @devground/tsconfig@3.0.1
+
 ## 3.0.2
 
 ### Patch Changes
