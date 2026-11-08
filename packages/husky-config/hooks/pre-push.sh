@@ -19,6 +19,7 @@ if node -e "process.exit(((require('./package.json').scripts)||{})['test:coverag
     echo "  ! La cobertura NO alcanza el umbral (ratchet/rutas críticas, ADR-0022)."
     echo "    Esto NO bloquea el push, pero CI SÍ lo va a rechazar."
     echo "    Súbela antes de abrir el PR, o usa 'SKIP_COVERAGE=1 git push' si es a propósito."
+    echo "    Pídele a tu agente: \"Agrega pruebas para el código nuevo hasta que pase test:coverage, sin bajar los umbrales\"."
     echo ""
   fi
 fi

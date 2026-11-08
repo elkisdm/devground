@@ -7,7 +7,16 @@
 #   - commitlint NO instalado -> avisa cómo instalarlo y DEJA pasar
 #     (la garantía dura la da CI; mismo criterio que gitleaks en pre-commit).
 if npx --no-install commitlint --version >/dev/null 2>&1; then
-  npx --no-install commitlint --edit "$1"
+  if ! npx --no-install commitlint --edit "$1"; then
+    echo ""
+    echo "  ✖ Commit detenido: el mensaje no sigue el formato acordado."
+    echo "    Debe verse así:  tipo: qué cambió    (ej.: feat: agrega inicio de sesión)"
+    echo "    Tipos: feat (algo nuevo), fix (arreglo), docs, refactor, test, chore."
+    echo "    Tu código no se perdió: solo falta rehacer el commit con otro mensaje."
+    echo "    Pídele a tu agente: \"Rehaz el commit con un mensaje en formato conventional commits\"."
+    echo ""
+    exit 1
+  fi
 else
   echo ""
   echo "  ! commitlint NO está disponible — se OMITE la validación del mensaje (ADR-0005)."

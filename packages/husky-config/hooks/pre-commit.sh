@@ -9,9 +9,11 @@ if command -v gitleaks >/dev/null 2>&1; then
   echo "ADR-0008: escaneando secretos con gitleaks (staged)..."
   if ! gitleaks protect --staged --redact --verbose; then
     echo ""
-    echo "  ✖ gitleaks detectó posibles secretos en los archivos staged."
-    echo "    Revisa el reporte de arriba. NO commitees secretos."
-    echo "    Falso positivo? Usa '# gitleaks:allow' en la línea o un .gitleaksignore (justificado)."
+    echo "  ✖ Commit detenido: parece que hay una clave, token o contraseña en el código."
+    echo "    Si llega a git, queda en el historial aunque después la borres."
+    echo "    Arriba aparece el archivo y la línea (con el valor oculto)."
+    echo "    Pídele a tu agente: \"Saca el secreto del código, léelo desde .env y verifica que .env esté en .gitignore\"."
+    echo "    ¿Falso positivo? Agrega '# gitleaks:allow' en esa línea, explicando por qué."
     exit 1
   fi
 else
@@ -27,4 +29,12 @@ fi
 
 # Lint + format de staged (ADR-0005). npx --no-install resuelve el binario local
 # sin acoplar a pnpm (funciona en npm/yarn/pnpm) y falla ruidoso si falta (#7).
-npx --no-install lint-staged
+if ! npx --no-install lint-staged; then
+  echo ""
+  echo "  ✖ Commit detenido: el revisor de código encontró problemas en los archivos que estás guardando."
+  echo "    Arriba aparece cada archivo, la línea y la regla que falló."
+  echo "    Tus cambios no se perdieron: siguen en tus archivos."
+  echo "    Pídele a tu agente: \"El pre-commit falló por lint; corrige lo que muestra sin desactivar reglas y vuelve a hacer commit\"."
+  echo ""
+  exit 1
+fi
