@@ -14,7 +14,7 @@
 2. **Construye** solo esa pieza.
 3. **Prueba**: escribe la prueba de su criterio de aceptación y córrela. Muestra el resultado.
 4. **Muéstralo**: dile cómo verlo (comando para abrirlo y qué hacer).
-5. **Guarda**: commit con un mensaje que diga qué funciona ahora.
+5. **Guarda**: antes del commit revisa que no haya claves en los archivos y que `.env` esté en `.gitignore`; luego commit con un mensaje que diga qué funciona ahora.
 6. Marca la pieza como hecha y pasa a la siguiente.
 
 ## Reglas
