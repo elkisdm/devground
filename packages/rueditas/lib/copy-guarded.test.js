@@ -34,7 +34,7 @@ describe('copyDirGuarded', () => {
 
     const res = copyDirGuarded(src, dst);
 
-    expect(res).toEqual({ written: 1, skipped: 0 });
+    expect(res).toEqual({ written: 1, skipped: 0, differs: [] });
     expect(fs.readFileSync(path.join(dst, 'SKILL.md'), 'utf8')).toBe('contenido');
   });
 
@@ -47,7 +47,7 @@ describe('copyDirGuarded', () => {
     const res = copyDirGuarded(src, dst);
 
     expect(fs.readFileSync(path.join(dst, 'SKILL.md'), 'utf8')).toBe('MI EDICION LOCAL');
-    expect(res).toEqual({ written: 0, skipped: 1 });
+    expect(res).toEqual({ written: 0, skipped: 1, differs: ["SKILL.md"] });
   });
 
   it('recursa en subdirectorios y suma los conteos de cada nivel', () => {
@@ -57,7 +57,7 @@ describe('copyDirGuarded', () => {
 
     const res = copyDirGuarded(src, dst);
 
-    expect(res).toEqual({ written: 3, skipped: 0 });
+    expect(res).toEqual({ written: 3, skipped: 0, differs: [] });
     expect(fs.existsSync(path.join(dst, 'references/anidado/hondo.md'))).toBe(true);
   });
 
@@ -68,7 +68,7 @@ describe('copyDirGuarded', () => {
 
     const res = copyDirGuarded(src, dst);
 
-    expect(res).toEqual({ written: 1, skipped: 1 });
+    expect(res).toEqual({ written: 1, skipped: 1, differs: ["SKILL.md"] });
     expect(fs.readFileSync(path.join(dst, 'SKILL.md'), 'utf8')).toBe('v1 editado por mi');
     expect(fs.existsSync(path.join(dst, 'references/nuevo.md'))).toBe(true);
   });
@@ -78,7 +78,7 @@ describe('copyDirGuarded', () => {
 
     const res = copyDirGuarded(src, dst);
 
-    expect(res).toEqual({ written: 0, skipped: 0 });
+    expect(res).toEqual({ written: 0, skipped: 0, differs: [] });
     expect(fs.existsSync(path.join(dst, 'vacio'))).toBe(true);
   });
 
@@ -90,7 +90,24 @@ describe('copyDirGuarded', () => {
 
     const res = copyDirGuarded(src, dst);
 
-    expect(res).toEqual({ written: 1, skipped: 0 });
+    expect(res).toEqual({ written: 1, skipped: 0, differs: [] });
     expect(fs.existsSync(path.join(dst, 'enlace.md'))).toBe(false);
+  });
+});
+
+describe('copyDirGuarded — aviso de versión distinta', () => {
+  it('no reporta diferencias si lo instalado es idéntico al paquete', () => {
+    write(src, 'SKILL.md', 'igual');
+    write(dst, 'SKILL.md', 'igual');
+
+    expect(copyDirGuarded(src, dst).differs).toEqual([]);
+  });
+
+  it('reporta con su ruta relativa los archivos distintos dentro de subcarpetas', () => {
+    write(src, 'references/etapa-5.md', 'v2');
+    write(dst, 'references/etapa-5.md', 'v1');
+
+    expect(copyDirGuarded(src, dst).differs).toEqual([path.join('references', 'etapa-5.md')]);
+    expect(fs.readFileSync(path.join(dst, 'references/etapa-5.md'), 'utf8')).toBe('v1');
   });
 });

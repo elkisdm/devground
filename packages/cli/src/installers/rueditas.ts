@@ -17,7 +17,17 @@ export function install(options: InstallerOptions): InstallResult {
   const output = ops.run('npx --yes --package=@devground/rueditas devground-rueditas', targetDir);
 
   if (!delegateWrote(output)) {
-    warn('Rueditas skill skipped: .claude/skills/rueditas already exists (left untouched).');
+    // El bin avisa cuando la skill instalada no coincide con la del paquete
+    // (versión anterior o editada): se repite aquí para que no quede escondido.
+    if (output.includes('no coincide con esta versión')) {
+      warn(
+        'Rueditas: la skill instalada es distinta a esta versión (anterior o editada); no se tocó. ' +
+          'Para actualizar: borra .claude/skills/rueditas/ y corre npx @devground/rueditas ' +
+          '(el progreso en .devground/rueditas.md se conserva).',
+      );
+    } else {
+      warn('Rueditas skill skipped: .claude/skills/rueditas already exists (left untouched).');
+    }
     return 'skipped';
   }
 

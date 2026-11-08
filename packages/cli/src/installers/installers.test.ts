@@ -406,6 +406,14 @@ describe('rueditas installer', () => {
     const { ops } = makeRecordingOps({}, [], SKIPPED_OUTPUT);
     expect(rueditas.install(optionsFor(NODE_STACK, ops))).toBe('skipped');
   });
+  it('on a re-run with an outdated skill, repeats how to update it', () => {
+    const outdated =
+      '  ! La skill instalada no coincide con esta versión (1 archivo(s) distintos: rueditas/SKILL.md).\n';
+    const { ops } = makeRecordingOps({}, [], outdated);
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+    expect(rueditas.install(optionsFor(NODE_STACK, ops))).toBe('skipped');
+    expect(log.mock.calls.flat().join(' ')).toContain('npx @devground/rueditas');
+  });
 });
 
 describe('overwrite guard (honors "no sobreescribe nada existente")', () => {
