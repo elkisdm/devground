@@ -1,13 +1,29 @@
 name: Release
 
+# Publicar depende de validar: Release corre solo cuando el workflow CI terminó
+# con éxito sobre un push a main. Antes ambos arrancaban en paralelo con el mismo
+# push y un commit con CI rojo podía llegar a npm.
 on:
-  push:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
     branches: [main]
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
   release:
+    # - conclusion == success: el CI de ese commit pasó (typecheck, build, test,
+    #   coverage, lint).
+    # - event == push: un CI de pull_request nunca publica.
+    # - github.sha == head_sha: en workflow_run, github.sha es la punta ACTUAL de
+    #   main, y changesets/action trabaja sobre ella. Si llegó un commit más nuevo
+    #   mientras corría el CI, este run se salta: el del commit nuevo publicará
+    #   cuando SU CI pase. Así nunca se publica código que no pasó CI.
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.sha == github.event.workflow_run.head_sha
     runs-on: ubuntu-latest
 
     permissions:
@@ -19,6 +35,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          # El commit exacto que pasó CI (igual a github.sha por el `if` de arriba).
+          ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
