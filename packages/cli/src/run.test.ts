@@ -1,6 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import prompts from 'prompts';
-import { printStack, chooseInstallers, runInstallers, ALL_INSTALLERS, type Installer } from './run.js';
+import {
+  printStack,
+  chooseInstallers,
+  runInstallers,
+  ALL_INSTALLERS,
+  type Installer,
+} from './run.js';
 import { makeRecordingOps } from './installers/test-helpers.js';
 import type { DetectedStack, InstallerOptions } from './types.js';
 
@@ -40,8 +46,34 @@ describe('chooseInstallers', () => {
   it('--yes selects every installer without prompting', async () => {
     const result = await chooseInstallers({ yes: true }, false);
 
-    expect(result).toHaveLength(ALL_INSTALLERS.length);
+    expect(result).toHaveLength(ALL_INSTALLERS.length - 1);
+    expect(result?.map((i) => i.value)).not.toContain('rueditas');
     expect(prompts).not.toHaveBeenCalled();
+  });
+
+  it('--preset full does not install the opt-in rueditas', async () => {
+    const result = await chooseInstallers({ preset: 'full' }, false);
+
+    expect(result?.map((i) => i.value)).not.toContain('rueditas');
+  });
+
+  it('--preset rueditas selects every installer, rueditas included', async () => {
+    const result = await chooseInstallers({ preset: 'rueditas' }, false);
+
+    expect(result).toHaveLength(ALL_INSTALLERS.length);
+    expect(result?.map((i) => i.value)).toContain('rueditas');
+  });
+
+  it('the interactive menu shows rueditas unchecked and the rest checked', async () => {
+    vi.mocked(prompts).mockResolvedValue({ tools: ['prettier'] });
+
+    await chooseInstallers({}, true);
+
+    const choices = (
+      vi.mocked(prompts).mock.calls[0]?.[0] as { choices: { value: string; selected: boolean }[] }
+    ).choices;
+    expect(choices.find((c) => c.value === 'rueditas')?.selected).toBe(false);
+    expect(choices.filter((c) => c.value !== 'rueditas').every((c) => c.selected)).toBe(true);
   });
 
   it('--preset agents-only selects just the agents-md installer', async () => {
@@ -53,7 +85,8 @@ describe('chooseInstallers', () => {
   it('defaults to the full preset in a non-interactive environment with no flags', async () => {
     const result = await chooseInstallers({}, false);
 
-    expect(result).toHaveLength(ALL_INSTALLERS.length);
+    expect(result).toHaveLength(ALL_INSTALLERS.length - 1);
+    expect(result?.map((i) => i.value)).not.toContain('rueditas');
     expect(prompts).not.toHaveBeenCalled();
   });
 

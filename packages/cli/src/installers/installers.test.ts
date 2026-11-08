@@ -9,6 +9,7 @@ import * as vitest from './vitest.js';
 import * as agentsMd from './agents-md.js';
 import * as architectureGuide from './architecture-guide.js';
 import * as uiConventions from './ui-conventions.js';
+import * as rueditas from './rueditas.js';
 import type { DetectedStack, InstallerOps, InstallerOptions } from '../types.js';
 import { makeRecordingOps } from './test-helpers.js';
 
@@ -124,7 +125,9 @@ describe('eslint installer', () => {
       'eslint',
       'eslint-plugin-astro',
     ]);
-    expect(writes[0]?.content).toContain("import astroConfig from '@devground/eslint-config/astro'");
+    expect(writes[0]?.content).toContain(
+      "import astroConfig from '@devground/eslint-config/astro'",
+    );
     expect(writes[0]?.content).toContain('export default astroConfig();');
   });
 });
@@ -145,7 +148,9 @@ describe('vitest installer', () => {
     expect(writes[0]?.path).toBe('/proj/vitest.config.mjs');
     // defineConfig + spread (NOT mergeConfig) so Vitest's autoUpdate can rewrite it,
     // while still inheriting the preset's critical-path thresholds.
-    expect(writes[0]?.content).toContain("import base, { CRITICAL_THRESHOLDS } from '@devground/vitest-config'");
+    expect(writes[0]?.content).toContain(
+      "import base, { CRITICAL_THRESHOLDS } from '@devground/vitest-config'",
+    );
     expect(writes[0]?.content).toContain('defineConfig({');
     expect(writes[0]?.content).not.toContain('mergeConfig');
     expect(writes[0]?.content).toContain('...CRITICAL_THRESHOLDS');
@@ -379,6 +384,23 @@ describe('ui-conventions installer', () => {
     const { ops } = makeRecordingOps({}, [], SKIPPED_OUTPUT);
     const result = uiConventions.install(optionsFor(REACT_STACK, ops));
     expect(result).toBe('skipped');
+  });
+});
+
+describe('rueditas installer', () => {
+  it('installs in any stack: adds dep and runs the bin', () => {
+    for (const stack of [NODE_STACK, NEXT_STACK]) {
+      const { ops, devDeps, runs } = makeRecordingOps({}, [], WROTE_OUTPUT);
+      const result = rueditas.install(optionsFor(stack, ops));
+      expect(result).toBe('installed');
+      expect(devDeps[0]?.packages).toEqual(['@devground/rueditas']);
+      expect(runs[0]?.cmd).toBe('npx devground-rueditas');
+      expect(runs[0]?.cwd).toBe('/proj');
+    }
+  });
+  it('reports skipped when the bin writes nothing on a re-run', () => {
+    const { ops } = makeRecordingOps({}, [], SKIPPED_OUTPUT);
+    expect(rueditas.install(optionsFor(NODE_STACK, ops))).toBe('skipped');
   });
 });
 

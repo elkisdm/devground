@@ -27,7 +27,7 @@ program
   .name('devground-init')
   .description('Scaffold @devground development standards into any project')
   .version(pkgVersion)
-  .option('--preset <name>', 'Install preset (full | agents-only)')
+  .option('--preset <name>', 'Install preset (full | agents-only | rueditas)')
   .option('-y, --yes', 'Skip prompts, install everything')
   .action(async (opts: { preset?: string; yes?: boolean }) => {
     header(`devground-init v${pkgVersion}`);
@@ -78,7 +78,13 @@ program
     log('');
     header('Installing...');
 
-    const tally = runInstallers(selectedInstallers, options, flush, stack.packageManager, targetDir);
+    const tally = runInstallers(
+      selectedInstallers,
+      options,
+      flush,
+      stack.packageManager,
+      targetDir,
+    );
 
     log('');
     header('Done!');
@@ -95,7 +101,9 @@ program
 
 program
   .command('machine')
-  .description('Instala el estandar UNA VEZ para toda la maquina (hooks globales de git) — ADR-0034')
+  .description(
+    'Instala el estandar UNA VEZ para toda la maquina (hooks globales de git) — ADR-0034',
+  )
   .option('--roots <paths>', 'Raices cubiertas, separadas por ":" (default: ~/Developer)')
   .option('--dry-run', 'Muestra que haria, sin escribir nada')
   .action((opts: { roots?: string; dryRun?: boolean }) => {
