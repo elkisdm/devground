@@ -21,10 +21,10 @@ La revisión del 2026-11-05 encontró el toolchain detenido en la fase de consol
 
 ## Decisión
 
-**El mínimo soportado es Node 22; CI prueba 22 y 24; las versiones mayores entran por
+**El mínimo soportado es Node 22.22.1 (lint-staged 17 lo exige); CI prueba 22 y 24; las versiones mayores entran por
 Dependabot agrupadas y se migran en vez de ignorarse.**
 
-1. `.nvmrc` = 24, `engines.node` = `>=22` en la raíz y en todos los paquetes publicados.
+1. `.nvmrc` = 24, `engines.node` = `>=22.22.1` en la raíz y en todos los paquetes publicados.
    Matriz de CI [22, 24]; el release publica con Node 24. Vitest 5 pide Node `^22.12`: es el
    piso efectivo para quien use `@devground/vitest-config`.
 2. Dependabot ya no ignora mayores: las agrupa (`*-major`) para que lleguen en un PR por

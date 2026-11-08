@@ -20,10 +20,18 @@ jobs:
     name: Build & Test (Node ${{ matrix.node }})
     runs-on: ubuntu-latest
 
+    # La línea 22 se prueba en el mínimo que declaran los `engines` (22.22.1,
+    # lo que exige lint-staged 17), no en la última 22: así un piso falso
+    # rompe el CI en vez de romperle la instalación a un usuario. `node` queda
+    # como etiqueta porque es parte del nombre del check que exige main.
     strategy:
       fail-fast: false
       matrix:
-        node: [22, 24]
+        include:
+          - node: 22
+            version: 22.22.1
+          - node: 24
+            version: 24
 
     steps:
       - name: Checkout
@@ -35,7 +43,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: ${{ matrix.node }}
+          node-version: ${{ matrix.version }}
           cache: pnpm
 
       - name: Install dependencies
@@ -66,18 +74,25 @@ jobs:
       - name: Lint
         run: pnpm lint
 
-      # Seguridad de dependencias. No bloquea: hay hallazgos preexistentes en
-      # dependencias transitivas de dev; se revisan sin frenar el merge.
+      # Seguridad de dependencias: bloquea desde severidad alta. Una transitiva
+      # sin versión arreglada del padre se acota con `pnpm.overrides` en el
+      # package.json raíz; no se vuelve a apagar este paso.
       - name: Audit de dependencias
         run: pnpm audit --audit-level=high
-        continue-on-error: true
 
   # El E2E vive en el workflow CI a propósito: Release se dispara con
   # `workflow_run` del CI exitoso, así que también depende de este job.
   e2e:
-    name: E2E instalación
+    name: E2E instalación (${{ matrix.pm }})
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
+
+    # El proyecto de prueba se instala con cada gestor: el CLI elige
+    # `npm install -D` o `pnpm add -D` según el lockfile que encuentra.
+    strategy:
+      fail-fast: false
+      matrix:
+        pm: [npm, pnpm]
 
     steps:
       - name: Checkout
@@ -101,3 +116,5 @@ jobs:
       # El script configura git user por proyecto de prueba (git config local).
       - name: E2E instalación
         run: bash packages/devground/test/quickstart.e2e.sh
+        env:
+          E2E_PM: ${{ matrix.pm }}

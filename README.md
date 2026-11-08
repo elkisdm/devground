@@ -20,7 +20,7 @@
   <a href="https://www.npmjs.com/package/@devground/devground"><img src="https://img.shields.io/npm/v/@devground/devground?logo=npm&color=CB3837&label=npm" alt="npm version" /></a>
   <a href="https://github.com/elkisdm/devground/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/elkisdm/devground/ci.yml?branch=main&logo=github&label=CI" alt="CI status" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-44CC11" alt="MIT License" /></a>
-  <img src="https://img.shields.io/badge/Node-%E2%89%A522-339933?logo=node.js&logoColor=white" alt="Node 22+" />
+  <img src="https://img.shields.io/badge/Node-%E2%89%A522.22.1-339933?logo=node.js&logoColor=white" alt="Node 22.22.1+" />
 </p>
 
 </div>
@@ -191,7 +191,7 @@ devground/
 
 ## Desarrollo
 
-**Requisitos:** Node.js >= 22 (se prueba en 22 y 24), pnpm >= 10.
+**Requisitos:** Node.js >= 22.22.1 (se prueba en 22 y 24), pnpm >= 10.
 
 ```bash
 git clone https://github.com/elkisdm/devground.git
