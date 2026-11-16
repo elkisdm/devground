@@ -28,14 +28,19 @@ def escribir(path, lineas):
             f.write((l if isinstance(l, str) else json.dumps(l)) + "\n")
 
 
-def lanz(tipo, model=None, prompt="x", dias=0):
-    inp = {"prompt": prompt, "description": "d"}
+def lanz(tipo, model=None, prompt="x", dias=0, desc="d"):
+    inp = {"prompt": prompt, "description": desc}
     if tipo:
         inp["subagent_type"] = tipo
     if model:
         inp["model"] = model
     return {"type": "assistant", "timestamp": iso(dias),
             "message": {"content": [{"type": "tool_use", "name": "Agent", "input": inp}]}}
+
+
+def texto(*bloques, dias=0):
+    return {"type": "assistant", "timestamp": iso(dias),
+            "message": {"content": [{"type": "text", "text": b} for b in bloques]}}
 
 
 def turno(mid, modelo, i=0, o=0, cr=0, cw=0, dias=0):
@@ -71,15 +76,18 @@ class Base(unittest.TestCase):
                                           "haiku": {"entrada": 1.0, "salida": 5.0}, "fable": None,
                                           "cache_lectura_x": 0.1, "cache_escritura_x": 1.25}}
         for k, v in extra.items():
-            cfg[k].update(v)
+            cfg.setdefault(k, {}).update(v)
         with open(self.cfgp, "w") as f:
             json.dump(cfg, f)
 
-    def sub(self, tipo, nombre, lineas, sesion="ses1", proy="p"):
+    def sub(self, tipo, nombre, lineas, sesion="ses1", proy="p", desc=None):
         base = os.path.join(self.root, proy, sesion, "subagents", nombre)
         escribir(base + ".jsonl", lineas)
+        meta = {"agentType": tipo}
+        if desc is not None:
+            meta["description"] = desc
         with open(base + ".meta.json", "w") as f:
-            json.dump({"agentType": tipo}, f)
+            json.dump(meta, f)
 
     def main(self, lineas, sesion="ses1", proy="p"):
         escribir(os.path.join(self.root, proy, sesion + ".jsonl"), lineas)
@@ -367,6 +375,157 @@ class Hook(Base):
                     os.environ.pop(k, None)
                 else:
                     os.environ[k] = v
+
+
+class Revisiones(Base):
+    def test_a1_cuenta_revisiones_en_opus_y_no_la_busqueda(self):
+        self.main([lanz("general-purpose", "opus", desc="Revisión de módulo X")] * 3
+                  + [lanz("general-purpose", "sonnet", desc="Buscar Y")])
+        self.sub("general-purpose", "a", [turno("m1", "claude-opus-5-5", i=300)], desc="Revisión de módulo X")
+        self.sub("general-purpose", "b", [turno("m2", "claude-sonnet-5-5", i=100)], desc="Buscar Y")
+        v = self.json()["revisiones"]
+        self.assertEqual(v["por_modelo"], {"opus": 3})
+        self.assertEqual(v["lanzamientos"], 3)
+        self.assertEqual(v["tokens"], 300)
+        self.assertEqual(v["pct_tokens"], 75.0)
+        out = self.run_cli().stdout
+        self.assertIn("Revisiones y auditorías genéricas", out)
+        self.assertIn("opus: 3", out)
+
+    def test_a1_sin_tipo_y_claude_cuentan_y_sin_model_se_marca(self):
+        self.main([lanz(None, desc="Re-review final"), lanz("claude", "haiku", desc="Audit")])
+        self.assertEqual(self.json()["revisiones"]["por_modelo"], {"(sin model)": 1, "haiku": 1})
+
+    def test_m5_no_cuenta_agentes_no_genericos(self):
+        d = "Revisión de hallazgos"
+        self.main([lanz("ejecutor", desc=d), lanz("Explore", "sonnet", desc=d), lanz("planner", desc=d)])
+        for t in ("ejecutor", "Explore", "planner"):
+            self.sub(t, t, [turno("m" + t, "claude-sonnet-5-5", i=100)], desc=d)
+        v = self.json()["revisiones"]
+        self.assertEqual((v["lanzamientos"], v["tokens"], v["por_modelo"]), (0, 0, {}))
+
+    def test_m5_sentido_contrario_generico_si_cuenta(self):
+        self.main([lanz("general-purpose", "opus", desc="Revisión")])
+        self.sub("general-purpose", "g", [turno("m1", "claude-opus-5-5", i=100)], desc="Revisión")
+        v = self.json()["revisiones"]
+        self.assertEqual((v["lanzamientos"], v["tokens"]), (1, 100))
+
+    def test_subagente_sin_meta_no_entra_y_titulo_vacio_no_calza(self):
+        escribir(os.path.join(self.root, "p", "ses1", "subagents", "z.jsonl"), [turno("m1", "claude-opus-5-5", i=5)])
+        self.main([lanz("general-purpose", "opus", desc="")])
+        v = self.json()["revisiones"]
+        self.assertEqual((v["lanzamientos"], v["tokens"]), (0, 0))
+
+    def test_patron_invalido_usa_el_defecto(self):
+        self.config({"medicion": {"patron_revision": "(["}})
+        self.main([lanz("general-purpose", "opus", desc="Revisión")])
+        self.assertEqual(self.json()["revisiones"]["lanzamientos"], 1)
+
+
+class Calidad(Base):
+    def lanzar(self, arreglos):
+        self.main([lanz("ejecutor", desc="Corregir hallazgos")] * arreglos
+                  + [lanz("ejecutor", desc="Implementar")] * (10 - arreglos))
+
+    def test_a2_tres_de_diez_sobre_el_umbral(self):
+        self.config({"medicion": {"arreglos_max_por_100_ejecutores": 20}})
+        self.lanzar(3)
+        q = self.json()["calidad"]
+        self.assertEqual((q["arreglos"], q["arreglos_por_100"], q["sobre_arreglos"]), (3, 30.0, True))
+        self.assertIn("sobre el umbral", self.run_cli().stdout.split("8. Calidad")[1])
+
+    def test_a2_uno_de_diez_dentro(self):
+        self.config({"medicion": {"arreglos_max_por_100_ejecutores": 20}})
+        self.lanzar(1)
+        q = self.json()["calidad"]
+        self.assertEqual((q["arreglos_por_100"], q["sobre_arreglos"]), (10.0, False))
+        self.assertIn("dentro", self.run_cli().stdout.split("8. Calidad")[1])
+
+    def test_m6_cero_ejecutores_no_divide_ni_marca(self):
+        self.main([lanz("Explore", "sonnet", desc="Corregir")])
+        q = self.json()["calidad"]
+        self.assertIsNone(q["arreglos_por_100"])
+        self.assertFalse(q["sobre_arreglos"])
+        self.assertIn("no se calcula", self.run_cli().stdout)
+
+    def test_a2_rechazo_solo_si_es_el_ultimo_texto(self):
+        self.sub("ejecutor-critico", "a", [turno("m1", "claude-opus-5-5", i=1),
+                                           texto("Esto no es una tarea crítica, devuelvo.")])
+        self.sub("ejecutor-critico", "b", [turno("m2", "claude-opus-5-5", i=1),
+                                           texto("no es una tarea crítica"), texto("Terminé el trabajo.")])
+        self.assertEqual(self.json()["calidad"]["rechazos_critico"], 1)
+
+    def test_a2_rechazo_ultimo_elemento_de_texto_del_mensaje(self):
+        self.sub("ejecutor-critico", "a", [turno("m1", "claude-opus-5-5", i=1),
+                                           texto("no es una tarea crítica", "Hecho igual.")])
+        self.assertEqual(self.json()["calidad"]["rechazos_critico"], 0)
+
+
+class Invariantes(Base):
+    def test_a3_lista_con_fecha_y_proyecto(self):
+        self.main([lanz("ejecutor-critico", prompt="Tarea\n**Invariante:** A → B\notro"),
+                   lanz("ejecutor-critico", prompt="sin nada"), lanz("ejecutor", prompt="Invariante: C → D")],
+                  proy="proy1")
+        r = self.run_cli("--invariantes")
+        self.assertEqual(r.returncode, 0)
+        filas = r.stdout.strip().splitlines()
+        self.assertEqual(len(filas), 1)
+        fecha, proy, txt = filas[0].split("\t")
+        self.assertEqual((proy, txt), ("proy1", "A → B"))
+        self.assertRegex(fecha, r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$")
+
+    def test_a3_sin_criticos_no_imprime_y_sale_con_0(self):
+        r = self.run_cli("--invariantes")
+        self.assertEqual((r.returncode, r.stdout), (0, ""))
+
+    def test_a3_informe_muestra_solo_las_5_mas_recientes(self):
+        self.main([lanz("ejecutor-critico", prompt=f"Invariante: inv{i} → p", dias=i) for i in range(7)])
+        rec = self.json()["critico"]["invariantes_recientes"]
+        self.assertEqual([x["texto"] for x in rec], [f"inv{i} → p" for i in range(5)])
+        self.assertEqual(self.run_cli().stdout.count("Invariante reciente"), 5)
+
+
+class HookCalidad(Hook):
+    def cache_con(self, calidad, dias=0, **extra):
+        d = {"generado": iso(dias), "critico": {"pct_lanzamientos": 1.0, "pct_tokens": 1.0}}
+        if calidad is not None:
+            d["calidad"] = calidad
+        with open(self.cache, "w") as f:
+            json.dump(d, f)
+
+    def test_a4_guardar_incluye_secciones_nuevas(self):
+        self.main([lanz("ejecutor", desc="Corregir")])
+        self.run_cli("--guardar")
+        with open(self.cache) as f:
+            d = json.load(f)
+        self.assertIn("revisiones", d)
+        self.assertEqual(d["calidad"]["arreglos"], 1)
+
+    def test_a4_hook_avisa_arreglos_sobre_umbral_en_una_linea(self):
+        self.config({"medicion": {"arreglos_max_por_100_ejecutores": 20}})
+        self.cache_con({"arreglos_por_100": 30.0})
+        out, lanzado = self.hook()
+        self.assertEqual(len(out.strip().splitlines()), 1)
+        self.assertIn("30 rondas de arreglo por cada 100 ejecutores (umbral 20)", out)
+        self.assertFalse(lanzado)
+
+    def test_a4_hook_arreglos_dentro_calla(self):
+        self.cache_con({"arreglos_por_100": 10.0})
+        self.assertEqual(self.hook(), ("", False))
+
+    def test_a4_critico_tiene_prioridad(self):
+        with open(self.cache, "w") as f:
+            json.dump({"generado": iso(), "critico": {"pct_lanzamientos": 25.0, "pct_tokens": 1.0},
+                       "calidad": {"arreglos_por_100": 50.0}}, f)
+        out, _ = self.hook()
+        self.assertEqual(len(out.strip().splitlines()), 1)
+        self.assertIn("el crítico", out)
+
+    def test_a4_cache_vieja_sin_claves_nuevas_sale_con_0(self):
+        self.escribir_cache(pl=1.0, pt=1.0)
+        self.assertEqual(self.hook(), ("", False))
+        self.cache_con("raro")
+        self.assertEqual(self.hook(), ("", False))
 
 
 class Config(Base):

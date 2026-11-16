@@ -2,7 +2,7 @@
 """Medición semanal de la delegación a subagentes (ADR-0049, contrato C4).
 
 Uso:
-  delegacion-medicion.py [--dias N | --desde AAAA-MM-DD] [--json] [--guardar]
+  delegacion-medicion.py [--dias N | --desde AAAA-MM-DD] [--json] [--guardar] [--invariantes]
   delegacion-medicion.py --hook      (SessionStart: lee la caché, nunca recorre transcripts)
 
 Rutas por entorno: CLAUDE_PROJECTS, DELEGACION_CONFIG, ENCARGOS_REGISTRO,
@@ -36,6 +36,12 @@ DEFECTO = {
         "max_agentes_por_cambio": 5,
     },
     "gate": {"patron_invariante": r"(?im)^[\s>*_-]*invariante[*_]*\s*:\s*\S"},
+    "medicion": {
+        "patron_revision": r"revis|review|audit|verific|juez|judge|hallazgo|finding|qa\b",
+        "patron_arreglo": r"corregir|arregl|fix|hallazgo|finding|ronda|round",
+        "patron_rechazo_critico": r"no es una tarea cr[ií]tica",
+        "arreglos_max_por_100_ejecutores": 20,
+    },
     "precios_usd_por_millon": {
         "opus": {"entrada": 5.0, "salida": 25.0},
         "sonnet": {"entrada": 3.0, "salida": 15.0},
@@ -56,12 +62,35 @@ def cargar_config():
     try:
         with open(ruta("DELEGACION_CONFIG", "delegacion.json"), encoding="utf-8") as f:
             real = json.load(f)
-        for k in ("umbrales", "gate", "precios_usd_por_millon"):
+        for k in ("umbrales", "gate", "medicion", "precios_usd_por_millon"):
             if isinstance(real.get(k), dict):
                 cfg[k].update(real[k])
     except (OSError, ValueError):
         pass
     return cfg
+
+
+def patron_medicion(cfg, clave):
+    """Regex (sin distinguir mayúsculas) de medicion.<clave>; si no compila, el valor por defecto."""
+    try:
+        return re.compile(str(cfg["medicion"][clave]), re.I)
+    except (re.error, KeyError, TypeError):
+        return re.compile(DEFECTO["medicion"][clave], re.I)
+
+
+def umbral_arreglos(cfg):
+    v = (cfg.get("medicion") or {}).get("arreglos_max_por_100_ejecutores")
+    return v if isinstance(v, (int, float)) and not isinstance(v, bool) else DEFECTO["medicion"]["arreglos_max_por_100_ejecutores"]
+
+
+PREFIJO_INV = re.compile(r"^[\s>*_-]*invariante[*_]*\s*:[*_]*\s*", re.I)
+
+
+def linea_invariante(prompt, rx):
+    for l in str(prompt or "").splitlines():
+        if rx.search(l):
+            return PREFIJO_INV.sub("", l, count=1).strip()
+    return ""
 
 
 def parse_ts(s):
@@ -123,6 +152,9 @@ def leer_lanzamientos(root, desde, hasta, patron):
                     "tipo": inp.get("subagent_type") or "general-purpose",
                     "model": inp.get("model") or None,
                     "invariante": bool(rx.search(str(inp.get("prompt") or ""))),
+                    "linea_invariante": linea_invariante(inp.get("prompt"), rx),
+                    "descripcion": str(inp.get("description") or ""),
+                    "ts": ts,
                     "sesion": sesion,
                 })
     return out
@@ -136,16 +168,40 @@ def familia(modelo):
     return "desconocida"
 
 
-def leer_consumo(root, desde, hasta):
-    """tipo -> {turnos, familias: {fam: {tok...}}}. Un message.id cuenta una vez (M-1)."""
-    res = defaultdict(lambda: {"turnos": 0, "familias": defaultdict(lambda: dict.fromkeys(TOK, 0))})
+def ultimo_texto(path, desde, hasta):
+    """Último elemento {"type":"text"} de la última entrada assistant con texto (o None)."""
+    ultimo = None
+    for o in lineas_json(path, ('"text"',)):
+        if o.get("type") != "assistant":
+            continue
+        ts = parse_ts(o.get("timestamp"))
+        if ts is not None and not (desde <= ts <= hasta):
+            continue
+        cont = (o.get("message") or {}).get("content")
+        if not isinstance(cont, list):
+            continue
+        textos = [c.get("text") for c in cont if isinstance(c, dict) and c.get("type") == "text"
+                  and isinstance(c.get("text"), str)]
+        if textos:
+            ultimo = textos[-1]
+    return ultimo
+
+
+def leer_consumo(root, desde, hasta, rx_rev=None, rx_rechazo=None):
+    """tipo -> {turnos, familias: {fam: {tok...}}, revision_tokens, rechazos}. Un message.id cuenta una vez (M-1)."""
+    res = defaultdict(lambda: {"turnos": 0, "familias": defaultdict(lambda: dict.fromkeys(TOK, 0)),
+                               "revision_tokens": 0, "rechazos": 0})
     for p in recientes(os.path.join(root, "*", "*", "subagents", "*.jsonl"), desde):
-        tipo = "desconocido"
+        tipo, desc, generico = "desconocido", "", False
         try:
             with open(p[:-6] + ".meta.json", encoding="utf-8") as f:
-                tipo = json.load(f).get("agentType") or tipo
+                meta = json.load(f)
+            tipo = meta.get("agentType") or tipo
+            desc = str(meta.get("description") or "")
+            generico = meta.get("agentType") in (None, "", "general-purpose", "claude")
         except (OSError, ValueError, AttributeError):
             pass
+        file_tok = 0
         vistos = set()
         for o in lineas_json(p, ('"usage"',)):
             if o.get("type") != "assistant":
@@ -168,6 +224,13 @@ def leer_consumo(root, desde, hasta):
             for k in TOK:
                 v = usage.get(k)
                 fam[k] += v if isinstance(v, int) else 0
+                file_tok += v if isinstance(v, int) else 0
+        if rx_rev is not None and generico and desc and rx_rev.search(desc) and file_tok:
+            res[tipo]["revision_tokens"] += file_tok
+        if rx_rechazo is not None and tipo == "ejecutor-critico":
+            fin = ultimo_texto(p, desde, hasta)
+            if fin and rx_rechazo.search(fin):
+                res[tipo]["rechazos"] += 1
     return res
 
 
@@ -218,7 +281,9 @@ def medir(cfg, desde, hasta):
     root = os.environ.get("CLAUDE_PROJECTS") or os.path.join(HOME, ".claude", "projects")
     um, precios = cfg["umbrales"], cfg["precios_usd_por_millon"]
     lanz = leer_lanzamientos(root, desde, hasta, cfg["gate"]["patron_invariante"])
-    cons = leer_consumo(root, desde, hasta)
+    rx_rev = patron_medicion(cfg, "patron_revision")
+    rx_arr = patron_medicion(cfg, "patron_arreglo")
+    cons = leer_consumo(root, desde, hasta, rx_rev, patron_medicion(cfg, "patron_rechazo_critico"))
 
     tipos = sorted(set(l["tipo"] for l in lanz) | set(cons))
     gran_total = sum(total_tokens(cons[t]["familias"]) for t in cons)
@@ -252,6 +317,27 @@ def medir(cfg, desde, hasta):
         for l in ls:
             pm[l["model"] or "(sin model)"] += 1
         gen[t] = {"lanzamientos": len(ls), "sin_model": sum(1 for l in ls if not l["model"]), "por_modelo": dict(pm)}
+
+    rev = [l for l in lanz if l["tipo"] in ("general-purpose", "claude") and l["descripcion"]
+           and rx_rev.search(l["descripcion"])]
+    rev_modelo = defaultdict(int)
+    for l in rev:
+        rev_modelo[l["model"] or "(sin model)"] += 1
+    rev_tok = sum(c["revision_tokens"] for c in cons.values())
+    revisiones = {"lanzamientos": len(rev), "por_modelo": dict(rev_modelo), "tokens": rev_tok,
+                  "pct_tokens": round(100.0 * rev_tok / gran_total, 1) if gran_total else None}
+
+    n_ej = sum(n_l.values())
+    arreglos = sum(1 for l in lanz if l["tipo"] in EJECUTORES and l["descripcion"] and rx_arr.search(l["descripcion"]))
+    por100 = None if not n_ej else round(100.0 * arreglos / n_ej, 1)  # M-6
+    umb_arr = umbral_arreglos(cfg)
+    calidad = {"arreglos": arreglos, "lanzamientos_ejecutores": n_ej, "arreglos_por_100": por100,
+               "umbral_arreglos_por_100": umb_arr, "sobre_arreglos": por100 is not None and por100 > umb_arr,
+               "rechazos_critico": cons["ejecutor-critico"]["rechazos"] if "ejecutor-critico" in cons else 0}
+
+    recientes_inv = sorted((l for l in crit if l["linea_invariante"]), key=lambda l: l["ts"], reverse=True)[:5]
+    invariantes_recientes = [{"fecha": chile(l["ts"]), "proyecto": os.path.basename(os.path.dirname(l["sesion"])),
+                              "texto": l["linea_invariante"]} for l in recientes_inv]
 
     ses = defaultdict(int)
     for l in lanz:
@@ -290,12 +376,25 @@ def medir(cfg, desde, hasta):
             "pct_tokens": pt, "umbral_tokens": um["critico_pct_tokens"], "sobre_tokens": sobre_t,
             "con_invariante": sum(1 for l in crit if l["invariante"]),
             "sin_invariante": sum(1 for l in crit if not l["invariante"]),
+            "invariantes_recientes": invariantes_recientes,
         },
+        "revisiones": revisiones,
+        "calidad": calidad,
         "genericos": gen,
         "sesiones_sobre_tope": {"sesiones": sobre_tope, "tope": um["max_agentes_por_cambio"], "aproximado": True},
         "externos": externos,
         "gate": {k: dict(v) for k, v in sorted(gate.items())},
     }
+
+
+def listar_invariantes(cfg, desde, hasta):
+    """A-3: una línea por crítico con invariante: fecha (Chile), proyecto y texto."""
+    root = os.environ.get("CLAUDE_PROJECTS") or os.path.join(HOME, ".claude", "projects")
+    lanz = leer_lanzamientos(root, desde, hasta, cfg["gate"]["patron_invariante"])
+    filas = sorted((l for l in lanz if l["tipo"] == "ejecutor-critico" and l["linea_invariante"]),
+                   key=lambda l: l["ts"])
+    return [f"{chile(l['ts'])}\t{os.path.basename(os.path.dirname(l['sesion']))}\t{l['linea_invariante']}"
+            for l in filas]
 
 
 # ---------------------------------------------------------------- informe
@@ -323,6 +422,8 @@ def texto(r):
           f"  Parte de los tokens de ejecutores: {pct(c['pct_tokens'])} (umbral {c['umbral_tokens']} %): "
           + ("sobre el umbral" if c["sobre_tokens"] else "dentro"),
           f"  Críticos con invariante: {c['con_invariante']}; sin invariante: {c['sin_invariante']}"]
+    for i in c.get("invariantes_recientes", []):
+        L.append(f"  Invariante reciente: {i['fecha']} {i['proyecto']}: {i['texto']}")
     L += ["", "3. Agentes genéricos por modelo"]
     for t, g in r["genericos"].items():
         mods = ", ".join(f"{m}: {n}" for m, n in sorted(g["por_modelo"].items())) or "-"
@@ -341,6 +442,18 @@ def texto(r):
         L.append("  Sin decisiones registradas en la ventana")
     for regla, d in r["gate"].items():
         L.append(f"  {regla}: " + ", ".join(f"{k}: {n}" for k, n in sorted(d.items())))
+    v = r["revisiones"]
+    mods = ", ".join(f"{m}: {n}" for m, n in sorted(v["por_modelo"].items())) or "-"
+    L += ["", "7. Revisiones y auditorías genéricas",
+          f"  {v['lanzamientos']} lanz. ({mods}); {v['tokens']:,} tokens, {pct(v['pct_tokens'])} de los tokens de subagentes"]
+    q = r["calidad"]
+    L += ["", "8. Calidad"]
+    if q["arreglos_por_100"] is None:
+        L.append(f"  Rondas de arreglo: {q['arreglos']}; sin lanzamientos de ejecutores, no se calcula la proporción")
+    else:
+        L.append(f"  Rondas de arreglo: {q['arreglos']} ({q['arreglos_por_100']:g} por cada 100 ejecutores, umbral "
+                 f"{q['umbral_arreglos_por_100']:g}): " + ("sobre el umbral" if q["sobre_arreglos"] else "dentro"))
+    L.append(f"  Rechazos del crítico («no es una tarea crítica»): {q['rechazos_critico']}")
     return "\n".join(L)
 
 
@@ -371,6 +484,12 @@ def hook(cfg):
         elif isinstance(pt, (int, float)) and pt > um["critico_pct_tokens"]:
             n, m, que = pt, um["critico_pct_tokens"], "de los tokens de los ejecutores"
         else:
+            cal = datos.get("calidad")
+            a = cal.get("arreglos_por_100") if isinstance(cal, dict) else None
+            u = umbral_arreglos(cfg)
+            if isinstance(a, (int, float)) and a > u:
+                print(f"Delegación: {a:g} rondas de arreglo por cada 100 ejecutores (umbral {u:g}). "
+                      "Detalle: python3 ~/.claude/scripts/delegacion-medicion.py")
             return
         print(f"Delegación: el crítico es {n:g} % {que} (umbral {m:g} %). "
               "Detalle: python3 ~/.claude/scripts/delegacion-medicion.py")
@@ -401,6 +520,7 @@ def main(argv=None):
     ap.add_argument("--json", action="store_true")
     ap.add_argument("--guardar", action="store_true")
     ap.add_argument("--hook", action="store_true")
+    ap.add_argument("--invariantes", action="store_true")
     a = ap.parse_args(argv)
     cfg = cargar_config()
     if a.hook:
@@ -418,6 +538,10 @@ def main(argv=None):
             return 2
     else:
         desde = hasta - timedelta(days=a.dias or cfg["umbrales"]["ventana_dias"])
+    if a.invariantes:
+        for fila in listar_invariantes(cfg, desde, hasta):
+            print(fila)
+        return 0
     r = medir(cfg, desde, hasta)
     if a.guardar:
         r["generado"] = datetime.now(CHILE).isoformat(timespec="seconds")

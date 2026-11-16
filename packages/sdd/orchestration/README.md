@@ -50,6 +50,14 @@ copia. Los hooks se registran con el extracto de `settings.hooks.json`.
 **Apagar el gate:** `gate.modo = "apagado"` (o `"avisar"`) en `delegacion.json`, o
 `DELEGACION_GATE=off` por sesión. No hace falta tocar nada más.
 
+**Contrapesos de la medición.** El informe incluye además las revisiones y auditorías lanzadas
+con agentes genéricos (por modelo y tokens), las rondas de arreglo por cada 100 ejecutores
+contra su umbral, los rechazos del crítico y, con `--invariantes`, el texto de cada invariante
+para revisar una muestra. `encargar.py disponibles` recuerda el último estado de cupo de cada
+ejecutor durante `ejecutores_externos_memoria_cupo_horas`. Los patrones y umbrales viven en
+la clave `medicion` de `delegacion.json`.
+
+
 ## Modelo de tiers
 
 | Tier                                           | Ruteo                                                                                                                                                                             |

@@ -64,5 +64,13 @@
       "sirve_para": "lógica autocontenida con pruebas, de varios archivos; encargos largos",
       "no_sirve_para": "revisiones de seguridad planteadas como ataque; lo que necesita servidor o navegador"
     }
-  }
+  },
+  "medicion": {
+    "_nota": "Patrones (regex, sin distinguir mayúsculas) sobre el título de la tarea delegada.",
+    "patron_revision": "revis|review|audit|verific|juez|judge|hallazgo|finding|qa\\b",
+    "patron_arreglo": "corregir|arregl|fix|hallazgo|finding|ronda|round",
+    "patron_rechazo_critico": "no es una tarea cr[ií]tica",
+    "arreglos_max_por_100_ejecutores": 20
+  },
+  "ejecutores_externos_memoria_cupo_horas": 24
 }

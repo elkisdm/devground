@@ -478,6 +478,85 @@ class Opciones(Base):
         self.assertEqual(filas["codex-falso"]["cupo_pct"], 90.0)
         self.assertEqual(filas["falso"]["sirve_para"], "pruebas")
 
+    def fila_registro(self, ej, estado, horas_atras, corta=False):
+        import datetime
+        from zoneinfo import ZoneInfo
+        f = (datetime.datetime.now(ZoneInfo("America/Santiago")) - datetime.timedelta(hours=horas_atras)).isoformat()
+        cols = [f, ej, "n", "r", estado] if corta else [f, ej, "n", "r", estado, "1", "", "", "", "3"]
+        ruta = self.env["ENCARGOS_REGISTRO"]
+        nuevo = not os.path.exists(ruta)
+        with open(ruta, "a") as fh:
+            fh.write(("fecha\tejecutor\tnombre\trepo\testado\n" if nuevo else "") + "\t".join(cols) + "\n")
+        return f
+
+    def disponibles(self):
+        r = subprocess.run([sys.executable, SCRIPT, "disponibles", "--json"], capture_output=True,
+                           text=True, env=self.env)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        return {f["ejecutor"]: f for f in json.loads(r.stdout)}
+
+    def test_B_cupo_reciente_no_apto_con_fecha(self):
+        self.ejecutor("x", OK)
+        self.fila_registro("x", "cupo", 1)
+        f = self.disponibles()["x"]
+        self.assertFalse(f["apto"])
+        self.assertEqual(f["ultimo_estado"], "cupo")
+        self.assertIn("ultimo_fecha", f)
+        r = subprocess.run([sys.executable, SCRIPT, "disponibles"], capture_output=True, text=True, env=self.env)
+        self.assertIn("no apto", r.stdout)
+        self.assertIn(f"sin cupo en el último encargo ({f['ultimo_fecha']})", r.stdout)
+
+    def test_B_no_responde_reciente_fila_corta_tambien_cuenta(self):
+        self.ejecutor("x", OK)
+        self.fila_registro("x", "no-responde", 2, corta=True)
+        self.assertFalse(self.disponibles()["x"]["apto"])
+
+    def test_B_cupo_viejo_fuera_de_memoria_es_apto(self):
+        self.ejecutor("x", OK)
+        self.fila_registro("x", "cupo", 30)
+        f = self.disponibles()["x"]
+        self.assertTrue(f["apto"])
+        self.assertNotIn("ultimo_estado", f)
+
+    def test_B_ok_posterior_lo_vuelve_apto(self):
+        self.ejecutor("x", OK)
+        self.fila_registro("x", "cupo", 3)
+        self.fila_registro("x", "ok", 1)
+        self.assertTrue(self.disponibles()["x"]["apto"])
+
+    def test_B_memoria_es_por_ejecutor(self):
+        self.ejecutor("x", OK)
+        self.ejecutor("y", OK)
+        self.fila_registro("x", "cupo", 1)
+        d = self.disponibles()
+        self.assertFalse(d["x"]["apto"])
+        self.assertTrue(d["y"]["apto"])
+
+    def test_B_registro_corrupto_decide_como_antes(self):
+        self.ejecutor("x", OK)
+        with open(self.env["ENCARGOS_REGISTRO"], "w") as fh:
+            fh.write("basura\n\t\t\n\x00\xff x\tx\tx\tx\tcupo\nno-fecha\tx\tn\tr\tcupo\n")
+        self.assertTrue(self.disponibles()["x"]["apto"])
+
+    def test_B_registro_ausente_es_apto(self):
+        self.ejecutor("x", OK)
+        self.assertFalse(os.path.exists(self.env["ENCARGOS_REGISTRO"]))
+        self.assertTrue(self.disponibles()["x"]["apto"])
+
+    def test_B_memoria_configurable_en_horas(self):
+        self.ejecutor("x", OK)
+        self.config["ejecutores_externos_memoria_cupo_horas"] = 0.5
+        with open(self.cfg_ruta, "w") as fh:
+            json.dump(self.config, fh)
+        self.fila_registro("x", "cupo", 1)
+        self.assertTrue(self.disponibles()["x"]["apto"])
+
+    def test_E6_lanzar_no_consulta_la_memoria_de_cupo(self):
+        ej = self.ejecutor("falso", OK)
+        self.fila_registro("falso", "cupo", 0.01)
+        r = self.lanzar(ej)
+        self.assertEqual((r.codigo, r.datos["estado"]), (0, "ok"), r.err)
+
     def test_cupo_muestra_plan_y_porcentaje(self):
         self.sesion_codex(42.5, "2026-11-16T15:00:00Z")
         r = subprocess.run([sys.executable, SCRIPT, "cupo"], capture_output=True, text=True, env=self.env)

@@ -46,6 +46,7 @@ CABECERA_REGISTRO = ["fecha", "ejecutor", "nombre", "repo", "estado", "duracion_
 DEFAULTS = {
     "umbrales": {"ventana_dias": 7, "critico_pct_lanzamientos": 12,
                  "critico_pct_tokens": 30, "max_agentes_por_cambio": 5},
+    "ejecutores_externos_memoria_cupo_horas": 24,
     "ejecutores_externos": {
         "codex": {
             "activo": True,
@@ -506,8 +507,37 @@ def cmd_lanzar(a):
 
 # ---------- disponibles / cupo ----------
 
+def ultimo_registro(ejecutor, horas):
+    """(estado, fecha) de la última fila del ejecutor en el registro si cae dentro de `horas`; si no, None.
+    Solo informa a `disponibles`: `lanzar` nunca la consulta. Registro ausente o filas malas se ignoran."""
+    ultima = None
+    try:
+        with open(ruta_env("ENCARGOS_REGISTRO", "~/.claude/encargos.tsv"), errors="ignore") as f:
+            for linea in f:
+                c = linea.rstrip("\n").split("\t")
+                if len(c) < 5 or c[1] != ejecutor:
+                    continue
+                try:
+                    fecha = datetime.datetime.fromisoformat(c[0])
+                except ValueError:
+                    continue
+                if fecha.tzinfo is None:
+                    fecha = fecha.replace(tzinfo=CHILE)
+                if ultima is None or fecha >= ultima[1]:
+                    ultima = (c[4], fecha)
+    except OSError:
+        return None
+    if ultima and ahora() - ultima[1] <= datetime.timedelta(hours=horas):
+        return ultima
+    return None
+
+
 def cmd_disponibles(a):
     cfg = cargar_config()
+    try:
+        horas = float(cfg["ejecutores_externos_memoria_cupo_horas"])
+    except (TypeError, ValueError):
+        horas = DEFAULTS["ejecutores_externos_memoria_cupo_horas"]
     filas = []
     for nombre, ej in cfg["ejecutores_externos"].items():
         if not isinstance(ej, dict) or not ej.get("activo"):
@@ -517,16 +547,23 @@ def cmd_disponibles(a):
         pct = porcentaje_codex() if ej.get("cupo") == "codex" else None
         maximo = ej.get("cupo_max_pct")
         sobre = pct is not None and maximo is not None and pct >= maximo
-        filas.append({"ejecutor": nombre, "binario": binario, "presente": presente,
-                      "cupo_pct": pct, "cupo_max_pct": maximo, "apto": presente and not sobre,
-                      "sirve_para": ej.get("sirve_para", ""), "no_sirve_para": ej.get("no_sirve_para", "")})
+        ult = ultimo_registro(nombre, horas)
+        sin_cupo = ult is not None and ult[0] in ("cupo", "no-responde")
+        fila = {"ejecutor": nombre, "binario": binario, "presente": presente,
+                "cupo_pct": pct, "cupo_max_pct": maximo, "apto": presente and not sobre and not sin_cupo,
+                "sirve_para": ej.get("sirve_para", ""), "no_sirve_para": ej.get("no_sirve_para", "")}
+        if sin_cupo:
+            fila["ultimo_estado"] = ult[0]
+            fila["ultimo_fecha"] = ult[1].astimezone(CHILE).strftime("%d-%m %H:%M")
+        filas.append(fila)
     if a.json:
         print(json.dumps(filas, ensure_ascii=False, indent=2))
         return 0
     for f in filas:
         cupo = "" if f["cupo_pct"] is None else f" · cupo {f['cupo_pct']} % (máximo {f['cupo_max_pct']} %)"
         binario = "binario presente" if f["presente"] else f"sin binario `{f['binario']}`"
-        print(f"{f['ejecutor']}: {'apto' if f['apto'] else 'no apto'} · {binario}{cupo}")
+        memoria = f" · sin cupo en el último encargo ({f['ultimo_fecha']})" if "ultimo_fecha" in f else ""
+        print(f"{f['ejecutor']}: {'apto' if f['apto'] else 'no apto'} · {binario}{cupo}{memoria}")
         print(f"  sirve para: {f['sirve_para']}")
         print(f"  no sirve para: {f['no_sirve_para']}")
     return 0
