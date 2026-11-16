@@ -1,0 +1,76 @@
+{
+  "_nota": "Parámetros de la delegación (ADR-0049). Cópialo a ~/.claude/delegacion.json; lo leen encargar.py, delegacion-gate.py y delegacion-medicion.py. Todo valor es inicial y se ajusta sin tocar código.",
+  "umbrales": {
+    "ventana_dias": 7,
+    "critico_pct_lanzamientos": 12,
+    "critico_pct_tokens": 30,
+    "max_agentes_por_cambio": 5
+  },
+  "gate": {
+    "modo": "bloquear",
+    "_modo": "bloquear | avisar | apagado",
+    "exigir_modelo_en": [
+      "general-purpose",
+      "Explore",
+      "claude",
+      ""
+    ],
+    "exigir_invariante_en": [
+      "ejecutor-critico"
+    ],
+    "patron_invariante": "(?im)^[\\s>*_-]*invariante[*_]*\\s*:\\s*\\S"
+  },
+  "precios_usd_por_millon": {
+    "_nota": "Indicador para comparar, no desembolso. null = sin precio verificado: el costo de ese modelo se reporta como «pendiente» y manda el conteo de tokens.",
+    "opus": {
+      "entrada": 5.0,
+      "salida": 25.0
+    },
+    "sonnet": {
+      "entrada": 3.0,
+      "salida": 15.0
+    },
+    "haiku": {
+      "entrada": 1.0,
+      "salida": 5.0
+    },
+    "fable": null,
+    "cache_lectura_x": 0.1,
+    "cache_escritura_x": 1.25
+  },
+  "ejecutores_externos": {
+    "codex": {
+      "activo": true,
+      "comando": [
+        "codex",
+        "exec",
+        "-s",
+        "{sandbox}",
+        "-C",
+        "{dir}",
+        "--output-last-message",
+        "{informe}",
+        "{encargo}"
+      ],
+      "informe": "archivo",
+      "sandbox": "workspace-write",
+      "errores_cupo": [
+        "^ERROR: You’ve hit",
+        "^ERROR: You've hit"
+      ],
+      "cupo": "codex",
+      "cupo_max_pct": 85,
+      "sonda": false,
+      "sirve_para": "lógica autocontenida con pruebas, de varios archivos; encargos largos",
+      "no_sirve_para": "revisiones de seguridad planteadas como ataque; lo que necesita servidor o navegador"
+    }
+  },
+  "medicion": {
+    "_nota": "Patrones (regex, sin distinguir mayúsculas) sobre el título de la tarea delegada.",
+    "patron_revision": "revis|review|audit|verific|juez|judge|hallazgo|finding|qa\\b",
+    "patron_arreglo": "corregir|arregl|fix|hallazgo|finding|ronda|round",
+    "patron_rechazo_critico": "no es una tarea cr[ií]tica",
+    "arreglos_max_por_100_ejecutores": 20
+  },
+  "ejecutores_externos_memoria_cupo_horas": 24
+}

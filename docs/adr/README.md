@@ -63,6 +63,7 @@ siguiente número de la secuencia, rellénalo y añádelo al índice de abajo.
 - [ADR-0046 — Núcleo público y capa de organización](0046-nucleo-publico-y-capa-de-organizacion.md) (Aceptado)
 - [ADR-0047 — Retiro de paquetes sin consumidores](0047-retiro-de-paquetes-sin-consumidores.md) (Aceptado)
 - [ADR-0048 — Modo rueditas (guía opt-in para quien empieza)](0048-modo-rueditas.md) (Aceptado)
+- [ADR-0049 — El ejecutor crítico se gana con un invariante; carril de ejecutores externos](0049-critico-por-invariante-y-ejecutores-externos.md) (Aceptado)
 
 > `knowledge/adr/` es otra serie (conocimiento de arquitectura general). Para no confundir, se cita como KB-0001…KB-0012; los de esta carpeta, como ADR-NNNN.
 

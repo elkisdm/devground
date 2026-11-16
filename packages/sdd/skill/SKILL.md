@@ -18,7 +18,7 @@ description: >
 license: MIT
 metadata:
   author: edaza
-  version: "0.9"
+  version: "0.10"
 ---
 
 ## What this is
@@ -307,10 +307,16 @@ on Tier 2 (no Tasks section) group **Files & routes to touch** into tasks right 
 ### Ejecución
 | # | Tarea | Destino | Estimación | Agente | Modelo · esfuerzo | Archivos | Entrega |
 |---|-------|---------|------------|--------|-------------------|----------|---------|
-| 1 | Migración + modelo | api | 2h | ejecutor-critico | opus · high | `db/0042_*.sql`, `models/user.ts` | diff + tests verdes |
-| 2 | Endpoint y validación | api | 2h | ejecutor | sonnet · medium | `api/users.ts` | diff + tests verdes |
-| 3 | README y changelog | api | 30m | ejecutor-mecanico | haiku · low | `README.md` | diff |
+| 1 | Guard de acceso por espacio | api | 2h | ejecutor-critico | opus · high | `api/guards/space.ts` | diff + tests verdes |
+| 2 | Endpoint y validación | api | 2h | ejecutor | sonnet · medium | `api/orders.ts` | diff + tests verdes |
+| 3 | Exportación a CSV | api | 1h | codex → ejecutor | del ejecutor | `api/export.ts` | parche + tests verdes |
+| 4 | README y changelog | api | 30m | ejecutor-mecanico | haiku · low | `README.md` | diff |
+
+Invariante (fila 1): un usuario de otro espacio nunca lee este pedido → prueba con dos espacios
 ```
+
+A row may name `ejecutor-critico` only with its `Invariante (fila N): …` line right under
+the table (see the critical-executor rule below, ADR-0049).
 
 **Destino and Estimación** are optional columns: include them only when an overlay asks
 for them (e.g. a work tracker that estimates per platform); otherwise leave them out.
@@ -323,8 +329,10 @@ own definition (`~/.claude/agents/`, ADR-0044); this table summarizes it:
 | Find / read / map code | `Explore` (pass `model: "sonnet"`) | sonnet · default |
 | Mechanical: docs, rename, move, bump, format | `ejecutor-mecanico` | haiku · low |
 | Logic: feat, fix, refactor, tests | `ejecutor` | sonnet · medium |
-| Logic on high risk: auth/security, money, irreversible migration, external contract, concurrency | `ejecutor-critico` | opus · high |
-| Judgment: design, decision, integration | **the orchestrator itself** — it already holds the brief | session model |
+| Delicate logic: state with several paths, cross-module changes, recoverable concurrency | `ejecutor` with `effort: "high"` in the call | sonnet · high |
+| Critical core: the task protects a named invariant of auth/security, money, irreversible data or an external contract | `ejecutor-critico` | opus · high |
+| Self-contained task the overlay allows to hand out | external executor from the overlay | the executor's own |
+| Judgment: design, decision, integration, resolving merges | **the orchestrator itself** — it already holds the brief | session model |
 
 The effort lives in each agent's definition (`~/.claude/agents/`), which is why the
 table names agents, not just models. If an agent is not installed, use `general-purpose`
@@ -333,17 +341,53 @@ with the row's `model` and say so in one line (its effort is then the default).
 Rules — they exist because delegation by default once launched 232 agents nobody asked
 for (ADR-0030):
 
-1. **At most 5 agents per change.** More tasks than that → merge the small ones.
+1. **At most 5 agents per change.** More tasks than that → merge the small ones **of the
+   same nature**; never merge an ordinary task into a critical row to save an agent
+   (ADR-0049). An external executor counts toward the 5.
 2. **Tasks that touch the same files run in sequence**; only disjoint tasks run in
    parallel (one message, several `Agent` calls).
 3. **No review agents.** Review stays opt-in (ADR-0039).
 4. **The plan is visible.** The table is part of the brief the user sees; Tier 2 proceeds
    unless the user objects, Tier 3 presents it first — same rule as the rest of the brief.
 
+**The critical-executor rule (ADR-0049, amends ADR-0040 and ADR-0044).** The critical
+executor is earned with an invariant, not with a topic.
+
+- A row may name `ejecutor-critico` only if, under the table, there is a line
+  `Invariante (fila N): <qué debe cumplirse siempre> → <prueba que lo rompe>`, and that same
+  `Invariante: …` line goes in the agent's task. "Touches auth" or "is in the payments
+  module" is not an invariant; "a user from another space never reads this order → test
+  with two spaces" is.
+- The critical agent gets the core, not the package: the migration, the guard, the
+  calculation. The endpoint, UI and copy around it are another row, for `ejecutor`.
+- Never to the critical agent: UI and styling, documentation, loose tests with no new
+  logic, rounds of fixing review findings (they go back to the agent that wrote the code,
+  or to `ejecutor`), nor resolving merges (that is integration: the orchestrator does it).
+- Budget: at most one critical row on Tier 2 and two on Tier 3. More than that is
+  justified in one line in the brief.
+
+**External lane (generic contract; the overlay says who the executors are).**
+
+- A row may name an external executor (another agent tool with its own quota) only if the
+  overlay declares it and the task meets all four conditions: self-contained (understood
+  without this conversation), files disjoint from the other rows, verifiable by tests the
+  orchestrator can run, and no secrets or outward-facing actions.
+- A critical row never goes out, nor does a task that needs credentials, a real database
+  or MCP.
+- Each external row names its fallback in the Agent column: `codex → ejecutor`. If the task
+  comes back with no quota, no report or no changes, the orchestrator dispatches the
+  fallback with the same task; it does not retry outside.
+- The task goes out through the script the overlay names, never by building the command by
+  hand: the script creates the work tree, blocks push, checks quota and returns status,
+  report and patch.
+- External work is data until the orchestrator verifies it: read the report and the
+  `diffstat`, apply the patch, run the row's tests (and look at any visual change in a
+  browser) before integrating it.
+
 **What each agent gets** — self-contained, because it does not inherit this
 conversation: the change's goal in one line; its task; the exact files; the scenarios,
-invariants and pre-mortem rows that belong to its task; the tests it must write; "do not
-commit". **What it returns**, in at most 15 lines: files changed, the test command and its
+invariants and pre-mortem rows that belong to its task (a critical agent's task carries the
+`Invariante: …` line); the tests it must write; "do not commit". **What it returns**, in at most 15 lines: files changed, the test command and its
 real result, and any deviation from the brief.
 
 **The orchestrator** dispatches, then integrates: it reads the summaries and `git diff
@@ -549,7 +593,7 @@ requested. Never write a `review` event for a review that did not run.
  "premortem":{"na":1}|false|"n/a",
  "spec_review":{"gaps_found":3,"gaps_adopted":2}|"n/a",
  "tests":"verified|added|updated|n/a|deferred",
- "spec_flow_version":"0.9"}
+ "spec_flow_version":"0.10"}
 ```
 
 `premortem` from Tier 2 up is `{"na": <rows answered n/a, 0–5>}` when the section was
@@ -569,7 +613,7 @@ here, not JSON; a line that doesn't parse is silently dropped.)
  "findings":10,"findings_capped":true,"found_total":13,
  "induced":0,"resolved":11,"open":2,"redesigned":false,
  "tests":"verified|added|updated|n/a|deferred",
- "spec_flow_version":"0.9"}
+ "spec_flow_version":"0.10"}
 ```
 
 **`findings` is the first pass only** — the one number comparable across changes;
@@ -612,7 +656,7 @@ user corrects it, or rework proves it — append a second line tied to the same 
 {"event":"assumption_reversed","ts":"<ISO-8601 with tz>","date":"<YYYY-MM-DD>",
  "change":"<same kebab-name as the spec event>","task_id":2,
  "assumption":"<the inferred thing that was wrong>",
- "cost":"trivial|rework|redesign","spec_flow_version":"0.9"}
+ "cost":"trivial|rework|redesign","spec_flow_version":"0.10"}
 ```
 
 This is what makes "asked 0 questions, built the wrong thing" register as the failure it is,
@@ -684,6 +728,10 @@ is a perfectly good spec for small work.
   instead of dispatching the execution plan — the orchestrator's context is the cost.
 - ❌ More than 5 agents on one change, parallel agents on the same files, or an agent
   without an explicit model.
+- ❌ Assigning `ejecutor-critico` by topic, with no named invariant (ADR-0049).
+- ❌ Sending the critical agent a findings-fix round or a merge resolution.
+- ❌ Building an external executor's command by hand, or integrating its patch without
+  running the tests.
 - ❌ A pre-mortem of mostly `n/a` on a change that touches a data path with more than one
   entry or an external dependency, or a **Consumidores** row written without a grep — that's the section filled to comply, and the design
   gate should catch it.

@@ -1,6 +1,7 @@
 # ADR-0044: Gobierno de agentes: seguridad, costo y modelos
 
 - **Estado**: Aceptado
+- **Enmendado por**: [ADR-0049](0049-critico-por-invariante-y-ejecutores-externos.md): el esfuerzo de `ejecutor` puede subirse en la llamada.
 - **Fecha**: 2026-11-05
 - **Decisor**: edaza
 - **Aplica a**: plantilla `AGENTS.md` (`@devground/agents-md`), agentes `ejecutor*` (`@devground/sdd`), skill spec-flow (Paso 3.5), skill `model-orchestrator`

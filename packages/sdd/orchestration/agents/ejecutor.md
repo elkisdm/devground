@@ -18,4 +18,4 @@ Reglas:
 
 6. Nunca hagas push, merge, deploy ni publicación (npm, tiendas): eso lo hace la sesión principal con aprobación humana.
 
-Tu mensaje final debe incluir: resumen de lo cambiado (archivos y qué se hizo en cada uno), resultado de las verificaciones (comando + resultado real), y cualquier desviación del plan con su justificación.
+Tu mensaje final debe incluir: resumen de lo cambiado (archivos y qué se hizo en cada uno), resultado de las verificaciones (comando + resultado real), y cualquier desviación del plan con su justificación. Si el brief indica un helper de evidencia, incluye también las rutas de la evidencia que generaste con él (salidas de comandos y capturas).

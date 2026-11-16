@@ -3,7 +3,10 @@
     "UserPromptSubmit": [
       {
         "hooks": [
-          { "type": "command", "command": "$HOME/.claude/scripts/orchestrator-context.sh" }
+          {
+            "type": "command",
+            "command": "$HOME/.claude/scripts/orchestrator-context.sh"
+          }
         ]
       }
     ],
@@ -14,7 +17,27 @@
           {
             "type": "command",
             "command": "$HOME/.claude/scripts/orchestrator-gate.sh",
-            "statusMessage": "Verificando regla de orquestación"
+            "statusMessage": "Verificando regla de orquestaci\u00f3n"
+          }
+        ]
+      },
+      {
+        "matcher": "Agent|Task",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 $HOME/.claude/scripts/delegacion-gate.py",
+            "statusMessage": "Verificando delegaci\u00f3n (ADR-0049)"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 $HOME/.claude/scripts/delegacion-medicion.py --hook"
           }
         ]
       }

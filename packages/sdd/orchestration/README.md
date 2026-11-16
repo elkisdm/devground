@@ -24,9 +24,39 @@ Todo lo que sigue describe qué cambia si activas la capa a propósito.
 | `scripts/orchestrator-context.sh` | Hook `UserPromptSubmit`. Activación: si el modelo de sesión es orquestador, inyecta el contexto de la regla y el modelo de tiers en cada turno; en Sonnet/Haiku queda en silencio.                                                                                                             |
 | `agents/ejecutor.md`              | Subagente Sonnet, esfuerzo `medium`. Implementa lógica (feat, fix, refactor, tests) a partir de su porción del brief.                                                                                                                                                                          |
 | `agents/ejecutor-mecanico.md`     | Subagente Haiku, esfuerzo `low`. Trabajo determinista sin lógica nueva: docs, renombrar, bump, formato.                                                                                                                                                                                        |
-| `agents/ejecutor-critico.md`      | Subagente Opus, esfuerzo `high`. Implementación de riesgo alto: auth, dinero, migraciones irreversibles, contratos externos.                                                                                                                                                                   |
+| `agents/ejecutor-critico.md`      | Subagente Opus, esfuerzo `high`. Núcleo de riesgo de un cambio: solo con un invariante nombrado (`Invariante: …`) de auth/seguridad, dinero, dato irreversible o contrato externo (ADR-0049). |
 | `agents/planner.md`               | Subagente Opus, esfuerzo `high`. Diseña la implementación de un cambio Tier 2: archivos a tocar, riesgos, criterios de verificación. Solo lectura.                                                                                                                                             |
 | `agents/planner-deep.md`          | Subagente Opus, esfuerzo `xhigh`. Igual que `planner` pero para Tier 3 o riesgo alto (migraciones, cambios irreversibles, contratos externos, seguridad, cambios que cruzan varios módulos). Solo lectura.                                                                                     |
+
+## Delegación medida (ADR-0049)
+
+Tres piezas en `scripts/`, con sus pruebas en `test/` (`python3 test/<archivo>.test.py`):
+
+- `encargar.py`: único punto de entrada a un ejecutor externo (otra herramienta de agentes con
+  su propio cupo). Crea un árbol de trabajo propio, bloquea el push del repo mientras corre,
+  comprueba el cupo y devuelve estado (`ok`, `cupo`, `no-responde`, `sin-informe`,
+  `sin-cambios`, `commit-indebido`, `tiempo`, `fallo`), informe y parche. La plantilla
+  `plantillas/encargo-reglas.md` se agrega a cada encargo.
+- `delegacion-gate.py`: hook `PreToolUse` (matcher `Agent|Task`). Niega un `ejecutor-critico`
+  sin línea `Invariante:` y un agente genérico sin `model`; falla abierto.
+- `delegacion-medicion.py`: informe semanal por agente (lanzamientos, turnos, tokens), la
+  proporción del crítico contra sus umbrales y los encargos externos; con `--hook`
+  (`SessionStart`) avisa en una línea si el crítico pasa los umbrales.
+
+Los parámetros (umbrales, modo del gate, precios, registro de ejecutores externos) viven en
+`~/.claude/delegacion.json`; `delegacion.example.json` es el punto de partida y el sync no lo
+copia. Los hooks se registran con el extracto de `settings.hooks.json`.
+
+**Apagar el gate:** `gate.modo = "apagado"` (o `"avisar"`) en `delegacion.json`, o
+`DELEGACION_GATE=off` por sesión. No hace falta tocar nada más.
+
+**Contrapesos de la medición.** El informe incluye además las revisiones y auditorías lanzadas
+con agentes genéricos (por modelo y tokens), las rondas de arreglo por cada 100 ejecutores
+contra su umbral, los rechazos del crítico y, con `--invariantes`, el texto de cada invariante
+para revisar una muestra. `encargar.py disponibles` recuerda el último estado de cupo de cada
+ejecutor durante `ejecutores_externos_memoria_cupo_horas`. Los patrones y umbrales viven en
+la clave `medicion` de `delegacion.json`.
+
 
 ## Modelo de tiers
 
