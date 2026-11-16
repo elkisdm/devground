@@ -15,7 +15,7 @@
   "scripts": {
     "sync": "node scripts/sync-spec-flow.mjs",
     "sync:orchestration": "node scripts/sync-orchestration.mjs",
-    "test": "bash orchestration/test/gate.test.sh"
+    "test": "bash orchestration/test/gate.test.sh && for f in orchestration/test/*.test.py; do [ -e \"$f\" ] || continue; python3 \"$f\" || exit 1; done"
   },
   "keywords": [
     "spec-driven-development",

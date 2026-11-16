@@ -1,6 +1,7 @@
 # ADR-0040: Plan de ejecución por agentes y contexto acotado
 
 - **Estado**: Aceptado
+- **Enmendado por**: [ADR-0049](0049-critico-por-invariante-y-ejecutores-externos.md): el crítico se asigna por invariante nombrado.
 - **Nota**: la asignación de modelo y esfuerzo la manda la definición de cada agente, no `policy.json` (ADR-0044).
 - **Fecha**: 2026-10-01
 - **Decisor**: edaza
